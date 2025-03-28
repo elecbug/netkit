@@ -1,11 +1,12 @@
 package bimap_test
 
 import (
-	"go-type/bimap"
 	"testing"
+
+	"github.com/elecbug/go-type/bimap"
 )
 
-func TestBiMap(t *testing.T) {
+func TestBimap(t *testing.T) {
 	bimap := bimap.New[string, int]()
 
 	bimap.Set("Apple", 5)
