@@ -19,7 +19,7 @@ func isScended(slice []int) bool {
 	return true
 }
 
-func TestSlice(t *testing.T) {
+func TestSort(t *testing.T) {
 	result := []float64{0, 0, 0}
 	iter := 10
 
