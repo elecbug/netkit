@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/elecbug/go-type/slice"
+	"github.com/elecbug/go-dspkg/slice"
 )
 
 func isAscended(slice []int) bool {

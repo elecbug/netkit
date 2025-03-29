@@ -3,7 +3,7 @@ package bimap_test
 import (
 	"testing"
 
-	"github.com/elecbug/go-type/bimap"
+	"github.com/elecbug/go-dspkg/bimap"
 )
 
 func TestBimap(t *testing.T) {
