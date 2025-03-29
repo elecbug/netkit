@@ -1,3 +1,3 @@
 module github.com/elecbug/go-type
 
-go 1.21.5
+go 1.23
