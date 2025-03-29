@@ -1,6 +1,6 @@
 package slice
 
-import "github.com/elecbug/go-type/slice/compare_type"
+import "github.com/elecbug/go-dspkg/slice/compare_type"
 
 // `Bsearch` performs a binary search on a sorted slice.
 // `compare` should return true if the `target` is less than or equal to the current element.

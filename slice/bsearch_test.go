@@ -3,8 +3,8 @@ package slice_test
 import (
 	"testing"
 
-	"github.com/elecbug/go-type/slice"
-	"github.com/elecbug/go-type/slice/compare_type"
+	"github.com/elecbug/go-dspkg/slice"
+	"github.com/elecbug/go-dspkg/slice/compare_type"
 )
 
 func TestBsearch(t *testing.T) {

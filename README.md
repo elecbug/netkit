@@ -1,2 +1,2 @@
-# go-type
-Go custom data structure
+# GO - Data Structure PacKaGe
+Go custom data structure and algorithm package
