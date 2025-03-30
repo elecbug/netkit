@@ -51,7 +51,7 @@ func (a *Recslice[T]) Get(index int) T {
 	panic("index not found (corrupted state)")
 }
 
-// `Insert“ inserts a `value` at `index`
+// `Insert` inserts a `value` at `index`
 func (a *Recslice[T]) Insert(index int, value T) {
 	if index < 0 || index > a.length {
 		panic("insert index out of bounds")
