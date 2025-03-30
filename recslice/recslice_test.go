@@ -16,13 +16,16 @@ func TestRecslice(t *testing.T) {
 		a.Insert(a.Length()/2, i)
 	}
 
-	t.Logf("Slice: %v", a.Print(0, func(value int) string { return fmt.Sprintf("%d", value) }))
+	t.Logf("Recslice: %v", a.Print(0, func(value int) string { return fmt.Sprintf("%d", value) }))
+	t.Logf("Slice: %v", a.ToSlice())
 
 	t.Log("After deleting 3 items:")
 	a.Delete(size / 2)
 	a.Delete(size / 3)
 	a.Delete(size / 4)
 
-	t.Logf("Slice: %v", a.Print(0, func(value int) string { return fmt.Sprintf("%d", value) }))
+	t.Logf("Recslice: %v", a.Print(0, func(value int) string { return fmt.Sprintf("%d", value) }))
+	t.Logf("Slice: %v", a.ToSlice())
+
 	t.Logf("Get middle: %v", a.Get(size/2))
 }
