@@ -9,16 +9,6 @@ import (
 	"github.com/elecbug/go-dspkg/slice"
 )
 
-func isAscended(slice []int) bool {
-	for i := 0; i < len(slice)-1; i++ {
-		if slice[i] > slice[i+1] {
-			return false
-		}
-	}
-
-	return true
-}
-
 func TestSort(t *testing.T) {
 	result := []float64{0, 0, 0}
 	iter := 10
@@ -40,19 +30,19 @@ func TestSort(t *testing.T) {
 		start := time.Now().UnixNano()
 		sort.Slice(copy1, func(i, j int) bool { return copy1[i] < copy1[j] })
 		end := float64(time.Now().UnixNano()-start) / 10e6
-		t.Logf("General sort: %v, time: %fms", isAscended(copy1), end)
+		t.Logf("General sort: %v, time: %fms", slice.IsSorted(copy1, func(i, j int) bool { return i < j }), end)
 		result[0] += end
 
 		start = time.Now().UnixNano()
 		slice.Sort(copy2, func(i, j int) bool { return i < j })
 		end = float64(time.Now().UnixNano()-start) / 10e6
-		t.Logf("go_type sort: %v, time: %fms", isAscended(copy2), end)
+		t.Logf("go_type sort: %v, time: %fms", slice.IsSorted(copy2, func(i, j int) bool { return i < j }), end)
 		result[1] += end
 
 		start = time.Now().UnixNano()
 		slice.ParallelSort(copy3, func(i, j int) bool { return i < j }, 7)
 		end = float64(time.Now().UnixNano()-start) / 10e6
-		t.Logf("go_type parallel sort: %v, time: %fms", isAscended(copy3), end)
+		t.Logf("go_type parallel sort: %v, time: %fms", slice.IsSorted(copy3, func(i, j int) bool { return i < j }), end)
 		result[2] += end
 	}
 
