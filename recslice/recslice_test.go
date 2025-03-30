@@ -1,6 +1,7 @@
 package recslice_test
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
@@ -12,11 +13,17 @@ func TestRecslice(t *testing.T) {
 	size := 100000
 	check := 100
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	recs := recslice.New[int](100)
+	recs.AutoCompact(ctx, 100*time.Millisecond)
 	for i := 0; i < size; i++ {
-		recs.Insert(recs.Length(), i)
+		recs.Insert(i, i)
 	}
-	t.Logf("Recslice: %v", recs.ToSlice())
+	// t.Logf("Recslice: %v", recs.ToSlice())
+	recs.Set(50, -1)
+	t.Logf("Recslice[50]: %d", recs.Get(50))
 
 	arr := make([]int, size)
 	for i := 0; i < size; i++ {
@@ -44,18 +51,4 @@ func TestRecslice(t *testing.T) {
 	}
 	end = float64(time.Now().UnixNano()-start) / 10e6
 	t.Logf("General array test: %f", end)
-
-	// // t.Logf("Recslice: %v", a.Print(0, func(value int) string { return fmt.Sprintf("%d", value) }))
-	// t.Logf("Recslice: %v", recs.ToSlice())
-	// t.Logf("General array: %v", arr)
-
-	// t.Log("After deleting 3 items:")
-	// recs.Delete(size / 2)
-	// recs.Delete(size / 3)
-	// recs.Delete(size / 4)
-
-	// // t.Logf("Recslice: %v", a.Print(0, func(value int) string { return fmt.Sprintf("%d", value) }))
-	// t.Logf("Recslice: %v", recs.ToSlice())
-
-	// t.Logf("Get middle: %v", recs.Get(size/2))
 }

@@ -1,6 +1,10 @@
 package recslice
 
-import "strings"
+import (
+	"context"
+	"strings"
+	"time"
+)
 
 // `Node` represents either a value or a pointer to a subarray.
 type Node[T any] struct {
@@ -21,9 +25,10 @@ func newNode[T any](val T) Node[T] {
 }
 
 // `New` creates a new `Recslice` with a given `maxLen`.
+// The `capacity` is initial length of recslice.
 func New[T any](maxLen int) *Recslice[T] {
 	return &Recslice[T]{
-		items:  make([]Node[T], 0, maxLen),
+		items:  make([]Node[T], 0),
 		maxLen: maxLen,
 	}
 }
@@ -54,6 +59,36 @@ func (a *Recslice[T]) Get(index int) T {
 	}
 
 	panic("index not found (corrupted state)")
+}
+
+// `Set` replaces the value at the specified `index` with a new `value`.
+// If the index points into a subarray, it updates recursively.
+func (a *Recslice[T]) Set(index int, value T) {
+	if index < 0 || index >= a.length {
+		panic("set index out of bounds")
+	}
+
+	count := 0
+	for i := range a.items {
+		item := &a.items[i]
+
+		if item.value != nil {
+			if count == index {
+				item.value = &value
+				return
+			}
+			count++
+		} else if item.sub != nil {
+			subLen := item.sub.length
+			if index < count+subLen {
+				item.sub.Set(index-count, value)
+				return
+			}
+			count += subLen
+		}
+	}
+
+	panic("set index not found (corrupted state)")
 }
 
 // `Insert` inserts a `value` at `index`
@@ -218,4 +253,50 @@ func (a *Recslice[T]) Print(tab int, toString func(value T) string) string {
 	sb.WriteString("]")
 
 	return sb.String()
+}
+
+// `Compact` merges adjacent subarrays recursively if their combined size is under `maxLen`.
+func (a *Recslice[T]) Compact() {
+	for i := 0; i < len(a.items)-1; {
+		left := &a.items[i]
+		right := &a.items[i+1]
+
+		if left.sub != nil && right.sub != nil {
+			totalLen := left.sub.length + right.sub.length
+			if totalLen <= a.maxLen {
+				// Merge right into left
+				left.sub.items = append(left.sub.items, right.sub.items...)
+				left.sub.length = totalLen
+
+				// Remove right node
+				a.items = append(a.items[:i+1], a.items[i+2:]...)
+				continue // recheck current i
+			}
+		}
+		i++
+	}
+
+	// Recurse into subarrays
+	for _, item := range a.items {
+		if item.sub != nil {
+			item.sub.Compact()
+		}
+	}
+}
+
+// `AutoCompact` periodically runs `Compact` in the background until context is cancelled.
+func (a *Recslice[T]) AutoCompact(ctx context.Context, interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				a.Compact()
+			}
+		}
+	}()
 }
