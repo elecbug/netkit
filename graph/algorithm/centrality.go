@@ -4,10 +4,10 @@ import (
 	"math"
 	"sync"
 
-	"github.com/elecbug/go-dspkg/graph/internal/graph"
+	"github.com/elecbug/go-dspkg/graph/graph"
 )
 
-// BetweennessCentrality computes the betweenness centrality of each node in the graph for a Unit.
+// `BetweennessCentrality` computes the betweenness centrality of each node in the graph for a Unit.
 // Betweenness centrality measures how often a node appears on the shortest paths between pairs of other nodes.
 //
 // Returns:
@@ -50,7 +50,7 @@ func (u *Unit) BetweennessCentrality() map[graph.NodeID]float64 {
 	return centrality
 }
 
-// BetweennessCentrality computes the betweenness centrality of each node in the graph for a ParallelUnit.
+// `BetweennessCentrality` computes the betweenness centrality of each node in the graph for a ParallelUnit.
 // The computation is performed in parallel for better performance on larger graphs.
 //
 // Returns:
@@ -118,7 +118,7 @@ func (pu *ParallelUnit) BetweennessCentrality() map[graph.NodeID]float64 {
 	return centrality
 }
 
-// DegreeCentrality computes the degree centrality of each node in the graph for a Unit.
+// `DegreeCentrality` computes the degree centrality of each node in the graph for a Unit.
 // Degree centrality is the number of direct connections a node has to other nodes.
 //
 // Returns:
@@ -136,7 +136,7 @@ func (u *Unit) DegreeCentrality() map[graph.NodeID]float64 {
 	matrix := g.Matrix()
 	for i, row := range matrix {
 		for _, value := range row {
-			if value != graph.INF {
+			if value != graph.INF_DISTANCE {
 				centrality[graph.NodeID(i)]++
 			}
 		}
@@ -153,7 +153,7 @@ func (u *Unit) DegreeCentrality() map[graph.NodeID]float64 {
 	return centrality
 }
 
-// DegreeCentrality computes the degree centrality of each node in the graph for a ParallelUnit.
+// `DegreeCentrality` computes the degree centrality of each node in the graph for a ParallelUnit.
 // The computation is performed in parallel for better performance on larger graphs.
 //
 // Returns:
@@ -182,7 +182,7 @@ func (pu *ParallelUnit) DegreeCentrality() map[graph.NodeID]float64 {
 			defer wg.Done()
 			count := 0.0
 			for _, value := range matrix[nodeIndex] {
-				if value != graph.INF {
+				if value != graph.INF_DISTANCE {
 					count++
 				}
 			}
@@ -215,7 +215,7 @@ func (pu *ParallelUnit) DegreeCentrality() map[graph.NodeID]float64 {
 	return centrality
 }
 
-// EigenvectorCentrality computes the eigenvector centrality of each node in the graph for a Unit.
+// `EigenvectorCentrality` computes the eigenvector centrality of each node in the graph for a Unit.
 // Eigenvector centrality assigns scores to nodes based on the importance of their neighbors.
 //
 // Returns:
@@ -237,7 +237,7 @@ func (u *Unit) EigenvectorCentrality(maxIter int, tol float64) map[graph.NodeID]
 		// Update centrality scores
 		for i := 0; i < n; i++ {
 			for j := 0; j < n; j++ {
-				if matrix[i][j] != graph.INF {
+				if matrix[i][j] != graph.INF_DISTANCE {
 					newCentrality[i] += float64(matrix[i][j].ToInt()) * centrality[j]
 				}
 			}
@@ -276,7 +276,7 @@ func (u *Unit) EigenvectorCentrality(maxIter int, tol float64) map[graph.NodeID]
 	return result
 }
 
-// EigenvectorCentrality computes the eigenvector centrality of each node in the graph for a ParallelUnit.
+// `EigenvectorCentrality` computes the eigenvector centrality of each node in the graph for a ParallelUnit.
 // The computation is performed in parallel for better performance on larger graphs.
 //
 // Returns:
@@ -304,7 +304,7 @@ func (pu *ParallelUnit) EigenvectorCentrality(maxIter int, tol float64) map[grap
 			go func(node int) {
 				defer wg.Done()
 				for j := 0; j < n; j++ {
-					if matrix[node][j] != graph.INF {
+					if matrix[node][j] != graph.INF_DISTANCE {
 						newCentrality[node] += float64(matrix[node][j].ToInt()) * centrality[j]
 					}
 				}

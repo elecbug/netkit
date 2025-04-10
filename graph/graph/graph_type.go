@@ -4,7 +4,7 @@ package graph
 // It specifies whether the graph is directed or undirected and whether it is weighted or unweighted.
 type GraphType int
 
-// Enumeration values for GraphType.
+// Enumeration values for `GraphType`.
 // These constants represent different types of graphs:
 const (
 	DIRECTED_UNWEIGHTED   GraphType = iota // A directed graph with unweighted edges.
@@ -13,7 +13,7 @@ const (
 	UNDIRECTED_WEIGHTED                    // An undirected graph with weighted edges.
 )
 
-// String converts a GraphType value to its string representation.
+// `String` converts a `GraphType` value to its string representation.
 // This is useful for displaying the graph type in a human-readable format.
 func (g GraphType) String() string {
 	switch g {

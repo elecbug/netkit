@@ -1,10 +1,10 @@
 package graph
 
 import (
-	"github.com/elecbug/go-dspkg/graph/internal/graph/internal/graph_err" // Custom error package
+	"github.com/elecbug/go-dspkg/graph/graph/internal/graph_err" // Custom error package
 )
 
-// Node represents a node in the graph.
+// `Node` represents a node in the graph.
 // It contains a unique identifier (`identifier`), a display name (`Name`),
 // the edges connected to the node (`edges`), and a flag (`alive`) indicating whether the node is active.
 type Node struct {
@@ -13,7 +13,7 @@ type Node struct {
 	edges      []*edge // A list of edges originating from this node.
 }
 
-// newNode creates a new Node instance.
+// `newNode` creates a new Node instance.
 //
 // Parameters:
 //   - identifier: The unique identifier for the node.
@@ -28,7 +28,7 @@ func newNode(identifier NodeID, name string) *Node {
 	}
 }
 
-// addEdge adds a new edge to the node's list of edges.
+// `addEdge` adds a new edge to the node's list of edges.
 //
 // Parameters:
 //   - to: The identifier of the destination node.
@@ -46,7 +46,7 @@ func (n *Node) addEdge(to NodeID, distance Distance) error {
 	return nil
 }
 
-// removeEdge removes an edge from the node's list of edges that points to the specified destination node.
+// `removeEdge` removes an edge from the node's list of edges that points to the specified destination node.
 //
 // Parameters:
 //   - to: The identifier of the destination node whose edge needs to be removed.
@@ -71,20 +71,20 @@ func (n *Node) removeEdge(to NodeID) error {
 	return graph_err.NotExistEdge(n.identifier.String(), to.String())
 }
 
-// ID returns the unique identifier of the node.
+// `ID` returns the unique identifier of the node.
 // Useful for accessing or comparing nodes by their identifiers.
 func (n Node) ID() NodeID {
 	return n.identifier
 }
 
-// edge represents a connection (edge) between two nodes in a graph.
+// `edge` represents a connection (edge) between two nodes in a graph.
 // It contains information about the destination node (`to`) and the weight of the edge (`distance`).
 type edge struct {
 	to       NodeID   // The destination node's unique identifier.
 	distance Distance // The weight or cost of traveling along this edge.
 }
 
-// newEdge creates a new Edge instance.
+// `newEdge` creates a new Edge instance.
 //
 // Parameters:
 //   - to: The destination node's identifier.

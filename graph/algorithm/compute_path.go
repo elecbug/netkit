@@ -4,10 +4,10 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/elecbug/go-dspkg/graph/internal/graph"
+	"github.com/elecbug/go-dspkg/graph/graph"
 )
 
-// computePaths calculates all shortest paths between every pair of nodes in the graph for a Unit.
+// `computePaths` calculates all shortest paths between every pair of nodes in the graph for a Unit.
 // After computation, the `shortestPaths` field in the Unit is updated and sorted by path distance in ascending order.
 //
 // Parameters:
@@ -25,7 +25,7 @@ func (u *Unit) computePaths() {
 
 			path := shortestPath(g, start, end)
 
-			if path.Distance() != graph.INF {
+			if path.Distance() != graph.INF_DISTANCE {
 				u.shortestPaths = append(u.shortestPaths, *path)
 			}
 		}
@@ -40,7 +40,7 @@ func (u *Unit) computePaths() {
 	g.Update()
 }
 
-// computePaths calculates all shortest paths in parallel for a ParallelUnit.
+// `computePaths` calculates all shortest paths in parallel for a ParallelUnit.
 // After computation, the `shortestPaths` field in the ParallelUnit is updated and sorted by path distance in ascending order.
 //
 // Parameters:
@@ -70,7 +70,7 @@ func (pu *ParallelUnit) computePaths() {
 			for job := range jobChan {
 				path := shortestPath(g, job.start, job.end)
 
-				if path.Distance() != graph.INF {
+				if path.Distance() != graph.INF_DISTANCE {
 					resultChan <- *path
 				}
 			}
@@ -109,7 +109,7 @@ func (pu *ParallelUnit) computePaths() {
 	g.Update()
 }
 
-// shortestPath computes the shortest path between two nodes in a graph.
+// `shortestPath` computes the shortest path between two nodes in a graph.
 //
 // Parameters:
 //   - g: The graph to perform the computation on.
@@ -125,11 +125,11 @@ func shortestPath(g *graph.Graph, start, end graph.NodeID) *graph.Path {
 	} else if g.Type() == graph.DIRECTED_UNWEIGHTED || g.Type() == graph.UNDIRECTED_UNWEIGHTED {
 		return unweightedShortestPath(g.Matrix(), start, end)
 	} else {
-		return graph.NewPath(graph.INF, []graph.NodeID{})
+		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 }
 
-// weightedShortestPath computes the shortest path between two nodes in a weighted graph.
+// `weightedShortestPath` computes the shortest path between two nodes in a weighted graph.
 // Uses Dijkstra's algorithm to calculate the path.
 //
 // Parameters:
@@ -143,7 +143,7 @@ func weightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph.P
 	n := len(matrix)
 
 	if int(start) >= n || int(end) >= n {
-		return graph.NewPath(graph.INF, []graph.NodeID{})
+		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 
 	dist := make([]graph.Distance, n)
@@ -151,14 +151,14 @@ func weightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph.P
 	visited := make([]bool, n)
 
 	for i := range dist {
-		dist[i] = graph.INF
+		dist[i] = graph.INF_DISTANCE
 		prev[i] = -1
 	}
 
 	dist[start] = 0
 
 	for {
-		minDist := graph.INF
+		minDist := graph.INF_DISTANCE
 		u := -1
 		for i := 0; i < n; i++ {
 			if !visited[i] && dist[i] < minDist {
@@ -194,14 +194,14 @@ func weightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph.P
 		path[i], path[j] = path[j], path[i]
 	}
 
-	if dist[end] == graph.INF {
-		return graph.NewPath(graph.INF, []graph.NodeID{})
+	if dist[end] == graph.INF_DISTANCE {
+		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 
 	return graph.NewPath(dist[end], path)
 }
 
-// unweightedShortestPath computes the shortest path between two nodes in an unweighted graph.
+// `unweightedShortestPath` computes the shortest path between two nodes in an unweighted graph.
 // Uses BFS to calculate the path.
 //
 // Parameters:
@@ -215,14 +215,14 @@ func unweightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph
 	n := len(matrix)
 
 	if int(start) >= n || int(end) >= n {
-		return graph.NewPath(graph.INF, []graph.NodeID{})
+		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 
 	dist := make([]graph.Distance, n)
 	prev := make([]int, n)
 
 	for i := range dist {
-		dist[i] = graph.INF
+		dist[i] = graph.INF_DISTANCE
 		prev[i] = -1
 	}
 
@@ -234,7 +234,7 @@ func unweightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph
 		queue = queue[1:]
 
 		for v := 0; v < n; v++ {
-			if matrix[u][v] == 1 && dist[v] == graph.INF {
+			if matrix[u][v] == 1 && dist[v] == graph.INF_DISTANCE {
 				dist[v] = dist[u] + 1
 				prev[v] = u
 				queue = append(queue, v)
@@ -252,8 +252,8 @@ func unweightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph
 		path[i], path[j] = path[j], path[i]
 	}
 
-	if dist[end] == graph.INF {
-		return graph.NewPath(graph.INF, []graph.NodeID{})
+	if dist[end] == graph.INF_DISTANCE {
+		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 
 	return graph.NewPath(dist[end], path)

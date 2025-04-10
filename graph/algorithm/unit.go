@@ -1,10 +1,10 @@
 package algorithm
 
 import (
-	"github.com/elecbug/go-dspkg/graph/internal/graph"
+	"github.com/elecbug/go-dspkg/graph/graph"
 )
 
-// Unit represents a computation unit for graph algorithms.
+// `Unit` represents a computation unit for graph algorithms.
 // It stores shortest paths within the graph and performs computations.
 //
 // Fields:
@@ -16,7 +16,7 @@ type Unit struct {
 	updated       bool         // Update information for shortest paths
 }
 
-// ParallelUnit extends Unit for parallel computation of graph algorithms.
+// `ParallelUnit` extends Unit for parallel computation of graph algorithms.
 // It supports dividing tasks across multiple CPU cores for better performance.
 //
 // Fields:
@@ -27,7 +27,7 @@ type ParallelUnit struct {
 	maxCore uint // Maximum number of CPU cores to use for parallel computation.
 }
 
-// NewUnit creates and initializes a new Unit instance.
+// `NewUnit` creates and initializes a new Unit instance.
 //
 // Parameters:
 //   - g: The graph to associate with this computation unit.
@@ -42,7 +42,7 @@ func NewUnit(g *graph.Graph) *Unit {
 	}
 }
 
-// NewParallelUnit creates and initializes a new ParallelUnit instance.
+// `NewParallelUnit` creates and initializes a new ParallelUnit instance.
 //
 // Parameters:
 //   - g: The graph to associate with this computation unit.

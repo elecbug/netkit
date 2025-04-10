@@ -3,10 +3,10 @@ package algorithm
 import (
 	"sync"
 
-	"github.com/elecbug/go-dspkg/graph/internal/graph"
+	"github.com/elecbug/go-dspkg/graph/graph"
 )
 
-// ClusteringCoefficient computes the local and global clustering coefficients for a graph using a Unit.
+// `ClusteringCoefficient` computes the local and global clustering coefficients for a graph using a Unit.
 // Local clustering coefficient measures the degree to which nodes in a graph cluster together.
 // Global clustering coefficient is the average of local coefficients across all nodes.
 //
@@ -28,7 +28,7 @@ func (u *Unit) ClusteringCoefficient() (map[graph.NodeID]float64, float64) {
 
 		// Identify neighbors of the current node.
 		for i := 0; i < n; i++ {
-			if matrix[v][i] != graph.INF && matrix[v][i] > 0 {
+			if matrix[v][i] != graph.INF_DISTANCE && matrix[v][i] > 0 {
 				neighbors = append(neighbors, i)
 			}
 		}
@@ -44,7 +44,7 @@ func (u *Unit) ClusteringCoefficient() (map[graph.NodeID]float64, float64) {
 		e := 0
 		for i := 0; i < k; i++ {
 			for j := i + 1; j < k; j++ {
-				if matrix[neighbors[i]][neighbors[j]] != graph.INF && matrix[neighbors[i]][neighbors[j]] > 0 {
+				if matrix[neighbors[i]][neighbors[j]] != graph.INF_DISTANCE && matrix[neighbors[i]][neighbors[j]] > 0 {
 					e++
 				}
 			}
@@ -62,7 +62,7 @@ func (u *Unit) ClusteringCoefficient() (map[graph.NodeID]float64, float64) {
 	return localCoeffs, globalCoeff
 }
 
-// ClusteringCoefficient computes the local and global clustering coefficients for a graph using a ParallelUnit.
+// `ClusteringCoefficient` computes the local and global clustering coefficients for a graph using a ParallelUnit.
 // The computation is performed in parallel for better performance on larger graphs.
 //
 // Returns:
@@ -96,7 +96,7 @@ func (pu *ParallelUnit) ClusteringCoefficient() (map[graph.NodeID]float64, float
 
 			// Identify neighbors of the current node.
 			for i := 0; i < n; i++ {
-				if matrix[node][i] != graph.INF && matrix[node][i] > 0 {
+				if matrix[node][i] != graph.INF_DISTANCE && matrix[node][i] > 0 {
 					neighbors = append(neighbors, i)
 				}
 			}
@@ -112,7 +112,7 @@ func (pu *ParallelUnit) ClusteringCoefficient() (map[graph.NodeID]float64, float
 			e := 0
 			for i := 0; i < k; i++ {
 				for j := i + 1; j < k; j++ {
-					if matrix[neighbors[i]][neighbors[j]] != graph.INF && matrix[neighbors[i]][neighbors[j]] > 0 {
+					if matrix[neighbors[i]][neighbors[j]] != graph.INF_DISTANCE && matrix[neighbors[i]][neighbors[j]] > 0 {
 						e++
 					}
 				}
@@ -142,7 +142,7 @@ func (pu *ParallelUnit) ClusteringCoefficient() (map[graph.NodeID]float64, float
 	return localCoeffs, globalCoeff
 }
 
-// RichClubCoefficient computes the rich club coefficient for a given threshold degree k.
+// `RichClubCoefficient` computes the rich club coefficient for a given threshold degree k.
 // This coefficient measures how well nodes with degree >= k are connected to each other.
 //
 // Parameters:
@@ -160,7 +160,7 @@ func (u *Unit) RichClubCoefficient(k int) float64 {
 	for v := 0; v < n; v++ {
 		degree := 0
 		for i := 0; i < n; i++ {
-			if matrix[v][i] != graph.INF && matrix[v][i] > 0 {
+			if matrix[v][i] != graph.INF_DISTANCE && matrix[v][i] > 0 {
 				degree++
 			}
 		}
@@ -179,7 +179,7 @@ func (u *Unit) RichClubCoefficient(k int) float64 {
 	Ek := 0
 	for i := 0; i < Nk; i++ {
 		for j := i + 1; j < Nk; j++ {
-			if matrix[nodes[i]][nodes[j]] != graph.INF && matrix[nodes[i]][nodes[j]] > 0 {
+			if matrix[nodes[i]][nodes[j]] != graph.INF_DISTANCE && matrix[nodes[i]][nodes[j]] > 0 {
 				Ek++
 			}
 		}
@@ -189,7 +189,7 @@ func (u *Unit) RichClubCoefficient(k int) float64 {
 	return float64(2*Ek) / float64(Nk*(Nk-1))
 }
 
-// RichClubCoefficient computes the rich club coefficient for a given threshold degree k using a ParallelUnit.
+// `RichClubCoefficient` computes the rich club coefficient for a given threshold degree k using a ParallelUnit.
 // The computation is performed in parallel for better performance.
 //
 // Parameters:
@@ -212,7 +212,7 @@ func (pu *ParallelUnit) RichClubCoefficient(k int) float64 {
 			defer wg.Done()
 			degree := 0
 			for i := 0; i < n; i++ {
-				if matrix[node][i] != graph.INF && matrix[node][i] > 0 {
+				if matrix[node][i] != graph.INF_DISTANCE && matrix[node][i] > 0 {
 					degree++
 				}
 			}
@@ -247,7 +247,7 @@ func (pu *ParallelUnit) RichClubCoefficient(k int) float64 {
 			wg.Add(1)
 			go func(node1, node2 int) {
 				defer wg.Done()
-				if matrix[node1][node2] != graph.INF && matrix[node1][node2] > 0 {
+				if matrix[node1][node2] != graph.INF_DISTANCE && matrix[node1][node2] > 0 {
 					EkChan <- 1
 				}
 			}(nodes[i], nodes[j])

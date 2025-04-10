@@ -1,10 +1,10 @@
 package algorithm
 
 import (
-	"github.com/elecbug/go-dspkg/graph/internal/graph"
+	"github.com/elecbug/go-dspkg/graph/graph"
 )
 
-// Diameter computes the diameter of the graph for a Unit.
+// `Diameter` computes the diameter of the graph for a Unit.
 // The diameter is defined as the longest shortest path between any two nodes in the graph.
 //
 // Returns:
@@ -24,7 +24,7 @@ func (u *Unit) Diameter() graph.Path {
 	return u.shortestPaths[len(u.shortestPaths)-1]
 }
 
-// Diameter computes the diameter of the graph for a ParallelUnit.
+// `Diameter` computes the diameter of the graph for a ParallelUnit.
 //
 // Returns:
 //   - A graph.Path representing the longest shortest path in the graph.

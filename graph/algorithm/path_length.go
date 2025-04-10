@@ -1,10 +1,10 @@
 package algorithm
 
 import (
-	"github.com/elecbug/go-dspkg/graph/internal/graph"
+	"github.com/elecbug/go-dspkg/graph/graph"
 )
 
-// ShortestPath finds and returns the shortest path between two nodes in the graph for a Unit.
+// `ShortestPath` finds and returns the shortest path between two nodes in the graph for a Unit.
 //
 // Parameters:
 //   - from: The identifier of the source node.
@@ -29,10 +29,10 @@ func (u *Unit) ShortestPath(from, to graph.NodeID) graph.Path {
 		}
 	}
 
-	return *graph.NewPath(graph.INF, []graph.NodeID{from, to})
+	return *graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{from, to})
 }
 
-// ShortestPath finds and returns the shortest path between two nodes in the graph for a ParallelUnit.
+// `ShortestPath` finds and returns the shortest path between two nodes in the graph for a ParallelUnit.
 //
 // Parameters:
 //   - from: The identifier of the source node.
@@ -57,10 +57,10 @@ func (pu *ParallelUnit) ShortestPath(from, to graph.NodeID) graph.Path {
 		}
 	}
 
-	return *graph.NewPath(graph.INF, []graph.NodeID{from, to})
+	return *graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{from, to})
 }
 
-// AverageShortestPathLength computes the average shortest path length in the graph.
+// `AverageShortestPathLength` computes the average shortest path length in the graph.
 //
 // Returns:
 //   - The average shortest path length as a float64.
@@ -91,7 +91,7 @@ func (u *Unit) AverageShortestPathLength() float64 {
 	return float64(totalDistance) / float64(pairCount)
 }
 
-// ParallelUnit version of AverageShortestPathLength.
+// ParallelUnit version of `AverageShortestPathLength`.
 // Computes the average shortest path length using parallel computations.
 //
 // Returns:
@@ -123,7 +123,7 @@ func (pu *ParallelUnit) AverageShortestPathLength() float64 {
 	return float64(totalDistance) / float64(pairCount)
 }
 
-// PercentileShortestPathLength returns the shortest path length at the specified percentile.
+// `PercentileShortestPathLength` returns the shortest path length at the specified percentile.
 //
 // Parameters:
 //   - percentile: A float64 between 0 and 1 indicating the desired percentile.
@@ -155,7 +155,7 @@ func (u *Unit) PercentileShortestPathLength(percentile float64) graph.Distance {
 	return u.shortestPaths[index].Distance()
 }
 
-// ParallelUnit version of PercentileShortestPathLength.
+// ParallelUnit version of `PercentileShortestPathLength`.
 // Computes the percentile shortest path length using parallel computations.
 //
 // Parameters:

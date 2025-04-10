@@ -1,10 +1,10 @@
 package graph
 
 import (
-	"github.com/elecbug/go-dspkg/graph/internal/graph/internal/graph_err" // Custom error package
+	"github.com/elecbug/go-dspkg/graph/graph/internal/graph_err" // Custom error package
 )
 
-// graphNodes represents a collection of nodes in a graph.
+// `graphNodes` represents a collection of nodes in a graph.
 // It maintains two mappings:
 //  1. `nodes`: Maps a node's unique identifier to its corresponding Node object.
 //  2. `nameMap`: Maps a node's name to a list of identifiers for nodes with that name.
@@ -13,7 +13,7 @@ type graphNodes struct {
 	nameMap map[string][]NodeID // Maps node names to lists of identifiers for nodes with the same name.
 }
 
-// newNodes creates and initializes a new graphNodes instance.
+// `newNodes` creates and initializes a new graphNodes instance.
 //
 // Parameters:
 //   - cap: Initial capacity for the internal maps.
@@ -26,7 +26,7 @@ func newNodes(cap int) *graphNodes {
 	}
 }
 
-// insert adds a new Node to the graphNodes collection.
+// `insert` adds a new Node to the graphNodes collection.
 //
 // Parameters:
 //   - node: The Node to be inserted.
@@ -52,7 +52,7 @@ func (ns *graphNodes) insert(node *Node) error {
 	}
 }
 
-// remove deletes a Node from the graphNodes collection using its identifier.
+// `remove` deletes a Node from the graphNodes collection using its identifier.
 //
 // Parameters:
 //   - identifier: The unique identifier of the Node to remove.
@@ -81,7 +81,7 @@ func (ns *graphNodes) remove(identifier NodeID) error {
 	}
 }
 
-// find retrieves a Node by its identifier.
+// `find` retrieves a Node by its identifier.
 //
 // Parameters:
 //   - identifier: The unique identifier of the Node.
@@ -91,7 +91,7 @@ func (ns *graphNodes) find(identifier NodeID) *Node {
 	return ns.nodes[identifier]
 }
 
-// findAll retrieves all Nodes with a given name.
+// `findAll` retrieves all Nodes with a given name.
 //
 // Parameters:
 //   - name: The name of the Nodes to find.
