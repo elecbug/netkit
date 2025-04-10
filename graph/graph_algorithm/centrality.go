@@ -1,10 +1,10 @@
-package algorithm
+package graph_algorithm
 
 import (
 	"math"
 	"sync"
 
-	"github.com/elecbug/go-dspkg/graph/graph"
+	"github.com/elecbug/go-dspkg/graph"
 )
 
 // `BetweennessCentrality` computes the betweenness centrality of each node in the graph for a Unit.
@@ -15,8 +15,7 @@ import (
 func (u *Unit) BetweennessCentrality() map[graph.NodeID]float64 {
 	g := u.graph
 
-	if !g.IsUpdated() || !u.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != u.updateVersion {
 		u.computePaths()
 	}
 
@@ -58,8 +57,7 @@ func (u *Unit) BetweennessCentrality() map[graph.NodeID]float64 {
 func (pu *ParallelUnit) BetweennessCentrality() map[graph.NodeID]float64 {
 	g := pu.graph
 
-	if !g.IsUpdated() || !pu.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != pu.updateVersion {
 		pu.computePaths()
 	}
 
@@ -83,7 +81,7 @@ func (pu *ParallelUnit) BetweennessCentrality() map[graph.NodeID]float64 {
 	for _, path := range pu.shortestPaths {
 		wg.Add(1)
 
-		go func(path graph.Path) {
+		go func(path Path) {
 			defer wg.Done()
 			nodes := path.Nodes()
 
@@ -133,7 +131,7 @@ func (u *Unit) DegreeCentrality() map[graph.NodeID]float64 {
 	}
 
 	// Calculate the degree for each node by counting direct neighbors.
-	matrix := g.Matrix()
+	matrix := g.ToMatrix()
 	for i, row := range matrix {
 		for _, value := range row {
 			if value != graph.INF_DISTANCE {
@@ -167,7 +165,7 @@ func (pu *ParallelUnit) DegreeCentrality() map[graph.NodeID]float64 {
 		centrality[graph.NodeID(i)] = 0
 	}
 
-	matrix := g.Matrix()
+	matrix := g.ToMatrix()
 	var wg sync.WaitGroup
 	resultChan := make(chan struct {
 		node  graph.NodeID
@@ -222,7 +220,7 @@ func (pu *ParallelUnit) DegreeCentrality() map[graph.NodeID]float64 {
 //   - A map where the keys are node identifiers and the values are the eigenvector centrality scores.
 func (u *Unit) EigenvectorCentrality(maxIter int, tol float64) map[graph.NodeID]float64 {
 	g := u.graph
-	matrix := g.Matrix()
+	matrix := g.ToMatrix()
 	n := len(matrix)
 
 	// Initialize centrality scores with 1/n
@@ -238,7 +236,7 @@ func (u *Unit) EigenvectorCentrality(maxIter int, tol float64) map[graph.NodeID]
 		for i := 0; i < n; i++ {
 			for j := 0; j < n; j++ {
 				if matrix[i][j] != graph.INF_DISTANCE {
-					newCentrality[i] += float64(matrix[i][j].ToInt()) * centrality[j]
+					newCentrality[i] += float64(matrix[i][j]) * centrality[j]
 				}
 			}
 		}
@@ -283,7 +281,7 @@ func (u *Unit) EigenvectorCentrality(maxIter int, tol float64) map[graph.NodeID]
 //   - A map where the keys are node identifiers and the values are the eigenvector centrality scores.
 func (pu *ParallelUnit) EigenvectorCentrality(maxIter int, tol float64) map[graph.NodeID]float64 {
 	g := pu.graph
-	matrix := g.Matrix()
+	matrix := g.ToMatrix()
 	n := len(matrix)
 
 	// Initialize centrality scores with 1/n
@@ -305,7 +303,7 @@ func (pu *ParallelUnit) EigenvectorCentrality(maxIter int, tol float64) map[grap
 				defer wg.Done()
 				for j := 0; j < n; j++ {
 					if matrix[node][j] != graph.INF_DISTANCE {
-						newCentrality[node] += float64(matrix[node][j].ToInt()) * centrality[j]
+						newCentrality[node] += float64(matrix[node][j]) * centrality[j]
 					}
 				}
 			}(i)

@@ -1,8 +1,4 @@
-package algorithm
-
-import (
-	"github.com/elecbug/go-dspkg/graph/graph"
-)
+package graph_algorithm
 
 // `Diameter` computes the diameter of the graph for a Unit.
 // The diameter is defined as the longest shortest path between any two nodes in the graph.
@@ -12,11 +8,10 @@ import (
 //
 // Notes:
 //   - If the graph or the Unit has been updated, shortest paths are recomputed.
-func (u *Unit) Diameter() graph.Path {
+func (u *Unit) Diameter() Path {
 	g := u.graph
 
-	if !g.IsUpdated() || !u.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != u.updateVersion {
 		u.computePaths()
 	}
 
@@ -31,11 +26,10 @@ func (u *Unit) Diameter() graph.Path {
 //
 // Notes:
 //   - If the graph or the ParallelUnit has been updated, shortest paths are recomputed in parallel.
-func (pu *ParallelUnit) Diameter() graph.Path {
+func (pu *ParallelUnit) Diameter() Path {
 	g := pu.graph
 
-	if !g.IsUpdated() || !pu.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != pu.updateVersion {
 		pu.computePaths()
 	}
 

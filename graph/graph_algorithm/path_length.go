@@ -1,25 +1,16 @@
-package algorithm
+package graph_algorithm
 
 import (
-	"github.com/elecbug/go-dspkg/graph/graph"
+	"github.com/elecbug/go-dspkg/graph"
 )
 
 // `ShortestPath` finds and returns the shortest path between two nodes in the graph for a Unit.
-//
-// Parameters:
-//   - from: The identifier of the source node.
-//   - to: The identifier of the destination node.
-//
-// Returns:
-//   - A `graph.Path` representing the shortest path from `from` to `to`.
-//   - If no path exists, returns a `graph.Path` with distance `INF` and the nodes `{from, to}`.
-//
-// Notes:
-//   - If the graph or the Unit has been updated, shortest paths are recomputed before the search.
-func (u *Unit) ShortestPath(from, to graph.NodeID) graph.Path {
+// Returns a `graph.Path` representing the shortest path from `from` to `to`.
+// If no path exists, returns a `graph.Path` with distance `INF` and the nodes `{from, to}`.
+func (u *Unit) ShortestPath(from, to graph.NodeID) Path {
 	g := u.graph
 
-	if !g.IsUpdated() || !u.updated {
+	if g.Version() != u.updateVersion {
 		u.computePaths()
 	}
 
@@ -29,25 +20,16 @@ func (u *Unit) ShortestPath(from, to graph.NodeID) graph.Path {
 		}
 	}
 
-	return *graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{from, to})
+	return *newPath(graph.INF_DISTANCE, []graph.NodeID{from, to})
 }
 
 // `ShortestPath` finds and returns the shortest path between two nodes in the graph for a ParallelUnit.
-//
-// Parameters:
-//   - from: The identifier of the source node.
-//   - to: The identifier of the destination node.
-//
-// Returns:
-//   - A `graph.Path` representing the shortest path from `from` to `to`.
-//   - If no path exists, returns a `graph.Path` with distance `INF` and the nodes `{from, to}`.
-//
-// Notes:
-//   - If the graph or the ParallelUnit has been updated, shortest paths are recomputed in parallel before the search.
-func (pu *ParallelUnit) ShortestPath(from, to graph.NodeID) graph.Path {
+// Returns a `graph.Path` representing the shortest path from `from` to `to`.
+// If no path exists, returns a `graph.Path` with distance `INF` and the nodes `{from, to}`.
+func (pu *ParallelUnit) ShortestPath(from, to graph.NodeID) Path {
 	g := pu.graph
 
-	if !g.IsUpdated() || !pu.updated {
+	if g.Version() != pu.updateVersion {
 		pu.computePaths()
 	}
 
@@ -57,7 +39,7 @@ func (pu *ParallelUnit) ShortestPath(from, to graph.NodeID) graph.Path {
 		}
 	}
 
-	return *graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{from, to})
+	return *newPath(graph.INF_DISTANCE, []graph.NodeID{from, to})
 }
 
 // `AverageShortestPathLength` computes the average shortest path length in the graph.
@@ -70,8 +52,7 @@ func (pu *ParallelUnit) ShortestPath(from, to graph.NodeID) graph.Path {
 func (u *Unit) AverageShortestPathLength() float64 {
 	g := u.graph
 
-	if !g.IsUpdated() || !u.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != u.updateVersion {
 		u.computePaths()
 	}
 
@@ -102,8 +83,7 @@ func (u *Unit) AverageShortestPathLength() float64 {
 func (pu *ParallelUnit) AverageShortestPathLength() float64 {
 	g := pu.graph
 
-	if !g.IsUpdated() || !pu.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != pu.updateVersion {
 		pu.computePaths()
 	}
 
@@ -137,8 +117,7 @@ func (pu *ParallelUnit) AverageShortestPathLength() float64 {
 func (u *Unit) PercentileShortestPathLength(percentile float64) graph.Distance {
 	g := u.graph
 
-	if !g.IsUpdated() || !u.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != u.updateVersion {
 		u.computePaths()
 	}
 
@@ -170,8 +149,7 @@ func (u *Unit) PercentileShortestPathLength(percentile float64) graph.Distance {
 func (pu *ParallelUnit) PercentileShortestPathLength(percentile float64) graph.Distance {
 	g := pu.graph
 
-	if !g.IsUpdated() || !pu.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != pu.updateVersion {
 		pu.computePaths()
 	}
 

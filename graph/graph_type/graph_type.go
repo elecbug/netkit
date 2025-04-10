@@ -1,6 +1,6 @@
-package graph
+package graph_type
 
-// GraphType is an enumeration that defines the type of a graph.
+// `GraphType` is an enumeration that defines the type of a graph.
 // It specifies whether the graph is directed or undirected and whether it is weighted or unweighted.
 type GraphType int
 

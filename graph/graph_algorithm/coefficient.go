@@ -1,9 +1,9 @@
-package algorithm
+package graph_algorithm
 
 import (
 	"sync"
 
-	"github.com/elecbug/go-dspkg/graph/graph"
+	"github.com/elecbug/go-dspkg/graph"
 )
 
 // `ClusteringCoefficient` computes the local and global clustering coefficients for a graph using a Unit.
@@ -15,8 +15,8 @@ import (
 //   - The global clustering coefficient as a float64.
 func (u *Unit) ClusteringCoefficient() (map[graph.NodeID]float64, float64) {
 	g := u.graph
-	matrix := g.Matrix() // Get adjacency matrix representation of the graph.
-	n := len(matrix)     // Number of nodes in the graph.
+	matrix := g.ToMatrix() // Get adjacency matrix representation of the graph.
+	n := len(matrix)       // Number of nodes in the graph.
 
 	// Map to store local clustering coefficients for each node.
 	localCoeffs := make(map[graph.NodeID]float64)
@@ -70,8 +70,8 @@ func (u *Unit) ClusteringCoefficient() (map[graph.NodeID]float64, float64) {
 //   - The global clustering coefficient as a float64.
 func (pu *ParallelUnit) ClusteringCoefficient() (map[graph.NodeID]float64, float64) {
 	g := pu.graph
-	matrix := g.Matrix() // Get adjacency matrix representation of the graph.
-	n := len(matrix)     // Number of nodes in the graph.
+	matrix := g.ToMatrix() // Get adjacency matrix representation of the graph.
+	n := len(matrix)       // Number of nodes in the graph.
 
 	// Map to store local clustering coefficients for each node.
 	localCoeffs := make(map[graph.NodeID]float64)
@@ -152,8 +152,8 @@ func (pu *ParallelUnit) ClusteringCoefficient() (map[graph.NodeID]float64, float
 //   - The rich club coefficient as a float64.
 func (u *Unit) RichClubCoefficient(k int) float64 {
 	g := u.graph
-	matrix := g.Matrix() // Get adjacency matrix representation of the graph.
-	n := len(matrix)     // Number of nodes in the graph.
+	matrix := g.ToMatrix() // Get adjacency matrix representation of the graph.
+	n := len(matrix)       // Number of nodes in the graph.
 
 	// Identify nodes with degree >= k
 	nodes := []int{}
@@ -199,8 +199,8 @@ func (u *Unit) RichClubCoefficient(k int) float64 {
 //   - The rich club coefficient as a float64.
 func (pu *ParallelUnit) RichClubCoefficient(k int) float64 {
 	g := pu.graph
-	matrix := g.Matrix() // Get adjacency matrix representation of the graph.
-	n := len(matrix)     // Number of nodes in the graph.
+	matrix := g.ToMatrix() // Get adjacency matrix representation of the graph.
+	n := len(matrix)       // Number of nodes in the graph.
 
 	// Identify nodes with degree >= k in parallel
 	nodesChan := make(chan int, n)

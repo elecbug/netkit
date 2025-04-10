@@ -1,24 +1,22 @@
-package algorithm
+package graph_algorithm
 
 import (
 	"sort"
 	"sync"
 
-	"github.com/elecbug/go-dspkg/graph/graph"
+	"github.com/elecbug/go-dspkg/graph"
+	"github.com/elecbug/go-dspkg/graph/graph_type"
 )
 
 // `computePaths` calculates all shortest paths between every pair of nodes in the graph for a Unit.
 // After computation, the `shortestPaths` field in the Unit is updated and sorted by path distance in ascending order.
-//
-// Parameters:
-//   - g: The graph to perform the computation on.
 func (u *Unit) computePaths() {
 	g := u.graph
-	u.shortestPaths = []graph.Path{}
-	n := len(g.Matrix())
+	u.shortestPaths = []Path{}
+	list := g.AliveNodes()
 
-	for start := graph.NodeID(0); start < graph.NodeID(n); start++ {
-		for end := graph.NodeID(0); end < graph.NodeID(n); end++ {
+	for _, start := range list {
+		for _, end := range list {
 			if start == end {
 				continue
 			}
@@ -36,28 +34,24 @@ func (u *Unit) computePaths() {
 		return u.shortestPaths[i].Distance() < u.shortestPaths[j].Distance()
 	})
 
-	u.updated = true
-	g.Update()
+	u.updateVersion = g.Version()
 }
 
 // `computePaths` calculates all shortest paths in parallel for a ParallelUnit.
 // After computation, the `shortestPaths` field in the ParallelUnit is updated and sorted by path distance in ascending order.
-//
-// Parameters:
-//   - g: The graph to perform the computation on.
 func (pu *ParallelUnit) computePaths() {
 	g := pu.graph
-	pu.shortestPaths = []graph.Path{}
+	pu.shortestPaths = []Path{}
 
 	type to struct {
 		start graph.NodeID
 		end   graph.NodeID
 	}
 
-	n := len(g.Matrix())
+	list := g.AliveNodes()
 
 	jobChan := make(chan to)
-	resultChan := make(chan graph.Path)
+	resultChan := make(chan Path)
 	workerCount := pu.maxCore
 
 	var wg sync.WaitGroup
@@ -79,8 +73,8 @@ func (pu *ParallelUnit) computePaths() {
 
 	// Generate jobs for every pair of nodes.
 	go func() {
-		for start := 0; start < n; start++ {
-			for end := 0; end < n; end++ {
+		for _, start := range list {
+			for _, end := range list {
 				if start != end {
 					jobChan <- to{graph.NodeID(start), graph.NodeID(end)}
 				}
@@ -105,45 +99,30 @@ func (pu *ParallelUnit) computePaths() {
 		return pu.shortestPaths[i].Distance() < pu.shortestPaths[j].Distance()
 	})
 
-	pu.updated = true
-	g.Update()
+	pu.updateVersion = g.Version()
 }
 
 // `shortestPath` computes the shortest path between two nodes in a graph.
-//
-// Parameters:
-//   - g: The graph to perform the computation on.
-//   - start: The starting node identifier.
-//   - end: The ending node identifier.
-//
-// Returns:
-//   - A graph.Path containing the shortest path and its total distance.
-//   - If no path exists, the returned Path has distance INF and an empty node sequence.
-func shortestPath(g *graph.Graph, start, end graph.NodeID) *graph.Path {
-	if g.Type() == graph.DIRECTED_WEIGHTED || g.Type() == graph.UNDIRECTED_WEIGHTED {
-		return weightedShortestPath(g.Matrix(), start, end)
-	} else if g.Type() == graph.DIRECTED_UNWEIGHTED || g.Type() == graph.UNDIRECTED_UNWEIGHTED {
-		return unweightedShortestPath(g.Matrix(), start, end)
+// Returns a Path containing the shortest path and its total distance.
+// If no path exists, the returned Path has distance INF and an empty node sequence.
+func shortestPath(g *graph.Graph, start, end graph.NodeID) *Path {
+	if g.Type() == graph_type.DIRECTED_WEIGHTED || g.Type() == graph_type.UNDIRECTED_WEIGHTED {
+		return weightedShortestPath(g.ToMatrix(), start, end)
+	} else if g.Type() == graph_type.DIRECTED_UNWEIGHTED || g.Type() == graph_type.UNDIRECTED_UNWEIGHTED {
+		return unweightedShortestPath(g.ToMatrix(), start, end)
 	} else {
-		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
+		return newPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 }
 
 // `weightedShortestPath` computes the shortest path between two nodes in a weighted graph.
 // Uses Dijkstra's algorithm to calculate the path.
-//
-// Parameters:
-//   - matrix: The adjacency matrix representation of the graph.
-//   - start: The starting node identifier.
-//   - end: The ending node identifier.
-//
-// Returns:
-//   - A graph.Path containing the shortest path and its total distance.
-func weightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph.Path {
+// Returns a Path containing the shortest path and its total distance.
+func weightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *Path {
 	n := len(matrix)
 
 	if int(start) >= n || int(end) >= n {
-		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
+		return newPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 
 	dist := make([]graph.Distance, n)
@@ -195,27 +174,19 @@ func weightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph.P
 	}
 
 	if dist[end] == graph.INF_DISTANCE {
-		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
+		return newPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 
-	return graph.NewPath(dist[end], path)
+	return newPath(dist[end], path)
 }
 
 // `unweightedShortestPath` computes the shortest path between two nodes in an unweighted graph.
-// Uses BFS to calculate the path.
-//
-// Parameters:
-//   - matrix: The adjacency matrix representation of the graph.
-//   - start: The starting node identifier.
-//   - end: The ending node identifier.
-//
-// Returns:
-//   - A graph.Path containing the shortest path and its total distance.
-func unweightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph.Path {
+// Returns a Path containing the shortest path and its total distance.
+func unweightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *Path {
 	n := len(matrix)
 
 	if int(start) >= n || int(end) >= n {
-		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
+		return newPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 
 	dist := make([]graph.Distance, n)
@@ -253,8 +224,8 @@ func unweightedShortestPath(matrix graph.Matrix, start, end graph.NodeID) *graph
 	}
 
 	if dist[end] == graph.INF_DISTANCE {
-		return graph.NewPath(graph.INF_DISTANCE, []graph.NodeID{})
+		return newPath(graph.INF_DISTANCE, []graph.NodeID{})
 	}
 
-	return graph.NewPath(dist[end], path)
+	return newPath(dist[end], path)
 }

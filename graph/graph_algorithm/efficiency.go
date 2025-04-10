@@ -1,9 +1,9 @@
-package algorithm
+package graph_algorithm
 
 import (
 	"sync"
 
-	"github.com/elecbug/go-dspkg/graph/graph"
+	"github.com/elecbug/go-dspkg/graph"
 )
 
 // `GlobalEfficiency` computes the global efficiency of a graph using a Unit.
@@ -14,8 +14,7 @@ import (
 func (u *Unit) GlobalEfficiency() float64 {
 	g := u.graph
 
-	if !g.IsUpdated() || !u.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != u.updateVersion {
 		u.computePaths()
 	}
 
@@ -45,8 +44,7 @@ func (u *Unit) GlobalEfficiency() float64 {
 func (pu *ParallelUnit) GlobalEfficiency() float64 {
 	g := pu.graph
 
-	if !g.IsUpdated() || !pu.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != pu.updateVersion {
 		pu.computePaths()
 	}
 
@@ -76,15 +74,14 @@ func (pu *ParallelUnit) GlobalEfficiency() float64 {
 func (u *Unit) LocalEfficiency() map[graph.NodeID]float64 {
 	g := u.graph
 
-	if !g.IsUpdated() || !u.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != u.updateVersion {
 		u.computePaths()
 	}
 
 	localEfficiency := make(map[graph.NodeID]float64)
 
 	// Group paths by their starting node
-	pathsBySource := make(map[graph.NodeID][]graph.Path)
+	pathsBySource := make(map[graph.NodeID][]Path)
 	for _, path := range u.shortestPaths {
 		if len(path.Nodes()) > 0 {
 			source := path.Nodes()[0]
@@ -144,8 +141,7 @@ func (u *Unit) LocalEfficiency() map[graph.NodeID]float64 {
 func (pu *ParallelUnit) LocalEfficiency() map[graph.NodeID]float64 {
 	g := pu.graph
 
-	if !g.IsUpdated() || !pu.updated {
-		// Recompute shortest paths if the graph or unit has been updated.
+	if g.Version() != pu.updateVersion {
 		pu.computePaths()
 	}
 
@@ -157,7 +153,7 @@ func (pu *ParallelUnit) LocalEfficiency() map[graph.NodeID]float64 {
 	var wg sync.WaitGroup
 
 	// Group paths by their starting node
-	pathsBySource := make(map[graph.NodeID][]graph.Path)
+	pathsBySource := make(map[graph.NodeID][]Path)
 	for _, path := range pu.shortestPaths {
 		if len(path.Nodes()) > 0 {
 			source := path.Nodes()[0]
@@ -168,7 +164,7 @@ func (pu *ParallelUnit) LocalEfficiency() map[graph.NodeID]float64 {
 	// Compute local efficiency for each node in parallel
 	for node, paths := range pathsBySource {
 		wg.Add(1)
-		go func(node graph.NodeID, paths []graph.Path) {
+		go func(node graph.NodeID, paths []Path) {
 			defer wg.Done()
 
 			neighbors := make(map[graph.NodeID]bool)
