@@ -6,11 +6,8 @@ import (
 	"github.com/elecbug/go-dspkg/graph"
 )
 
-// `GlobalEfficiency` computes the global efficiency of a graph using a Unit.
+// `GlobalEfficiency` computes the global efficiency of a graph using a `Unit`.
 // Global efficiency is the average inverse shortest path length for all node pairs.
-//
-// Returns:
-//   - The global efficiency as a float64.
 func (u *Unit) GlobalEfficiency() float64 {
 	g := u.graph
 
@@ -36,11 +33,8 @@ func (u *Unit) GlobalEfficiency() float64 {
 	return totalEfficiency / float64(pairCount)
 }
 
-// `GlobalEfficiency` computes the global efficiency of a graph using a ParallelUnit.
+// `GlobalEfficiency` computes the global efficiency of a graph using a `ParallelUnit`.
 // The computation is performed in parallel for better performance.
-//
-// Returns:
-//   - The global efficiency as a float64.
 func (pu *ParallelUnit) GlobalEfficiency() float64 {
 	g := pu.graph
 
@@ -66,11 +60,8 @@ func (pu *ParallelUnit) GlobalEfficiency() float64 {
 	return totalEfficiency / float64(pairCount)
 }
 
-// `LocalEfficiency` computes the local efficiency of each node in the graph using a Unit.
+// `LocalEfficiency` computes the local efficiency of each node in the graph using a `Unit`.
 // Local efficiency measures how well the neighbors of a node are connected.
-//
-// Returns:
-//   - A map where the keys are node identifiers and the values are the local efficiency scores.
 func (u *Unit) LocalEfficiency() map[graph.NodeID]float64 {
 	g := u.graph
 
@@ -133,11 +124,8 @@ func (u *Unit) LocalEfficiency() map[graph.NodeID]float64 {
 	return localEfficiency
 }
 
-// `LocalEfficiency` computes the local efficiency of each node in the graph using a ParallelUnit.
+// `LocalEfficiency` computes the local efficiency of each node in the graph using a `ParallelUnit`.
 // The computation is performed in parallel for better performance.
-//
-// Returns:
-//   - A map where the keys are node identifiers and the values are the local efficiency scores.
 func (pu *ParallelUnit) LocalEfficiency() map[graph.NodeID]float64 {
 	g := pu.graph
 

@@ -6,6 +6,8 @@ import (
 	"github.com/elecbug/go-dspkg/graph/graph_type"
 )
 
+// `Graph` type expressed internally through matrix operations.
+// This can express weighted/unweighted and directed/undirected, etc.
 type Graph struct {
 	matrix        Matrix
 	capacity      int
@@ -17,7 +19,14 @@ type Graph struct {
 	edgeCount     int
 }
 
+// `NodeID` wrapper type.
 type NodeID int
+
+// `Degree` means node's incoming/outgoing edge count.
+type Degree struct {
+	Incoming int
+	Outgoing int
+}
 
 // `NewGraph` creates and initializes a new Graph instance.
 // Returns a pointer to the newly created Graph.
@@ -180,22 +189,49 @@ func (g *Graph) RemoveEdge(from, to NodeID) error {
 // An error if the edge or either of the nodes does not exist, or if attempting to find a self-loop edge.
 func (g *Graph) FindEdge(from, to NodeID) (Distance, error) {
 	if from == to {
-		return Distance(-1), fmt.Errorf("does not add edge to self")
+		return INF_DISTANCE, fmt.Errorf("does not add edge to self")
 	}
 	if from > NodeID(g.recentlyID) {
-		return Distance(-1), fmt.Errorf("entered ID %d is bigger then currently node count %d", from, g.recentlyID)
+		return INF_DISTANCE, fmt.Errorf("entered ID %d is bigger then currently node count %d", from, g.recentlyID)
 	}
 	if to > NodeID(g.recentlyID) {
-		return Distance(-1), fmt.Errorf("entered ID %d is bigger then currently node count %d", to, g.recentlyID)
+		return INF_DISTANCE, fmt.Errorf("entered ID %d is bigger then currently node count %d", to, g.recentlyID)
 	}
 	if !g.state[int(from)] {
-		return Distance(-1), fmt.Errorf("node (ID: %d) is down or removed", from)
+		return INF_DISTANCE, fmt.Errorf("node (ID: %d) is down or removed", from)
 	}
 	if !g.state[int(to)] {
-		return Distance(-1), fmt.Errorf("node (ID: %d) is down or removed", to)
+		return INF_DISTANCE, fmt.Errorf("node (ID: %d) is down or removed", to)
 	}
 
 	return g.matrix[from][to], nil
+}
+
+// `Degree` returns degree of node from the graph by its ID.
+func (g *Graph) Degree(id NodeID) (*Degree, error) {
+	if id > NodeID(g.recentlyID) {
+		return nil, fmt.Errorf("entered ID %d is bigger then currently node count %d", id, g.recentlyID)
+	}
+
+	if !g.state[int(id)] {
+		return nil, fmt.Errorf("node (ID: %d) is already removed", id)
+	}
+
+	degree := Degree{
+		Incoming: 0,
+		Outgoing: 0,
+	}
+
+	for i := 0; i < g.recentlyID; i++ {
+		if g.matrix[id][i] != INF_DISTANCE {
+			degree.Incoming++
+		}
+		if g.matrix[i][id] != INF_DISTANCE {
+			degree.Outgoing++
+		}
+	}
+
+	return &degree, nil
 }
 
 // `AliveNodes` return list of all activated node

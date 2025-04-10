@@ -12,8 +12,7 @@ type Path struct {
 	nodes    []graph.NodeID // Sequence of nodes from the source to the destination.
 }
 
-// `NewPath` creates and initializes a new Path instance.
-// Returns a pointer to the newly created Path.
+// `NewPath` creates and initializes a new `Path` instance.
 func newPath(distance graph.Distance, nodes []graph.NodeID) *Path {
 	return &Path{
 		distance: distance,
