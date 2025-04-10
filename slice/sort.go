@@ -124,3 +124,16 @@ func ParallelSort[T any](slice []T, compare func(a, b T) bool, level int) {
 
 	copy(slice, sorted)
 }
+
+// Verify that the `slice` is sorted.
+// The `compare` is a validation function, This return `true` only when every
+// `compare(a, b) == true` for two adjacent `a` and `b` elements in `slice`.
+func IsSorted[T any](slice []T, compare func(a, b T) bool) bool {
+	for i := 0; i < len(slice)-1; i++ {
+		if !compare(slice[i], slice[i+1]) {
+			return false
+		}
+	}
+
+	return true
+}

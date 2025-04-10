@@ -3,6 +3,7 @@
         "Bimap",
         "Bsearch",
         "dspkg",
-        "elecbug"
+        "elecbug",
+        "recslice"
     ]
 }
