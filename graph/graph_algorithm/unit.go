@@ -19,8 +19,7 @@ type ParallelUnit struct {
 	maxCore uint // Maximum number of CPU cores to use for parallel computation.
 }
 
-// `NewUnit` creates and initializes a new Unit instance.
-// Return A pointer to the newly created Unit.
+// `NewUnit` creates and initializes a new `Unit` instance.
 func NewUnit(g *graph.Graph) *Unit {
 	return &Unit{
 		shortestPaths: make([]Path, g.EdgeCount()), // Initialize with an empty slice of paths.
@@ -29,8 +28,7 @@ func NewUnit(g *graph.Graph) *Unit {
 	}
 }
 
-// `NewParallelUnit` creates and initializes a new ParallelUnit instance.
-// Return A pointer to the newly created ParallelUnit.
+// `NewParallelUnit` creates and initializes a new `ParallelUnit` instance.
 func NewParallelUnit(g *graph.Graph, core uint) *ParallelUnit {
 	return &ParallelUnit{
 		Unit:    *NewUnit(g), // Initialize the embedded Unit structure.

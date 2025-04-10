@@ -4,9 +4,8 @@ import (
 	"github.com/elecbug/go-dspkg/graph"
 )
 
-// `ShortestPath` finds and returns the shortest path between two nodes in the graph for a Unit.
-// Returns a `graph.Path` representing the shortest path from `from` to `to`.
-// If no path exists, returns a `graph.Path` with distance `INF` and the nodes `{from, to}`.
+// `ShortestPath` finds and returns the shortest path between two nodes in the graph for a `Unit`.
+// If no path exists, returns a `Path` with distance `graph.INF_DISTANCE` and the nodes `{from, to}`.
 func (u *Unit) ShortestPath(from, to graph.NodeID) Path {
 	g := u.graph
 
@@ -23,9 +22,8 @@ func (u *Unit) ShortestPath(from, to graph.NodeID) Path {
 	return *newPath(graph.INF_DISTANCE, []graph.NodeID{from, to})
 }
 
-// `ShortestPath` finds and returns the shortest path between two nodes in the graph for a ParallelUnit.
-// Returns a `graph.Path` representing the shortest path from `from` to `to`.
-// If no path exists, returns a `graph.Path` with distance `INF` and the nodes `{from, to}`.
+// `ShortestPath` finds and returns the shortest path between two nodes in the graph for a `ParallelUnit`.
+// If no path exists, returns a `Path` with distance `graph.INF_DISTANCE` and the nodes `{from, to}`.
 func (pu *ParallelUnit) ShortestPath(from, to graph.NodeID) Path {
 	g := pu.graph
 
@@ -43,12 +41,6 @@ func (pu *ParallelUnit) ShortestPath(from, to graph.NodeID) Path {
 }
 
 // `AverageShortestPathLength` computes the average shortest path length in the graph.
-//
-// Returns:
-//   - The average shortest path length as a float64.
-//
-// Notes:
-//   - If no shortest paths are found, the function returns 0.
 func (u *Unit) AverageShortestPathLength() float64 {
 	g := u.graph
 
@@ -72,14 +64,8 @@ func (u *Unit) AverageShortestPathLength() float64 {
 	return float64(totalDistance) / float64(pairCount)
 }
 
-// ParallelUnit version of `AverageShortestPathLength`.
+// `ParallelUnit` version of `AverageShortestPathLength`.
 // Computes the average shortest path length using parallel computations.
-//
-// Returns:
-//   - The average shortest path length as a float64.
-//
-// Notes:
-//   - If no shortest paths are found, the function returns 0.
 func (pu *ParallelUnit) AverageShortestPathLength() float64 {
 	g := pu.graph
 
@@ -104,16 +90,7 @@ func (pu *ParallelUnit) AverageShortestPathLength() float64 {
 }
 
 // `PercentileShortestPathLength` returns the shortest path length at the specified percentile.
-//
-// Parameters:
-//   - percentile: A float64 between 0 and 1 indicating the desired percentile.
-//
-// Returns:
-//   - The shortest path length corresponding to the given percentile.
-//
-// Notes:
-//   - The percentile is calculated based on the sorted list of shortest paths.
-//   - If the percentile is out of range, it is clamped to valid indices.
+// If the percentile is out of range, it is clamped to valid indices.
 func (u *Unit) PercentileShortestPathLength(percentile float64) graph.Distance {
 	g := u.graph
 
@@ -134,18 +111,9 @@ func (u *Unit) PercentileShortestPathLength(percentile float64) graph.Distance {
 	return u.shortestPaths[index].Distance()
 }
 
-// ParallelUnit version of `PercentileShortestPathLength`.
+// `ParallelUnit` version of `PercentileShortestPathLength`.
 // Computes the percentile shortest path length using parallel computations.
-//
-// Parameters:
-//   - percentile: A float64 between 0 and 1 indicating the desired percentile.
-//
-// Returns:
-//   - The shortest path length corresponding to the given percentile.
-//
-// Notes:
-//   - The percentile is calculated based on the sorted list of shortest paths.
-//   - If the percentile is out of range, it is clamped to valid indices.
+// If the percentile is out of range, it is clamped to valid indices.
 func (pu *ParallelUnit) PercentileShortestPathLength(percentile float64) graph.Distance {
 	g := pu.graph
 
