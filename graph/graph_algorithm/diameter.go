@@ -10,6 +10,11 @@ func (u *Unit) Diameter() Path {
 	}
 
 	// The diameter corresponds to the last (longest) path in the sorted shortestPaths slice.
+	if len(u.shortestPaths) == 0 {
+		return Path{} // Return an empty path if no paths are computed
+	}
+
+	// The diameter corresponds to the last (longest) path in the sorted shortestPaths slice.
 	return u.shortestPaths[len(u.shortestPaths)-1]
 }
 
