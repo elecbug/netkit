@@ -77,6 +77,10 @@ func (g *Graph) RemoveNode(id NodeID) error {
 		for y := range v {
 			if x == int(id) || y == int(id) {
 				g.matrix[x][y] = INF_DISTANCE
+
+				if g.graphType == graph_type.UNDIRECTED_UNWEIGHTED || g.graphType == graph_type.UNDIRECTED_WEIGHTED {
+					g.matrix[y][x] = INF_DISTANCE
+				}
 			}
 		}
 	}
