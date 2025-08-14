@@ -12,7 +12,7 @@ func newMatrix(nodeCount int) Matrix {
 		result[i] = make([]Distance, nodeCount)
 
 		for j := range result[i] {
-			result[i][j] = -1
+			result[i][j] = INF_DISTANCE
 		}
 	}
 

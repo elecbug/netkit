@@ -76,7 +76,7 @@ func (g *Graph) RemoveNode(id NodeID) error {
 	for x, v := range g.matrix {
 		for y := range v {
 			if x == int(id) || y == int(id) {
-				g.matrix[x][y] = -1
+				g.matrix[x][y] = INF_DISTANCE
 			}
 		}
 	}
