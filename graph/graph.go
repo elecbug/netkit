@@ -123,7 +123,7 @@ func (g *Graph) AddWeightEdge(from, to NodeID, distance Distance) error {
 		return fmt.Errorf("node (ID: %d) is down or removed", to)
 	}
 
-	if g.matrix[from][to] != -1 {
+	if g.matrix[from][to] != INF_DISTANCE {
 		return fmt.Errorf("node (ID: %d) and (ID: %d) are already connected", from, to)
 	}
 
@@ -131,7 +131,7 @@ func (g *Graph) AddWeightEdge(from, to NodeID, distance Distance) error {
 
 	// Add a reverse edge for undirected graphs.
 	if g.graphType == graph_type.UNDIRECTED_UNWEIGHTED || g.graphType == graph_type.UNDIRECTED_WEIGHTED {
-		if g.matrix[to][from] != -1 {
+		if g.matrix[to][from] != INF_DISTANCE {
 			return fmt.Errorf("node (ID: %d) and (ID: %d) are already connected", to, from)
 		}
 
@@ -163,7 +163,7 @@ func (g *Graph) RemoveEdge(from, to NodeID) error {
 		return fmt.Errorf("node (ID: %d) is down or removed", to)
 	}
 
-	if g.matrix[from][to] == -1 {
+	if g.matrix[from][to] == INF_DISTANCE {
 		return fmt.Errorf("node (ID: %d) and (ID: %d) are already disconnected", from, to)
 	}
 
@@ -171,7 +171,7 @@ func (g *Graph) RemoveEdge(from, to NodeID) error {
 
 	// Add a reverse edge for undirected graphs.
 	if g.graphType == graph_type.UNDIRECTED_UNWEIGHTED || g.graphType == graph_type.UNDIRECTED_WEIGHTED {
-		if g.matrix[to][from] == -1 {
+		if g.matrix[to][from] == INF_DISTANCE {
 			return fmt.Errorf("node (ID: %d) and (ID: %d) are already disconnected", to, from)
 		}
 
