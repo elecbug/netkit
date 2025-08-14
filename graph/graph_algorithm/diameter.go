@@ -22,5 +22,9 @@ func (pu *ParallelUnit) Diameter() Path {
 	}
 
 	// The diameter corresponds to the last (longest) path in the sorted shortestPaths slice.
+	if len(pu.shortestPaths) == 0 {
+		return Path{} // Return an empty path if no paths are computed
+	}
+
 	return pu.shortestPaths[len(pu.shortestPaths)-1]
 }
