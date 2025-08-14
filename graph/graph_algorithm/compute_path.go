@@ -123,7 +123,8 @@ func computeAllShortestPathsFrom(matrix graph.Matrix, start graph.NodeID, weight
 			visited[u] = true
 
 			for v := 0; v < n; v++ {
-				if matrix[u][v] > 0 && !visited[v] {
+				// consider only existing edges (non-INF)
+				if matrix[u][v] != graph.INF_DISTANCE && !visited[v] {
 					alt := dist[u] + matrix[u][v]
 					if alt < dist[v] {
 						dist[v] = alt
@@ -140,7 +141,8 @@ func computeAllShortestPathsFrom(matrix graph.Matrix, start graph.NodeID, weight
 			queue = queue[1:]
 
 			for v := 0; v < n; v++ {
-				if matrix[u][v] > 0 && dist[v] == graph.INF_DISTANCE {
+				// in unweighted graphs, traverse only actual edges (non-INF)
+				if matrix[u][v] != graph.INF_DISTANCE && dist[v] == graph.INF_DISTANCE {
 					dist[v] = dist[u] + 1
 					prev[v] = u
 					queue = append(queue, v)
