@@ -77,6 +77,10 @@ func (g *Graph) RemoveNode(id NodeID) error {
 		for y := range v {
 			if x == int(id) || y == int(id) {
 				g.matrix[x][y] = INF_DISTANCE
+
+				if g.graphType == graph_type.UNDIRECTED_UNWEIGHTED || g.graphType == graph_type.UNDIRECTED_WEIGHTED {
+					g.matrix[y][x] = INF_DISTANCE
+				}
 			}
 		}
 	}
@@ -167,7 +171,7 @@ func (g *Graph) RemoveEdge(from, to NodeID) error {
 		return fmt.Errorf("node (ID: %d) and (ID: %d) are already disconnected", from, to)
 	}
 
-	g.matrix[from][to] = -1
+	g.matrix[from][to] = INF_DISTANCE
 
 	// Add a reverse edge for undirected graphs.
 	if g.graphType == graph_type.UNDIRECTED_UNWEIGHTED || g.graphType == graph_type.UNDIRECTED_WEIGHTED {
@@ -175,7 +179,7 @@ func (g *Graph) RemoveEdge(from, to NodeID) error {
 			return fmt.Errorf("node (ID: %d) and (ID: %d) are already disconnected", to, from)
 		}
 
-		g.matrix[to][from] = -1
+		g.matrix[to][from] = INF_DISTANCE
 	}
 
 	g.updateVersion++
