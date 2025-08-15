@@ -6,7 +6,7 @@ import (
 )
 
 // ClusteringCoefficient computes the clustering coefficient for a node in the graph.
-func ClusteringCoefficient(g *graph.Graph, id node.ID) float64 {
+func ClusteringCoefficient(g *graph.Graph, id node.ID, config *Config) float64 {
 	if len(g.GetNodes()) == 0 {
 		return 0.0
 	}

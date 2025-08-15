@@ -2,6 +2,9 @@
 package graph
 
 import (
+	"crypto/sha256"
+	"fmt"
+
 	"github.com/elecbug/go-dspkg/network-graph/node"
 )
 
@@ -23,4 +26,13 @@ func New(bidirectional bool) *Graph {
 
 func (g *Graph) IsBidirectional() bool {
 	return g.bidirectional
+}
+
+func (g *Graph) Hash() string {
+	h := sha256.New()
+
+	h.Write([]byte(fmt.Sprintf("%v", g.nodes)))
+	h.Write([]byte(fmt.Sprintf("%v", g.edges)))
+
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

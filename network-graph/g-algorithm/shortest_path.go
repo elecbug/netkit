@@ -12,6 +12,10 @@ import (
 // ShortestPath computes a shortest path between start and end using BFS.
 // It returns an empty path when no path exists.
 func ShortestPath(g *graph.Graph, start, end node.ID) path.Path {
+	if v, ok := cachedPaths[g.Hash()]; ok {
+		return v[start][end]
+	}
+
 	if start == end {
 		return *path.NewPath(start)
 	}
@@ -53,8 +57,17 @@ func ShortestPath(g *graph.Graph, start, end node.ID) path.Path {
 }
 
 // AllShortestPathsConcurrent computes all-pairs shortest paths using a worker pool.
-// 'workers' <= 0 will fallback to runtime.NumCPU().
-func AllShortestPaths(g *graph.Graph, workers int) map[node.ID]map[node.ID]path.Path {
+func AllShortestPaths(g *graph.Graph, config *Config) map[node.ID]map[node.ID]path.Path {
+	if v, ok := cachedPaths[g.Hash()]; ok {
+		return v
+	}
+
+	if config == nil {
+		config = &Config{}
+	}
+
+	workers := config.Workers
+
 	if workers <= 0 {
 		workers = runtime.NumCPU()
 	}
@@ -124,6 +137,8 @@ func AllShortestPaths(g *graph.Graph, workers int) map[node.ID]map[node.ID]path.
 	for s, r := range rows {
 		out[s] = r.m
 	}
+
+	cachedPaths[g.Hash()] = out
 
 	return out
 }

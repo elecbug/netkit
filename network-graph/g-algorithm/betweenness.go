@@ -6,7 +6,7 @@ import (
 )
 
 // BetweennessCentrality computes the betweenness centrality for a node in the graph.
-func BetweennessCentrality(g *graph.Graph, id node.ID) float64 {
+func BetweennessCentrality(g *graph.Graph, id node.ID, config *Config) float64 {
 	if len(g.GetNodes()) == 0 {
 		return 0.0
 	}
@@ -24,8 +24,9 @@ func BetweennessCentrality(g *graph.Graph, id node.ID) float64 {
 				continue // Skip if it's the same node or the source node
 			}
 
-			paths := AllShortestPaths(g, 1) // Assuming single-threaded for simplicity
+			paths := AllShortestPaths(g, config) // Assuming single-threaded for simplicity
 			p := paths[s][e]
+
 			for _, node := range p.GetNodes() {
 				if node == id {
 					betweenness++

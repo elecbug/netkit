@@ -6,9 +6,9 @@ import (
 )
 
 // Diameter computes the diameter of the graph using all-pairs shortest paths.
-func Diameter(g *graph.Graph, workers int) path.Path {
+func Diameter(g *graph.Graph, config *Config) path.Path {
 	result := *path.NewPath()
-	paths := AllShortestPaths(g, workers)
+	paths := AllShortestPaths(g, config)
 
 	for _, v := range paths {
 		for _, p := range v {
