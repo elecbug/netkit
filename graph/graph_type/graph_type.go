@@ -1,11 +1,9 @@
 package graph_type
 
-// `GraphType` is an enumeration that defines the type of a graph.
-// It specifies whether the graph is directed or undirected and whether it is weighted or unweighted.
+// GraphType describes whether a graph is directed/undirected and weighted/unweighted.
 type GraphType int
 
-// Enumeration values for `GraphType`.
-// These constants represent different types of graphs:
+// Enumeration values for GraphType.
 const (
 	DIRECTED_UNWEIGHTED   GraphType = iota // A directed graph with unweighted edges.
 	DIRECTED_WEIGHTED                      // A directed graph with weighted edges.
@@ -13,8 +11,7 @@ const (
 	UNDIRECTED_WEIGHTED                    // An undirected graph with weighted edges.
 )
 
-// `String` converts a `GraphType` value to its string representation.
-// This is useful for displaying the graph type in a human-readable format.
+// String returns a human-readable representation of the graph type.
 func (g GraphType) String() string {
 	switch g {
 	case DIRECTED_UNWEIGHTED:
