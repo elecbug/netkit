@@ -45,7 +45,7 @@ func TestBimap(t *testing.T) {
 		t.Logf("Do not find {\"Orange\", ?}")
 	}
 
-	bimap.DeleteByKey("Orange")
+	bimap.RemoveByKey("Orange")
 
 	if orange, ok := bimap.GetByKey("Orange"); ok {
 		t.Logf(`bimap.GetByKey("Orange") is `+"%d", orange)

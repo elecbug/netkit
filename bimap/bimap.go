@@ -49,9 +49,9 @@ func (b *Bimap[T1, T2]) GetByValue(value T2) (T1, bool) {
 	return key, ok
 }
 
-// DeleteByKey removes the pair identified by key.
+// RemoveByKey removes the pair identified by key.
 // It returns true if the pair existed and was removed.
-func (b *Bimap[T1, T2]) DeleteByKey(key T1) bool {
+func (b *Bimap[T1, T2]) RemoveByKey(key T1) bool {
 	if val, ok := b.forward[key]; ok {
 		delete(b.forward, key)
 		delete(b.reverse, val)
@@ -62,9 +62,9 @@ func (b *Bimap[T1, T2]) DeleteByKey(key T1) bool {
 	}
 }
 
-// DeleteByValue removes the pair identified by value.
+// RemoveByValue removes the pair identified by value.
 // It returns true if the pair existed and was removed.
-func (b *Bimap[T1, T2]) DeleteByValue(value T2) bool {
+func (b *Bimap[T1, T2]) RemoveByValue(value T2) bool {
 	if key, ok := b.reverse[value]; ok {
 		delete(b.reverse, value)
 		delete(b.forward, key)
