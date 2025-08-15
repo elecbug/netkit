@@ -1,13 +1,17 @@
+// Package path defines path structures used by network-graph algorithms.
 package path
 
 import "github.com/elecbug/go-dspkg/network-graph/node"
 
+// Path represents an ordered sequence of nodes with a hop distance.
 type Path struct {
 	distance int
 	nodes    []node.ID
 	isInf    bool
 }
 
+// NewPath constructs a Path from the given nodes. Distance is hops (edges).
+// If no nodes are provided, the path is considered infinite (unreachable).
 func NewPath(nodes ...node.ID) *Path {
 	return &Path{
 		distance: len(nodes) - 1, // Assuming distance is the number of edges

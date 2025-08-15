@@ -6,6 +6,7 @@ import (
 	"github.com/elecbug/go-dspkg/network-graph/node"
 )
 
+// AddEdge adds an edge from -> to. If bidirectional is true, adds the reverse edge as well.
 func (g *Graph) AddEdge(from, to node.ID, bidirectional bool) error {
 	if _, ok := g.nodes[from]; !ok {
 		return fmt.Errorf("from node %s does not exist", from)
@@ -39,6 +40,7 @@ func (g *Graph) AddEdge(from, to node.ID, bidirectional bool) error {
 	return nil
 }
 
+// RemoveEdge removes the edge from -> to. If bidirectional is true, removes the reverse edge as well.
 func (g *Graph) RemoveEdge(from, to node.ID, bidirectional bool) error {
 	if _, ok := g.edges[from]; !ok {
 		return fmt.Errorf("no edges from node %s", from)
@@ -61,6 +63,7 @@ func (g *Graph) RemoveEdge(from, to node.ID, bidirectional bool) error {
 	return nil
 }
 
+// GetEdges returns the list of neighbors reachable from the given node id.
 func (g *Graph) GetEdges(id node.ID) []node.ID {
 	if edges, ok := g.edges[id]; ok {
 		var result []node.ID

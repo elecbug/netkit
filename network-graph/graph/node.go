@@ -6,6 +6,7 @@ import (
 	"github.com/elecbug/go-dspkg/network-graph/node"
 )
 
+// AddNode adds a node to the graph.
 func (g *Graph) AddNode(id node.ID) error {
 	if _, ok := g.nodes[id]; !ok {
 		g.nodes[id] = true
@@ -16,6 +17,7 @@ func (g *Graph) AddNode(id node.ID) error {
 	}
 }
 
+// RemoveNode removes a node and its incident edges from the graph.
 func (g *Graph) RemoveNode(id node.ID) error {
 	if _, ok := g.nodes[id]; !ok {
 		return fmt.Errorf("node %s does not exist", id)
@@ -31,6 +33,7 @@ func (g *Graph) RemoveNode(id node.ID) error {
 	return nil
 }
 
+// FindNode reports whether a node with the given id exists.
 func (g *Graph) FindNode(id node.ID) (bool, error) {
 	if _, ok := g.nodes[id]; ok {
 		return true, nil

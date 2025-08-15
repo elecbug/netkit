@@ -14,9 +14,9 @@ const (
 )
 
 // Bsearch performs a binary search on a sorted slice.
-// The compare function should return one of compare_type.TARGET_SMALL,
-// compare_type.EQUAL, or compare_type.TARGET_BIG for the probed element.
-// It returns the index i such that compare(slice[i]) == CompareType.EQUAL,
+// The compare function should return one of TARGET_SMALL, EQUAL, or TARGET_BIG
+// for the probed element. It returns the index i such that
+// compare(slice[i]) == EQUAL,
 // or -1 if no such element exists.
 func Bsearch[T any](slice []T, compare func(target T) CompareType) int {
 	left, right := 0, len(slice)-1

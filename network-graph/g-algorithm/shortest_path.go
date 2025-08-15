@@ -6,6 +6,8 @@ import (
 	"github.com/elecbug/go-dspkg/network-graph/path"
 )
 
+// ShortestPath computes a shortest path between start and end using BFS.
+// It returns an empty path when no path exists.
 func ShortestPath(graph *graph.Graph, start, end node.ID) path.Path {
 	if start == end {
 		return *path.NewPath(start)
