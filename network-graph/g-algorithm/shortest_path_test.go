@@ -13,7 +13,7 @@ import (
 
 func TestShortestPath(t *testing.T) {
 	// Create a sample graph
-	g := graph.New()
+	g := graph.New(true)
 
 	n1 := node.ID("1")
 	n2 := node.ID("2")
@@ -25,9 +25,9 @@ func TestShortestPath(t *testing.T) {
 	g.AddNode(n3)
 	g.AddNode(n4)
 
-	g.AddEdge(n1, n2, false)
-	g.AddEdge(n2, n3, false)
-	g.AddEdge(n4, n3, true)
+	g.AddEdge(n1, n2)
+	g.AddEdge(n2, n3)
+	g.AddEdge(n4, n3)
 
 	tests := []struct {
 		start   node.ID
@@ -50,4 +50,17 @@ func TestShortestPath(t *testing.T) {
 			}
 		})
 	}
+
+	t.Log("== All shortest paths ==")
+
+	for start, paths := range algo.AllShortestPaths(g, 16) {
+		for end, path := range paths {
+			t.Logf("  From %s to %s: %v", start, end, path)
+		}
+	}
+
+	t.Log("== Diameter ==")
+
+	p := algo.Diameter(g, 16)
+	t.Logf("  Diameter: %v", p)
 }

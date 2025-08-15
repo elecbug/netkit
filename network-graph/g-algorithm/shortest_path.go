@@ -1,6 +1,9 @@
 package g_algorithm
 
 import (
+	"runtime"
+	"sync"
+
 	"github.com/elecbug/go-dspkg/network-graph/graph"
 	"github.com/elecbug/go-dspkg/network-graph/node"
 	"github.com/elecbug/go-dspkg/network-graph/path"
@@ -8,7 +11,7 @@ import (
 
 // ShortestPath computes a shortest path between start and end using BFS.
 // It returns an empty path when no path exists.
-func ShortestPath(graph *graph.Graph, start, end node.ID) path.Path {
+func ShortestPath(g *graph.Graph, start, end node.ID) path.Path {
 	if start == end {
 		return *path.NewPath(start)
 	}
@@ -22,7 +25,7 @@ func ShortestPath(graph *graph.Graph, start, end node.ID) path.Path {
 		current := queue[0]
 		queue = queue[1:]
 
-		neighbors := graph.GetEdges(current)
+		neighbors := g.GetNeighbors(current)
 
 		for _, neighbor := range neighbors {
 			if !visited[neighbor] {
@@ -47,4 +50,93 @@ func ShortestPath(graph *graph.Graph, start, end node.ID) path.Path {
 	}
 
 	return *path.NewPath() // No path found
+}
+
+// AllShortestPathsConcurrent computes all-pairs shortest paths using a worker pool.
+// 'workers' <= 0 will fallback to runtime.NumCPU().
+func AllShortestPaths(g *graph.Graph, workers int) map[node.ID]map[node.ID]path.Path {
+	if workers <= 0 {
+		workers = runtime.NumCPU()
+	}
+
+	nodes := g.GetNodes()
+
+	// Prepare per-start row buckets with independent locks
+	rows := make(map[node.ID]*row, len(nodes))
+
+	for _, s := range nodes {
+		rows[s] = &row{m: make(map[node.ID]path.Path, len(nodes)-1)}
+	}
+
+	// Create job queue
+	jobs := make(chan pair, workers*2)
+
+	var wg sync.WaitGroup
+
+	// Worker goroutines
+	workerFn := func() {
+		defer wg.Done()
+		for job := range jobs {
+			// Compute the shortest path for (start, end)
+			p := ShortestPath(g, job.start, job.end)
+
+			// Write into the per-start row with minimal lock scope
+			rS := rows[job.start]
+			rS.mu.Lock()
+			rS.m[job.end] = p
+			rS.mu.Unlock()
+
+			if g.IsBidirectional() {
+				rE := rows[job.end]
+				rE.mu.Lock()
+				rE.m[job.start] = p
+				rE.mu.Unlock()
+			}
+		}
+	}
+
+	// Start workers
+	wg.Add(workers)
+
+	for i := 0; i < workers; i++ {
+		go workerFn()
+	}
+
+	// Enqueue all (start, end) pairs where start != end
+	for i, s := range nodes {
+		for j, e := range nodes {
+			if (g.IsBidirectional() && i > j) || i == j {
+				continue // Skip if bidirectional and i < j
+			}
+
+			jobs <- pair{start: s, end: e}
+		}
+	}
+
+	close(jobs)
+
+	// Wait for all jobs to finish
+	wg.Wait()
+
+	// Assemble final output (rows[*].m is already the desired inner map)
+	out := make(map[node.ID]map[node.ID]path.Path, len(rows))
+
+	for s, r := range rows {
+		out[s] = r.m
+	}
+
+	return out
+}
+
+// row is a per-start-node bucket with its own mutex.
+// It prevents concurrent writes to the inner map.
+type row struct {
+	mu sync.Mutex
+	m  map[node.ID]path.Path
+}
+
+// pair is a single job unit (start, end) to compute.
+type pair struct {
+	start node.ID
+	end   node.ID
 }
