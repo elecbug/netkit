@@ -41,3 +41,30 @@ func (g *Graph) FindNode(id node.ID) (bool, error) {
 
 	return false, fmt.Errorf("node %s does not exist", id)
 }
+
+func (g *Graph) GetNodes() []node.ID {
+	var nodes []node.ID
+
+	for id := range g.nodes {
+		nodes = append(nodes, id)
+	}
+
+	return nodes
+}
+
+// GetNeighbors returns the list of neighbors reachable from the given node id.
+func (g *Graph) GetNeighbors(id node.ID) []node.ID {
+	if edges, ok := g.edges[id]; ok {
+		var result []node.ID
+
+		for to, v := range edges {
+			if v {
+				result = append(result, to)
+			}
+		}
+
+		return result
+	}
+
+	return nil
+}

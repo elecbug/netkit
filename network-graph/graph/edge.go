@@ -7,7 +7,7 @@ import (
 )
 
 // AddEdge adds an edge from -> to. If bidirectional is true, adds the reverse edge as well.
-func (g *Graph) AddEdge(from, to node.ID, bidirectional bool) error {
+func (g *Graph) AddEdge(from, to node.ID) error {
 	if _, ok := g.nodes[from]; !ok {
 		return fmt.Errorf("from node %s does not exist", from)
 	}
@@ -25,7 +25,7 @@ func (g *Graph) AddEdge(from, to node.ID, bidirectional bool) error {
 
 	g.edges[from][to] = true
 
-	if bidirectional {
+	if g.bidirectional {
 		if _, ok := g.edges[to]; !ok {
 			g.edges[to] = make(map[node.ID]bool)
 		}
@@ -41,7 +41,7 @@ func (g *Graph) AddEdge(from, to node.ID, bidirectional bool) error {
 }
 
 // RemoveEdge removes the edge from -> to. If bidirectional is true, removes the reverse edge as well.
-func (g *Graph) RemoveEdge(from, to node.ID, bidirectional bool) error {
+func (g *Graph) RemoveEdge(from, to node.ID) error {
 	if _, ok := g.edges[from]; !ok {
 		return fmt.Errorf("no edges from node %s", from)
 	}
@@ -52,7 +52,7 @@ func (g *Graph) RemoveEdge(from, to node.ID, bidirectional bool) error {
 
 	delete(g.edges[from], to)
 
-	if bidirectional {
+	if g.bidirectional {
 		if _, ok := g.edges[to]; !ok {
 			g.edges[to] = make(map[node.ID]bool)
 		}
@@ -63,19 +63,10 @@ func (g *Graph) RemoveEdge(from, to node.ID, bidirectional bool) error {
 	return nil
 }
 
-// GetEdges returns the list of neighbors reachable from the given node id.
-func (g *Graph) GetEdges(id node.ID) []node.ID {
-	if edges, ok := g.edges[id]; ok {
-		var result []node.ID
-
-		for to, v := range edges {
-			if v {
-				result = append(result, to)
-			}
-		}
-
-		return result
+func (g *Graph) HasEdge(from, to node.ID) bool {
+	if edges, ok := g.edges[from]; ok {
+		return edges[to]
 	}
 
-	return nil
+	return false
 }

@@ -19,3 +19,18 @@ func NewPath(nodes ...node.ID) *Path {
 		nodes:    nodes,
 	}
 }
+
+// IsInfinite reports whether the path is infinite (unreachable).
+func (p *Path) IsInfinite() bool {
+	return p.isInf
+}
+
+// GetDistance returns the hop distance of the path.
+func (p *Path) GetDistance() int {
+	return p.distance
+}
+
+// GetNodes returns the node IDs in the path.
+func (p *Path) GetNodes() []node.ID {
+	return p.nodes
+}

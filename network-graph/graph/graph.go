@@ -2,19 +2,37 @@
 package graph
 
 import (
+	"crypto/sha256"
+	"fmt"
+
 	"github.com/elecbug/go-dspkg/network-graph/node"
 )
 
 // Graph maintains nodes and adjacency edges.
 type Graph struct {
-	nodes map[node.ID]bool
-	edges map[node.ID]map[node.ID]bool
+	nodes         map[node.ID]bool
+	edges         map[node.ID]map[node.ID]bool
+	bidirectional bool
 }
 
 // New creates and returns an empty Graph.
-func New() *Graph {
+func New(bidirectional bool) *Graph {
 	return &Graph{
-		nodes: make(map[node.ID]bool),
-		edges: make(map[node.ID]map[node.ID]bool),
+		nodes:         make(map[node.ID]bool),
+		edges:         make(map[node.ID]map[node.ID]bool),
+		bidirectional: bidirectional,
 	}
+}
+
+func (g *Graph) IsBidirectional() bool {
+	return g.bidirectional
+}
+
+func (g *Graph) Hash() string {
+	h := sha256.New()
+
+	h.Write([]byte(fmt.Sprintf("%v", g.nodes)))
+	h.Write([]byte(fmt.Sprintf("%v", g.edges)))
+
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
