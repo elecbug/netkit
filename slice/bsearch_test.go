@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/elecbug/go-dspkg/slice"
-	"github.com/elecbug/go-dspkg/slice/compare_type"
 )
 
 func TestBsearch(t *testing.T) {
@@ -14,13 +13,13 @@ func TestBsearch(t *testing.T) {
 		arr[i] = i * 2
 	}
 
-	idx := slice.Bsearch(arr, func(target int) int {
+	idx := slice.Bsearch(arr, func(target int) slice.CompareType {
 		if target == 123456 {
-			return compare_type.EQUAL
+			return slice.EQUAL
 		} else if target < 123456 {
-			return compare_type.TARGET_SMALL
+			return slice.TARGET_SMALL
 		} else {
-			return compare_type.TARGET_BIG
+			return slice.TARGET_BIG
 		}
 	})
 
@@ -30,13 +29,13 @@ func TestBsearch(t *testing.T) {
 		t.Logf("Do not find: %d", idx)
 	}
 
-	idx = slice.Bsearch(arr, func(target int) int {
+	idx = slice.Bsearch(arr, func(target int) slice.CompareType {
 		if target == 123457 {
-			return compare_type.EQUAL
+			return slice.EQUAL
 		} else if target < 123457 {
-			return compare_type.TARGET_SMALL
+			return slice.TARGET_SMALL
 		} else {
-			return compare_type.TARGET_BIG
+			return slice.TARGET_BIG
 		}
 	})
 
@@ -46,13 +45,13 @@ func TestBsearch(t *testing.T) {
 		t.Logf("Do not find: %d", idx)
 	}
 
-	idx = slice.Bsearch(arr, func(target int) int {
+	idx = slice.Bsearch(arr, func(target int) slice.CompareType {
 		if target == -1 {
-			return compare_type.EQUAL
+			return slice.EQUAL
 		} else if target < -1 {
-			return compare_type.TARGET_SMALL
+			return slice.TARGET_SMALL
 		} else {
-			return compare_type.TARGET_BIG
+			return slice.TARGET_BIG
 		}
 	})
 
@@ -62,13 +61,13 @@ func TestBsearch(t *testing.T) {
 		t.Logf("Do not find: %d", idx)
 	}
 
-	idx = slice.Bsearch(arr, func(target int) int {
+	idx = slice.Bsearch(arr, func(target int) slice.CompareType {
 		if target == 10000000 {
-			return compare_type.EQUAL
+			return slice.EQUAL
 		} else if target < 10000000 {
-			return compare_type.TARGET_SMALL
+			return slice.TARGET_SMALL
 		} else {
-			return compare_type.TARGET_BIG
+			return slice.TARGET_BIG
 		}
 	})
 

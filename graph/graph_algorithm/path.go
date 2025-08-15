@@ -1,3 +1,5 @@
+// Package graph_algorithm provides graph algorithms and analysis utilities
+// built on top of the graph package.
 package graph_algorithm
 
 import (

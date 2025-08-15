@@ -8,7 +8,7 @@ import (
 	"github.com/elecbug/go-dspkg/graph/graph_type"
 )
 
-// `BetweennessCentrality` computes the betweenness centrality of each node in the graph for a `Unit`.
+// BetweennessCentrality computes the betweenness centrality of each node for a Unit.
 // Betweenness centrality measures how often a node appears on the shortest paths between pairs of other nodes.
 func (u *Unit) BetweennessCentrality() map[graph.NodeID]float64 {
 	g := u.graph
@@ -47,7 +47,7 @@ func (u *Unit) BetweennessCentrality() map[graph.NodeID]float64 {
 	return centrality
 }
 
-// `BetweennessCentrality` computes the betweenness centrality of each node in the graph for a `ParallelUnit`.
+// BetweennessCentrality computes the betweenness centrality of each node for a ParallelUnit.
 // The computation is performed in parallel for better performance on larger graphs.
 func (pu *ParallelUnit) BetweennessCentrality() map[graph.NodeID]float64 {
 	g := pu.graph
@@ -111,7 +111,7 @@ func (pu *ParallelUnit) BetweennessCentrality() map[graph.NodeID]float64 {
 	return centrality
 }
 
-// `DegreeCentrality` computes the degree centrality of each node in the graph for a `Unit`.
+// DegreeCentrality computes the degree centrality of each node for a Unit.
 // Degree centrality is the number of direct connections a node has to other nodes.
 func (u *Unit) DegreeCentrality() map[graph.NodeID]float64 {
 	g := u.graph
@@ -149,7 +149,7 @@ func (u *Unit) DegreeCentrality() map[graph.NodeID]float64 {
 	return centrality
 }
 
-// `DegreeCentrality` computes the degree centrality of each node in the graph for a `ParallelUnit`.
+// DegreeCentrality computes the degree centrality of each node for a ParallelUnit.
 // The computation is performed in parallel for better performance on larger graphs.
 func (pu *ParallelUnit) DegreeCentrality() map[graph.NodeID]float64 {
 	g := pu.graph
@@ -209,7 +209,7 @@ func (pu *ParallelUnit) DegreeCentrality() map[graph.NodeID]float64 {
 	return centrality
 }
 
-// `EigenvectorCentrality` computes the eigenvector centrality of each node in the graph for a `Unit`.
+// EigenvectorCentrality computes the eigenvector centrality of each node for a Unit.
 // Eigenvector centrality assigns scores to nodes based on the importance of their neighbors.
 func (u *Unit) EigenvectorCentrality(maxIter int, tol float64) map[graph.NodeID]float64 {
 	g := u.graph
@@ -267,7 +267,7 @@ func (u *Unit) EigenvectorCentrality(maxIter int, tol float64) map[graph.NodeID]
 	return result
 }
 
-// `EigenvectorCentrality` computes the eigenvector centrality of each node in the graph for a `ParallelUnit`.
+// EigenvectorCentrality computes the eigenvector centrality of each node for a ParallelUnit.
 // The computation is performed in parallel for better performance on larger graphs.
 func (pu *ParallelUnit) EigenvectorCentrality(maxIter int, tol float64) map[graph.NodeID]float64 {
 	g := pu.graph

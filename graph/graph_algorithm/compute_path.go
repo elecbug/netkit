@@ -8,7 +8,7 @@ import (
 	"github.com/elecbug/go-dspkg/graph/graph_type"
 )
 
-// `computePaths` calculates all shortest paths between every pair of nodes in the graph for a `Unit`.
+// computePaths calculates all shortest paths between every pair of nodes in the graph for a Unit.
 func (u *Unit) computePaths() {
 	u.shortestPaths = []Path{}
 	list := u.graph.AliveNodes()
@@ -29,7 +29,7 @@ func (u *Unit) computePaths() {
 	u.updateVersion = u.graph.Version()
 }
 
-// `computePaths` calculates all shortest paths in parallel for a `ParallelUnit`.
+// computePaths calculates all shortest paths in parallel for a ParallelUnit.
 func (pu *ParallelUnit) computePaths() {
 	pu.shortestPaths = []Path{}
 	list := pu.graph.AliveNodes()
@@ -91,7 +91,7 @@ func (pu *ParallelUnit) computePaths() {
 	pu.updateVersion = pu.graph.Version()
 }
 
-// `computeAllShortestPathsFrom` computes all shortest paths from a single `start` node to all other nodes.
+// computeAllShortestPathsFrom computes all shortest paths from a single start node to all other nodes.
 func computeAllShortestPathsFrom(matrix graph.Matrix, start graph.NodeID, weighted bool) map[graph.NodeID]*Path {
 	n := len(matrix)
 	dist := make([]graph.Distance, n)
