@@ -85,8 +85,10 @@ def compute_metrics(G: nx.Graph, is_bidirectional: bool):
     all_shortest_path_length = dict(nx.all_pairs_shortest_path_length(G))
     metrics["average_shortest_path_length"] = all_shortest_path_length
     metrics["clustering_coefficient"] = nx.clustering(G)
-    metrics["betweenness_centrality"] = nx.betweenness_centrality(G, normalized=True, endpoints=False)
-    
+    metrics["betweenness_centrality"] = nx.betweenness_centrality(G)
+    # metrics["degree_centrality"] = nx.degree_centrality(G)
+    # metrics["closeness_centrality"] = nx.closeness_centrality(G)
+
     return metrics
 
 def to_jsonable(d):
