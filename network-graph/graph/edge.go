@@ -63,10 +63,22 @@ func (g *Graph) RemoveEdge(from, to node.ID) error {
 	return nil
 }
 
+// HasEdge checks if an edge exists from -> to.
 func (g *Graph) HasEdge(from, to node.ID) bool {
 	if edges, ok := g.edges[from]; ok {
 		return edges[to]
 	}
 
 	return false
+}
+
+// EdgeCount returns the number of edges in the graph.
+func (g *Graph) EdgeCount() int {
+	count := 0
+
+	for _, edges := range g.edges {
+		count += len(edges)
+	}
+
+	return count
 }

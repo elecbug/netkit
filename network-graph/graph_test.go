@@ -113,6 +113,10 @@ func TestGraph(t *testing.T) {
 		t.Logf("Average Eigenvector Centrality: %+v\n", algo.ToGlobal(g, algo.EigenvectorCentrality, &algo.Config{Workers: 16}))
 	})
 
+	t.Run("Local Efficiency", func(t *testing.T) {
+		t.Logf("Average Local Efficiency: %+v\n", algo.ToGlobal(g, algo.LocalEfficiency, &algo.Config{Workers: 16}))
+	})
+
 	t.Run("Rich Club Coefficient", func(t *testing.T) {
 		t.Logf("Average Rich Club Coefficient: %+v\n", algo.ToGlobal(g, algo.RichClubCoefficient, &algo.Config{Workers: 16}))
 	})
