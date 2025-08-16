@@ -11,6 +11,10 @@ func Diameter(g *graph.Graph, config *Config) int {
 
 	for _, v := range paths {
 		for _, ps := range v {
+			if len(ps) == 0 {
+				continue
+			}
+
 			if ps[0].GetDistance() > result {
 				result = ps[0].GetDistance()
 			}
