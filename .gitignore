@@ -26,3 +26,5 @@ go.work.sum
 
 # log file
 log
+
+*.log

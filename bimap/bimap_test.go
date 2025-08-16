@@ -9,9 +9,9 @@ import (
 func TestBimap(t *testing.T) {
 	bimap := bimap.New[string, int]()
 
-	bimap.Set("Apple", 5)
-	bimap.Set("Banana", 4)
-	bimap.Set("Orange", 3)
+	bimap.Insert("Apple", 5)
+	bimap.Insert("Banana", 4)
+	bimap.Insert("Orange", 3)
 
 	if apple, ok := bimap.GetByKey("Apple"); ok {
 		t.Logf(`bimap.GetByKey("Apple") is `+"%d", apple)
@@ -25,7 +25,7 @@ func TestBimap(t *testing.T) {
 		t.Logf("Do not find {?, 4}")
 	}
 
-	bimap.Set("Cake", 4)
+	bimap.Insert("Cake", 4)
 
 	if banana, ok := bimap.GetByKey("Banana"); ok {
 		t.Logf(`bimap.GetByKey("Banana") is `+"%d", banana)
@@ -53,5 +53,5 @@ func TestBimap(t *testing.T) {
 		t.Logf("Do not find {\"Orange\", ?}")
 	}
 
-	t.Logf("bimap to list: %v", bimap.ToList())
+	t.Logf("bimap to list: %v", bimap.Pairs())
 }

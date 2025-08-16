@@ -9,58 +9,56 @@ import (
 	"github.com/elecbug/go-dspkg/network-graph/path"
 )
 
-// ShortestPath computes a shortest path between start and end using BFS.
-// It returns an empty path when no path exists.
-func ShortestPath(g *graph.Graph, start, end node.ID) path.Path {
-	if v, ok := cachedPaths[g.Hash()]; ok {
-		return v[start][end]
-	}
+// ShortestPaths finds all shortest paths between two nodes in a graph.
+func ShortestPaths(g *graph.Graph, start, end node.ID) []path.Path {
+	gh := g.Hash()
 
-	if start == end {
-		return *path.NewPath(start)
-	}
+	cacheMu.RLock()
 
-	queue := []node.ID{start}
-	visited := make(map[node.ID]bool)
-	parent := make(map[node.ID]node.ID)
-	visited[start] = true
-
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
-
-		neighbors := g.GetNeighbors(current)
-
-		for _, neighbor := range neighbors {
-			if !visited[neighbor] {
-				visited[neighbor] = true
-				parent[neighbor] = current
-				queue = append(queue, neighbor)
-
-				if neighbor == end {
-					// Reconstruct path
-					p := []node.ID{}
-
-					for n := end; n != start; n = parent[n] {
-						p = append([]node.ID{n}, p...)
-					}
-
-					p = append([]node.ID{start}, p...)
-
-					return *path.NewPath(p...)
-				}
+	if byStart, ok := cachedAllShortestPaths[gh]; ok {
+		if byEnd, ok2 := byStart[start]; ok2 {
+			if paths, ok3 := byEnd[end]; ok3 {
+				cacheMu.RUnlock()
+				return paths
 			}
 		}
 	}
 
-	return *path.NewPath() // No path found
+	cacheMu.RUnlock()
+
+	res := allShortestPathsBFS(g, start, end)
+
+	cacheMu.Lock()
+
+	if _, ok := cachedAllShortestPaths[gh]; !ok {
+		cachedAllShortestPaths[gh] = make(map[node.ID]map[node.ID][]path.Path)
+	}
+
+	if _, ok := cachedAllShortestPaths[gh][start]; !ok {
+		cachedAllShortestPaths[gh][start] = make(map[node.ID][]path.Path)
+	}
+
+	if _, exists := cachedAllShortestPaths[gh][start][end]; !exists {
+		cachedAllShortestPaths[gh][start][end] = res
+	}
+
+	cacheMu.Unlock()
+
+	return res
 }
 
-// AllShortestPathsConcurrent computes all-pairs shortest paths using a worker pool.
-func AllShortestPaths(g *graph.Graph, config *Config) map[node.ID]map[node.ID]path.Path {
-	if v, ok := cachedPaths[g.Hash()]; ok {
+// AllShortestPaths finds all shortest paths between all pairs of nodes in a graph.
+func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
+	gh := g.Hash()
+
+	cacheMu.RLock()
+
+	if v, ok := cachedAllShortestPaths[gh]; ok {
+		cacheMu.RUnlock()
 		return v
 	}
+
+	cacheMu.RUnlock()
 
 	if config == nil {
 		config = &Config{}
@@ -72,34 +70,32 @@ func AllShortestPaths(g *graph.Graph, config *Config) map[node.ID]map[node.ID]pa
 		workers = runtime.NumCPU()
 	}
 
-	nodes := g.GetNodes()
+	nodes := g.Nodes()
+	n := len(nodes)
 
-	// Prepare per-start row buckets with independent locks
-	rows := make(map[node.ID]*row, len(nodes))
+	rows := make(map[node.ID]*row, n)
 
 	for _, s := range nodes {
-		rows[s] = &row{m: make(map[node.ID]path.Path, len(nodes)-1)}
+		rows[s] = &row{m: make(map[node.ID][]path.Path, n-1)}
 	}
 
-	// Create job queue
 	jobs := make(chan pair, workers*2)
 
 	var wg sync.WaitGroup
+	isUndirected := g.IsBidirectional()
 
-	// Worker goroutines
 	workerFn := func() {
 		defer wg.Done()
 		for job := range jobs {
-			// Compute the shortest path for (start, end)
-			p := ShortestPath(g, job.start, job.end)
 
-			// Write into the per-start row with minimal lock scope
+			p := allShortestPathsBFS(g, job.start, job.end)
+
 			rS := rows[job.start]
 			rS.mu.Lock()
 			rS.m[job.end] = p
 			rS.mu.Unlock()
 
-			if g.IsBidirectional() {
+			if isUndirected {
 				rE := rows[job.end]
 				rE.mu.Lock()
 				rE.m[job.start] = p
@@ -108,49 +104,126 @@ func AllShortestPaths(g *graph.Graph, config *Config) map[node.ID]map[node.ID]pa
 		}
 	}
 
-	// Start workers
 	wg.Add(workers)
 
 	for i := 0; i < workers; i++ {
 		go workerFn()
 	}
 
-	// Enqueue all (start, end) pairs where start != end
 	for i, s := range nodes {
 		for j, e := range nodes {
-			if (g.IsBidirectional() && i > j) || i == j {
-				continue // Skip if bidirectional and i < j
+			if i == j {
+				continue
 			}
 
+			if isUndirected && i > j {
+
+				continue
+			}
 			jobs <- pair{start: s, end: e}
 		}
 	}
 
 	close(jobs)
 
-	// Wait for all jobs to finish
 	wg.Wait()
 
-	// Assemble final output (rows[*].m is already the desired inner map)
-	out := make(map[node.ID]map[node.ID]path.Path, len(rows))
+	out := make(path.GraphPaths, len(rows))
 
 	for s, r := range rows {
 		out[s] = r.m
 	}
 
-	cachedPaths[g.Hash()] = out
+	cacheMu.Lock()
+	cachedAllShortestPaths[gh] = out
+	cacheMu.Unlock()
 
 	return out
 }
 
-// row is a per-start-node bucket with its own mutex.
-// It prevents concurrent writes to the inner map.
-type row struct {
-	mu sync.Mutex
-	m  map[node.ID]path.Path
+// allShortestPathsBFS finds all shortest paths between two nodes in a graph using BFS.
+func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
+	if start == end {
+		return []path.Path{*path.NewPath(start)}
+	}
+
+	queue := []node.ID{start}
+	dist := make(map[node.ID]int)
+	dist[start] = 0
+	preds := make(map[node.ID][]node.ID)
+	targetDist := -1
+
+	for len(queue) > 0 {
+		v := queue[0]
+		queue = queue[1:]
+
+		if targetDist >= 0 && dist[v] >= targetDist {
+			continue
+		}
+
+		for _, w := range g.Neighbors(v) {
+			_, seen := dist[w]
+
+			if !seen {
+				dist[w] = dist[v] + 1
+				preds[w] = append(preds[w], v)
+				queue = append(queue, w)
+
+				if w == end {
+					targetDist = dist[w]
+				}
+				continue
+			}
+
+			if dist[w] == dist[v]+1 {
+				preds[w] = append(preds[w], v)
+			}
+		}
+	}
+
+	if targetDist < 0 {
+		return []path.Path{}
+	}
+
+	var all [][]node.ID
+	cur := []node.ID{end}
+
+	var dfs func(u node.ID)
+	dfs = func(u node.ID) {
+		if u == start {
+			seq := make([]node.ID, len(cur))
+
+			for i := range cur {
+				seq[i] = cur[len(cur)-1-i]
+			}
+
+			all = append(all, seq)
+
+			return
+		}
+
+		for _, p := range preds[u] {
+			cur = append(cur, p)
+			dfs(p)
+			cur = cur[:len(cur)-1]
+		}
+	}
+
+	dfs(end)
+
+	res := make([]path.Path, 0, len(all))
+
+	for _, seq := range all {
+		res = append(res, *path.NewPath(seq...))
+	}
+	return res
 }
 
-// pair is a single job unit (start, end) to compute.
+type row struct {
+	mu sync.Mutex
+	m  map[node.ID][]path.Path
+}
+
 type pair struct {
 	start node.ID
 	end   node.ID
