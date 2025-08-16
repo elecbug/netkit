@@ -13,6 +13,7 @@ func BetweennessCentrality(g *graph.Graph, id node.ID, config *Config) float64 {
 
 	betweenness := 0.0
 	nodes := g.GetNodes()
+	paths := AllShortestPaths(g, config) // Assuming single-threaded for simplicity
 
 	for _, s := range nodes {
 		if s == id {
@@ -24,7 +25,6 @@ func BetweennessCentrality(g *graph.Graph, id node.ID, config *Config) float64 {
 				continue // Skip if it's the same node or the source node
 			}
 
-			paths := AllShortestPaths(g, config) // Assuming single-threaded for simplicity
 			p := paths[s][e]
 
 			for _, node := range p.GetNodes() {

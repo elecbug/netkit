@@ -1,8 +1,10 @@
-package g_algorithm_test
+package network_graph_test
 
 import (
 	"fmt"
+	"io/fs"
 	"math/rand"
+	"os"
 	"reflect"
 	"testing"
 
@@ -51,19 +53,6 @@ func TestSimple(t *testing.T) {
 			}
 		})
 	}
-
-	// t.Log("== All shortest paths ==")
-
-	// for start, paths := range algo.AllShortestPaths(g, &algo.Config{Workers: 16}) {
-	// 	for end, path := range paths {
-	// 		t.Logf("  From %s to %s: %v", start, end, path)
-	// 	}
-	// }
-
-	// t.Log("== Diameter ==")
-
-	// p := algo.Diameter(g, &algo.Config{Workers: 16})
-	// t.Logf("  Diameter: %v", p)
 }
 
 func TestGraph(t *testing.T) {
@@ -77,18 +66,54 @@ func TestGraph(t *testing.T) {
 		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(100))), node.ID(fmt.Sprintf("%d", rand.Intn(100))))
 	}
 
+	str, err := graph.Save(g)
+
+	if err != nil {
+		t.Fatalf("Failed to save graph: %v", err)
+	}
+
+	os.WriteFile("log", []byte(str), fs.ModePerm)
+
+	g2, err := graph.Load(str)
+
+	if err != nil {
+		t.Fatalf("Failed to load graph: %v", err)
+	}
+
+	if !reflect.DeepEqual(g, g2) {
+		t.Errorf("Loaded graph is not equal to original graph")
+	}
+
 	t.Run("AllShortestPaths-First", func(t *testing.T) {
 		sps := algo.AllShortestPaths(g, &algo.Config{Workers: 16})
-		t.Logf("Path 0 to 99: %v\n", sps["0"]["99"])
-		t.Logf("Diameter: %v\n", algo.Diameter(g, &algo.Config{Workers: 16}))
-		t.Logf("Average Clustering Coefficient: %v\n", algo.AverageMetric(g, algo.ClusteringCoefficient, &algo.Config{Workers: 16}))
+		t.Logf("Path 0 to 99: %+v\n", sps["0"]["99"])
 	})
 
 	t.Run("AllShortestPaths-Cached", func(t *testing.T) {
-		sps := algo.AllShortestPaths(g, &algo.Config{Workers: 16})
-		t.Logf("Path 0 to 99: %v\n", sps["0"]["99"])
-		t.Logf("Diameter: %v\n", algo.Diameter(g, &algo.Config{Workers: 16}))
-		t.Logf("Average Clustering Coefficient: %v\n", algo.AverageMetric(g, algo.ClusteringCoefficient, &algo.Config{Workers: 16}))
+		algo.AllShortestPaths(g, &algo.Config{Workers: 16})
 	})
 
+	t.Run("Betweenness Centrality", func(t *testing.T) {
+		t.Logf("Average Betweenness Centrality: %+v\n", algo.ToGlobal(g, algo.BetweennessCentrality, &algo.Config{Workers: 16}))
+	})
+
+	t.Run("Clustering Coefficient", func(t *testing.T) {
+		t.Logf("Average Clustering Coefficient: %+v\n", algo.ToGlobal(g, algo.ClusteringCoefficient, &algo.Config{Workers: 16}))
+	})
+
+	t.Run("Degree Centrality", func(t *testing.T) {
+		t.Logf("Average Degree Centrality: %+v\n", algo.ToGlobal(g, algo.DegreeCentrality, &algo.Config{Workers: 16}))
+	})
+
+	t.Run("Diameter", func(t *testing.T) {
+		t.Logf("Diameter: %+v\n", algo.Diameter(g, &algo.Config{Workers: 16}))
+	})
+
+	t.Run("Eigenvector Centrality", func(t *testing.T) {
+		t.Logf("Average Eigenvector Centrality: %+v\n", algo.ToGlobal(g, algo.EigenvectorCentrality, &algo.Config{Workers: 16}))
+	})
+
+	t.Run("Rich Club Coefficient", func(t *testing.T) {
+		t.Logf("Average Rich Club Coefficient: %+v\n", algo.ToGlobal(g, algo.RichClubCoefficient, &algo.Config{Workers: 16}))
+	})
 }

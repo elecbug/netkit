@@ -22,10 +22,10 @@ func New[T1 comparable, T2 comparable]() *Bimap[T1, T2] {
 	}
 }
 
-// Set inserts or updates a key/value pair.
+// Insert inserts or updates a key/value pair.
 // If the key or the value already exists, the previous association is removed
 // so that keys and values remain unique.
-func (b *Bimap[T1, T2]) Set(key T1, value T2) {
+func (b *Bimap[T1, T2]) Insert(key T1, value T2) {
 	if oldVal, ok := b.forward[key]; ok {
 		delete(b.reverse, oldVal)
 	}
@@ -75,8 +75,8 @@ func (b *Bimap[T1, T2]) RemoveByValue(value T2) bool {
 	}
 }
 
-// ToList returns all pairs in the map as a slice.
-func (b Bimap[T1, T2]) ToList() []Pair[T1, T2] {
+// Pairs returns all pairs in the map as a slice.
+func (b Bimap[T1, T2]) Pairs() []Pair[T1, T2] {
 	result := make([]Pair[T1, T2], len(b.forward))
 	i := 0
 

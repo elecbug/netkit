@@ -33,13 +33,13 @@ func (g *Graph) RemoveNode(id node.ID) error {
 	return nil
 }
 
-// FindNode reports whether a node with the given id exists.
-func (g *Graph) FindNode(id node.ID) (bool, error) {
+// HasNode reports whether a node with the given id exists.
+func (g *Graph) HasNode(id node.ID) bool {
 	if _, ok := g.nodes[id]; ok {
-		return true, nil
+		return true
+	} else {
+		return false
 	}
-
-	return false, fmt.Errorf("node %s does not exist", id)
 }
 
 func (g *Graph) GetNodes() []node.ID {

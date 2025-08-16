@@ -57,7 +57,7 @@ func ShortestPath(g *graph.Graph, start, end node.ID) path.Path {
 }
 
 // AllShortestPathsConcurrent computes all-pairs shortest paths using a worker pool.
-func AllShortestPaths(g *graph.Graph, config *Config) map[node.ID]map[node.ID]path.Path {
+func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
 	if v, ok := cachedPaths[g.Hash()]; ok {
 		return v
 	}
@@ -132,7 +132,7 @@ func AllShortestPaths(g *graph.Graph, config *Config) map[node.ID]map[node.ID]pa
 	wg.Wait()
 
 	// Assemble final output (rows[*].m is already the desired inner map)
-	out := make(map[node.ID]map[node.ID]path.Path, len(rows))
+	out := make(path.GraphPaths, len(rows))
 
 	for s, r := range rows {
 		out[s] = r.m
