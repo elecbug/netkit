@@ -42,7 +42,8 @@ func (g *Graph) HasNode(id node.ID) bool {
 	}
 }
 
-func (g *Graph) GetNodes() []node.ID {
+// Nodes returns a slice of all node IDs in the graph.
+func (g *Graph) Nodes() []node.ID {
 	var nodes []node.ID
 
 	for id := range g.nodes {
@@ -52,8 +53,8 @@ func (g *Graph) GetNodes() []node.ID {
 	return nodes
 }
 
-// GetNeighbors returns the list of neighbors reachable from the given node id.
-func (g *Graph) GetNeighbors(id node.ID) []node.ID {
+// Neighbors returns the list of neighbors reachable from the given node id.
+func (g *Graph) Neighbors(id node.ID) []node.ID {
 	if edges, ok := g.edges[id]; ok {
 		var result []node.ID
 

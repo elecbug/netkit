@@ -13,7 +13,7 @@ type Path struct {
 }
 
 // GraphPaths is a mapping of start node IDs to end node IDs and their corresponding paths.
-type GraphPaths map[node.ID]map[node.ID]Path
+type GraphPaths map[node.ID]map[node.ID][]Path
 
 // NewPath constructs a Path from the given nodes. Distance is hops (edges).
 // If no nodes are provided, the path is considered infinite (unreachable).

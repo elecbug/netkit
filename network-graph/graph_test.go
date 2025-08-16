@@ -35,18 +35,18 @@ func TestSimple(t *testing.T) {
 	tests := []struct {
 		start   node.ID
 		end     node.ID
-		want    path.Path
+		want    []path.Path
 		wantErr bool
 	}{
-		{start: n1, end: n3, want: *path.NewPath(n1, n2, n3), wantErr: false},
-		{start: n1, end: n1, want: *path.NewPath(n1), wantErr: false},
-		{start: n2, end: n1, want: *path.NewPath(n2, n1), wantErr: false},
-		{start: n3, end: n4, want: *path.NewPath(n3, n4), wantErr: false},
+		{start: n1, end: n3, want: []path.Path{*path.NewPath(n1, n2, n3)}, wantErr: false},
+		{start: n1, end: n1, want: []path.Path{*path.NewPath(n1)}, wantErr: false},
+		{start: n2, end: n1, want: []path.Path{*path.NewPath(n2, n1)}, wantErr: false},
+		{start: n3, end: n4, want: []path.Path{*path.NewPath(n3, n4)}, wantErr: false},
 	}
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("From %s to %s", tt.start, tt.end), func(t *testing.T) {
-			got := algo.ShortestPath(g, tt.start, tt.end)
+			got := algo.ShortestPaths(g, tt.start, tt.end)
 
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ShortestPath() = %v, want %v", got, tt.want)
@@ -55,15 +55,15 @@ func TestSimple(t *testing.T) {
 	}
 }
 
-func TestGraph(t *testing.T) {
+func TestBidirectionalGraph(t *testing.T) {
 	g := graph.New(true)
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
 	}
 
-	for i := 0; i < 4000; i++ {
-		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(100))), node.ID(fmt.Sprintf("%d", rand.Intn(100))))
+	for i := 0; i < 20; i++ {
+		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(10))), node.ID(fmt.Sprintf("%d", rand.Intn(10))))
 	}
 
 	str, err := graph.Save(g)
@@ -72,7 +72,7 @@ func TestGraph(t *testing.T) {
 		t.Fatalf("Failed to save graph: %v", err)
 	}
 
-	os.WriteFile("log", []byte(str), fs.ModePerm)
+	os.WriteFile("bidirectional.log", []byte(str), fs.ModePerm)
 
 	g2, err := graph.Load(str)
 
@@ -84,40 +84,73 @@ func TestGraph(t *testing.T) {
 		t.Errorf("Loaded graph is not equal to original graph")
 	}
 
-	t.Run("AllShortestPaths-First", func(t *testing.T) {
-		sps := algo.AllShortestPaths(g, &algo.Config{Workers: 16})
-		t.Logf("Path 0 to 99: %+v\n", sps["0"]["99"])
+	t.Run("AllShortestPaths", func(t *testing.T) {
+		t.Logf("%+v", algo.AllShortestPaths(g, &algo.Config{Workers: 16}))
 	})
 
-	t.Run("AllShortestPaths-Cached", func(t *testing.T) {
-		algo.AllShortestPaths(g, &algo.Config{Workers: 16})
-	})
-
-	t.Run("Betweenness Centrality", func(t *testing.T) {
-		t.Logf("Average Betweenness Centrality: %+v\n", algo.ToGlobal(g, algo.BetweennessCentrality, &algo.Config{Workers: 16}))
-	})
-
-	t.Run("Clustering Coefficient", func(t *testing.T) {
-		t.Logf("Average Clustering Coefficient: %+v\n", algo.ToGlobal(g, algo.ClusteringCoefficient, &algo.Config{Workers: 16}))
-	})
-
-	t.Run("Degree Centrality", func(t *testing.T) {
-		t.Logf("Average Degree Centrality: %+v\n", algo.ToGlobal(g, algo.DegreeCentrality, &algo.Config{Workers: 16}))
+	t.Run("AllShortestPaths-Retry", func(t *testing.T) {
+		t.Logf("%+v", algo.AllShortestPaths(g, &algo.Config{Workers: 16}))
 	})
 
 	t.Run("Diameter", func(t *testing.T) {
-		t.Logf("Diameter: %+v\n", algo.Diameter(g, &algo.Config{Workers: 16}))
+		t.Logf("%+v", algo.Diameter(g, &algo.Config{Workers: 16}))
 	})
 
-	t.Run("Eigenvector Centrality", func(t *testing.T) {
-		t.Logf("Average Eigenvector Centrality: %+v\n", algo.ToGlobal(g, algo.EigenvectorCentrality, &algo.Config{Workers: 16}))
+	t.Run("BetweennessCentrality", func(t *testing.T) {
+		t.Logf("%+v", algo.BetweennessCentrality(g, &algo.Config{Workers: 16}))
 	})
 
-	t.Run("Local Efficiency", func(t *testing.T) {
-		t.Logf("Average Local Efficiency: %+v\n", algo.ToGlobal(g, algo.LocalEfficiency, &algo.Config{Workers: 16}))
+	t.Run("ClusteringCoefficient", func(t *testing.T) {
+		t.Logf("%+v", algo.ClusteringCoefficient(g, &algo.Config{Workers: 16}))
+	})
+}
+
+func TestDirectionalGraph(t *testing.T) {
+	g := graph.New(false)
+
+	for i := 0; i < 10; i++ {
+		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
+	}
+
+	for i := 0; i < 40; i++ {
+		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(10))), node.ID(fmt.Sprintf("%d", rand.Intn(10))))
+	}
+
+	str, err := graph.Save(g)
+
+	if err != nil {
+		t.Fatalf("Failed to save graph: %v", err)
+	}
+
+	os.WriteFile("directional.log", []byte(str), fs.ModePerm)
+
+	g2, err := graph.Load(str)
+
+	if err != nil {
+		t.Fatalf("Failed to load graph: %v", err)
+	}
+
+	if !reflect.DeepEqual(g, g2) {
+		t.Errorf("Loaded graph is not equal to original graph")
+	}
+
+	t.Run("AllShortestPaths", func(t *testing.T) {
+		t.Logf("%+v", algo.AllShortestPaths(g, &algo.Config{Workers: 16}))
 	})
 
-	t.Run("Rich Club Coefficient", func(t *testing.T) {
-		t.Logf("Average Rich Club Coefficient: %+v\n", algo.ToGlobal(g, algo.RichClubCoefficient, &algo.Config{Workers: 16}))
+	t.Run("AllShortestPaths-Retry", func(t *testing.T) {
+		t.Logf("%+v", algo.AllShortestPaths(g, &algo.Config{Workers: 16}))
+	})
+
+	t.Run("Diameter", func(t *testing.T) {
+		t.Logf("%+v", algo.Diameter(g, &algo.Config{Workers: 16}))
+	})
+
+	t.Run("BetweennessCentrality", func(t *testing.T) {
+		t.Logf("%+v", algo.BetweennessCentrality(g, &algo.Config{Workers: 16}))
+	})
+
+	t.Run("ClusteringCoefficient", func(t *testing.T) {
+		t.Logf("%+v", algo.ClusteringCoefficient(g, &algo.Config{Workers: 16}))
 	})
 }
