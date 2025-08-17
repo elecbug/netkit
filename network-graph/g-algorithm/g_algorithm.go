@@ -1,3 +1,4 @@
+// Package g_algorithm provides graph algorithms for network analysis.
 package g_algorithm
 
 import (
