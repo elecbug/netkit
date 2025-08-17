@@ -15,8 +15,8 @@ func Diameter(g *graph.Graph, config *Config) int {
 				continue
 			}
 
-			if ps[0].GetDistance() > result {
-				result = ps[0].GetDistance()
+			if ps[0].Distance() > result {
+				result = ps[0].Distance()
 			}
 		}
 	}
