@@ -30,12 +30,12 @@ func (p *Path) IsInfinite() bool {
 	return p.isInf
 }
 
-// GetDistance returns the hop distance of the path.
-func (p *Path) GetDistance() int {
+// Distance returns the hop distance of the path.
+func (p *Path) Distance() int {
 	return p.distance
 }
 
-// GetNodes returns the node IDs in the path.
-func (p *Path) GetNodes() []node.ID {
+// Nodes returns the node IDs in the path.
+func (p *Path) Nodes() []node.ID {
 	return p.nodes
 }
