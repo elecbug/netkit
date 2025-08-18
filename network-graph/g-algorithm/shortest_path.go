@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
 	"github.com/elecbug/go-dspkg/network-graph/graph"
 	"github.com/elecbug/go-dspkg/network-graph/node"
 	"github.com/elecbug/go-dspkg/network-graph/path"
@@ -48,7 +49,7 @@ func ShortestPaths(g *graph.Graph, start, end node.ID) []path.Path {
 }
 
 // AllShortestPaths finds all shortest paths between all pairs of nodes in a graph.
-func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
+func AllShortestPaths(g *graph.Graph, cfg *config.Config) path.GraphPaths {
 	gh := g.Hash()
 
 	cacheMu.RLock()
@@ -60,11 +61,11 @@ func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
 
 	cacheMu.RUnlock()
 
-	if config == nil {
-		config = &Config{}
+	if cfg == nil {
+		cfg = &config.Config{}
 	}
 
-	workers := config.Workers
+	workers := cfg.Workers
 
 	if workers <= 0 {
 		workers = runtime.NumCPU()
@@ -117,9 +118,9 @@ func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
 			}
 
 			if isUndirected && i > j {
-
 				continue
 			}
+
 			jobs <- pair{start: s, end: e}
 		}
 	}
@@ -132,6 +133,10 @@ func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
 
 	for s, r := range rows {
 		out[s] = r.m
+	}
+
+	for _, id := range nodes {
+		out[id][id] = []path.Path{*path.NewSelf(id)}
 	}
 
 	cacheMu.Lock()
@@ -172,6 +177,7 @@ func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 				if w == end {
 					targetDist = dist[w]
 				}
+
 				continue
 			}
 
