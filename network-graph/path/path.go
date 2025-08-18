@@ -15,8 +15,8 @@ type Path struct {
 // GraphPaths is a mapping of start node IDs to end node IDs and their corresponding paths.
 type GraphPaths map[node.ID]map[node.ID][]Path
 
-// PathLengths represents the length of a path between two nodes.
-type PathLengths map[string]map[string]int
+// PathLength represents the length of a path between two nodes.
+type PathLength map[node.ID]map[node.ID]int
 
 // New constructs a Path from the given nodes. Distance is hops (edges).
 // If no nodes are provided, the path is considered infinite (unreachable).
@@ -52,22 +52,22 @@ func (p *Path) Nodes() []node.ID {
 }
 
 // OnlyLength returns a slice of PathLength representing the lengths of all paths in the graph.
-func (g *GraphPaths) OnlyLength() *PathLengths {
-	results := make(PathLengths, 0)
+func (g GraphPaths) OnlyLength() PathLength {
+	results := make(PathLength, 0)
 
-	for start, endMap := range *g {
+	for start, endMap := range g {
 		for end, paths := range endMap {
 			if len(paths) == 0 {
 				continue
 			}
 
-			if results[start.String()] == nil {
-				results[start.String()] = make(map[string]int)
+			if results[start] == nil {
+				results[start] = make(map[node.ID]int)
 			}
 
-			results[start.String()][end.String()] = paths[0].Distance()
+			results[start][end] = paths[0].Distance()
 		}
 	}
 
-	return &results
+	return results
 }

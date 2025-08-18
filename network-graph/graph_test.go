@@ -57,11 +57,45 @@ func TestSimple(t *testing.T) {
 	}
 }
 
+func TestPathLengths(t *testing.T) {
+	g := graph.New(false)
+
+	nodeCount := 5000
+	edgeCount := 10000
+
+	for i := 0; i < nodeCount; i++ {
+		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
+	}
+
+	for i := 0; i < edgeCount; i++ {
+		g.AddEdge(node.ID(fmt.Sprintf("%d", i)), node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
+	}
+
+	t.Run("CheckEqualShortestPaths", func(t *testing.T) {
+		var got path.GraphPaths
+		var want path.PathLength
+
+		t.Run("WithPaths", func(t *testing.T) {
+			got = algo.AllShortestPaths(g, &config.Config{Workers: 4})
+		})
+		gotLengths := got.OnlyLength()
+
+		t.Run("WithoutPaths", func(t *testing.T) {
+			want = algo.AllShortestPathLength(g, &config.Config{Workers: 4})
+		})
+
+		if !reflect.DeepEqual(gotLengths, want) {
+			t.Errorf("AllShortestPathLength() = %v, want %v", gotLengths, want)
+		}
+	})
+
+}
+
 func TestBidirectionalGraph(t *testing.T) {
 	g := graph.New(true)
 
-	nodeCount := 100
-	edgeCount := 500
+	nodeCount := 1000
+	edgeCount := 5000
 
 	for i := 0; i < nodeCount; i++ {
 		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
@@ -95,8 +129,8 @@ func TestBidirectionalGraph(t *testing.T) {
 func TestDirectionalGraph(t *testing.T) {
 	g := graph.New(false)
 
-	nodeCount := 100
-	edgeCount := 1000
+	nodeCount := 1000
+	edgeCount := 10000
 
 	for i := 0; i < nodeCount; i++ {
 		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
@@ -129,15 +163,11 @@ func TestDirectionalGraph(t *testing.T) {
 
 func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 	results := make(map[string]interface{})
-	cfg := &config.Config{
-		Workers:   16,
-		Closeness: &config.ClosenessCentralityConfig{WfImproved: true, Reverse: false},
-		PageRank:  &config.PageRankConfig{Alpha: 0.85, MaxIter: 100, Tol: 1e-6},
-	}
+	cfg := config.Default()
 
 	t.Run("ShortestPaths", func(t *testing.T) {
-		p := algo.AllShortestPaths(g, cfg)
-		results["shortest_path_length"] = p.OnlyLength()
+		// results["shortest_path_length"] = algo.AllShortestPathLength(g, cfg)
+		results["shortest_paths"] = algo.AllShortestPaths(g, cfg).OnlyLength()
 	})
 	t.Run("BetweennessCentrality", func(t *testing.T) {
 		results["betweenness_centrality"] = algo.BetweennessCentrality(g, cfg)
@@ -150,6 +180,9 @@ func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 	})
 	t.Run("Diameter", func(t *testing.T) {
 		results["diameter"] = algo.Diameter(g, cfg)
+	})
+	t.Run("EdgeBetweennessCentrality", func(t *testing.T) {
+		results["edge_betweenness_centrality"] = algo.EdgeBetweennessCentrality(g, cfg)
 	})
 	t.Run("PageRank", func(t *testing.T) {
 		results["page_rank"] = algo.PageRank(g, cfg)

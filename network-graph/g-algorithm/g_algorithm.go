@@ -7,5 +7,6 @@ import (
 	"github.com/elecbug/go-dspkg/network-graph/path"
 )
 
-var cachedAllShortestPaths map[string]path.GraphPaths = make(map[string]path.GraphPaths)
+var cachedAllShortestPaths = make(map[string]path.GraphPaths)
+var cachedAllShortestPathLengths = make(map[string]path.PathLength)
 var cacheMu sync.RWMutex

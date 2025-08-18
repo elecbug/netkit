@@ -4,7 +4,7 @@
 import argparse
 import json
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Any, Dict, Tuple
 
 import networkx as nx
 
@@ -87,10 +87,12 @@ def compute_metrics(G: nx.Graph, is_bidirectional: bool) -> Dict[str, Any]:
     metrics: Dict[str, Any] = {}
 
     # NOTE: keep key names aligned with your Go outputs for easy comparison
-    metrics["shortest_path_length"] = dict(nx.all_pairs_shortest_path_length(G))
+    metrics["shortest_paths"] = dict(nx.all_pairs_shortest_path_length(G))
     metrics["betweenness_centrality"] = nx.betweenness_centrality(G)
     metrics["closeness_centrality"] = nx.closeness_centrality(G)  # wf_improved=True semantics in recent NX
     metrics["clustering_coefficient"] = nx.clustering(G)          # for DiGraph, NX uses underlying undirected
+    metrics["edge_betweenness_centrality"] = nx.edge_betweenness_centrality(G)
+    # print(metrics["edge_betweenness_centrality"])  # debug output
     metrics["page_rank"] = nx.pagerank(G, weight=None)            # unweighted
 
     # If you also want degree_centrality comparison, uncomment:
@@ -113,7 +115,9 @@ NUMERIC_NODE_METRICS = {
     "betweenness_centrality",
     "closeness_centrality",
     "clustering_coefficient",
+    "edge_betweenness_centrality",
     "page_rank",
+    "shortest_paths"
     # "degree_centrality",
 }
 
@@ -140,10 +144,18 @@ def _safe_rel_err(diff: float, ref: float, eps: float = 1e-15) -> float:
     return abs(diff) / denom
 
 
-def compare_metric_maps(ref: Dict[str, float], cmp_: Dict[str, float], include_per_node: bool) -> Dict[str, Any]:
-    # align keys as strings
-    ref_s = {str(k): float(v) for k, v in ref.items()}
-    cmp_s = {str(k): float(v) for k, v in cmp_.items()}
+def compare_metric_maps(name: str, ref: Dict[str, float], cmp_: Dict[str, float], include_per_node: bool) -> Dict[str, Any]:
+    if name == "edge_betweenness_centrality":
+        ref_s = {str(k): float(v) for k, v in ref.items()}
+        cmp_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in cmp_.items() for k2, v in v1.items()}
+    elif name == "shortest_paths":
+        ref_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in ref.items() for k2, v in v1.items()}
+        cmp_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in cmp_.items() for k2, v in v1.items()}
+    else:
+        # align keys as strings
+        ref_s = {str(k): float(v) for k, v in ref.items()}
+        cmp_s = {str(k): float(v) for k, v in cmp_.items()}
+
 
     common = sorted(set(ref_s.keys()) & set(cmp_s.keys()), key=lambda x: (len(x), x))
     miss_in_cmp = sorted(set(ref_s.keys()) - set(cmp_s.keys()))
@@ -214,16 +226,15 @@ def compare_shortest_path_length(ref: Dict[str, Dict[str, int]], cmp_: Dict[str,
 
 def compare_metrics(ref_metrics: Dict[str, Any], cmp_metrics: Dict[str, Any], include_per_node: bool) -> Dict[str, Any]:
     report: Dict[str, Any] = {"metrics_compared": []}
+
     for name in sorted(NUMERIC_NODE_METRICS):
         if name in ref_metrics and name in cmp_metrics:
             # Only compare node->float maps
             if isinstance(ref_metrics[name], dict) and isinstance(cmp_metrics[name], dict):
-                report[name] = compare_metric_maps(ref_metrics[name], cmp_metrics[name], include_per_node)
+                report[name] = compare_metric_maps(name, ref_metrics[name], cmp_metrics[name], include_per_node)
                 report["metrics_compared"].append(name)
         # else: silently skip if either missing
 
-    name = "shortest_path_length"
-    report[name] = compare_shortest_path_length(ref_metrics[name], cmp_metrics[name])
     return report
 
 
