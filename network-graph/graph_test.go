@@ -38,10 +38,10 @@ func TestSimple(t *testing.T) {
 		want    []path.Path
 		wantErr bool
 	}{
-		{start: n1, end: n3, want: []path.Path{*path.NewPath(n1, n2, n3)}, wantErr: false},
-		{start: n1, end: n1, want: []path.Path{*path.NewPath(n1)}, wantErr: false},
-		{start: n2, end: n1, want: []path.Path{*path.NewPath(n2, n1)}, wantErr: false},
-		{start: n3, end: n4, want: []path.Path{*path.NewPath(n3, n4)}, wantErr: false},
+		{start: n1, end: n3, want: []path.Path{*path.New(n1, n2, n3)}, wantErr: false},
+		{start: n1, end: n1, want: []path.Path{*path.New(n1)}, wantErr: false},
+		{start: n2, end: n1, want: []path.Path{*path.New(n2, n1)}, wantErr: false},
+		{start: n3, end: n4, want: []path.Path{*path.New(n3, n4)}, wantErr: false},
 	}
 
 	for _, tt := range tests {

@@ -144,7 +144,7 @@ func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
 // allShortestPathsBFS finds all shortest paths between two nodes in a graph using BFS.
 func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 	if start == end {
-		return []path.Path{*path.NewPath(start)}
+		return []path.Path{*path.New(start)}
 	}
 
 	queue := []node.ID{start}
@@ -214,7 +214,7 @@ func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 	res := make([]path.Path, 0, len(all))
 
 	for _, seq := range all {
-		res = append(res, *path.NewPath(seq...))
+		res = append(res, *path.New(seq...))
 	}
 	return res
 }

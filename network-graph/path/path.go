@@ -15,9 +15,9 @@ type Path struct {
 // GraphPaths is a mapping of start node IDs to end node IDs and their corresponding paths.
 type GraphPaths map[node.ID]map[node.ID][]Path
 
-// NewPath constructs a Path from the given nodes. Distance is hops (edges).
+// New constructs a Path from the given nodes. Distance is hops (edges).
 // If no nodes are provided, the path is considered infinite (unreachable).
-func NewPath(nodes ...node.ID) *Path {
+func New(nodes ...node.ID) *Path {
 	return &Path{
 		distance: len(nodes) - 1, // Assuming distance is the number of edges
 		isInf:    len(nodes) == 0,
