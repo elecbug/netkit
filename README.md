@@ -28,3 +28,8 @@ go test ./...
 ## License
 
 MIT © 2025 elecbug. See `LICENSE`.
+
+## Credits
+
+This project reimplements common network algorithms in Go with results validated against NetworkX.
+NetworkX is © the NetworkX Developers and distributed under the BSD 3-Clause License.
