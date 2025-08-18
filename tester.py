@@ -4,7 +4,7 @@
 import argparse
 import json
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Any, Dict, Tuple
 
 import networkx as nx
 
@@ -87,11 +87,12 @@ def compute_metrics(G: nx.Graph, is_bidirectional: bool) -> Dict[str, Any]:
     metrics: Dict[str, Any] = {}
 
     # NOTE: keep key names aligned with your Go outputs for easy comparison
-    metrics["shortest_path_length"] = dict(nx.all_pairs_shortest_path_length(G))
+    metrics["shortest_paths"] = dict(nx.all_pairs_shortest_path_length(G))
     metrics["betweenness_centrality"] = nx.betweenness_centrality(G)
     metrics["closeness_centrality"] = nx.closeness_centrality(G)  # wf_improved=True semantics in recent NX
     metrics["clustering_coefficient"] = nx.clustering(G)          # for DiGraph, NX uses underlying undirected
     metrics["page_rank"] = nx.pagerank(G, weight=None)            # unweighted
+    # metrics["harmonic_centrality"] = nx.harmonic_centrality(G)  # harmonic centrality, similar to closeness
 
     # If you also want degree_centrality comparison, uncomment:
     # metrics["degree_centrality"] = nx.degree_centrality(G)
@@ -113,6 +114,7 @@ NUMERIC_NODE_METRICS = {
     "betweenness_centrality",
     "closeness_centrality",
     "clustering_coefficient",
+    # "harmonic_centrality",
     "page_rank",
     # "degree_centrality",
 }
@@ -222,8 +224,8 @@ def compare_metrics(ref_metrics: Dict[str, Any], cmp_metrics: Dict[str, Any], in
                 report["metrics_compared"].append(name)
         # else: silently skip if either missing
 
-    name = "shortest_path_length"
-    report[name] = compare_shortest_path_length(ref_metrics[name], cmp_metrics[name])
+    name = "shortest_paths"
+    report[name+"_err"] = compare_shortest_path_length(ref_metrics[name], cmp_metrics[name])
     return report
 
 

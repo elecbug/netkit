@@ -44,7 +44,7 @@ func ClosenessCentrality(g *graph.Graph, cfg *config.Config) map[node.ID]float64
 
 	// Use cached all-pairs shortest paths.
 	// Type: map[start]map[end][]path.Path
-	all := AllShortestPaths(g, cfg)
+	all := AllShortestPathLength(g, cfg)
 
 	// Exact NetworkX scaling helper.
 	applyNX := func(nReach int, sumDist float64, isUndirected bool) float64 {
@@ -79,9 +79,9 @@ func ClosenessCentrality(g *graph.Graph, cfg *config.Config) map[node.ID]float64
 					if v == u {
 						continue
 					}
-					if ps, ok := row[v]; ok && len(ps) > 0 {
+					if ps, ok := row[v]; ok {
 						// All shortest paths u->v have equal length; take any.
-						d := len(ps[0].Nodes()) - 1
+						d := ps
 						if d > 0 {
 							r++
 							sumDist += float64(d)
@@ -96,8 +96,8 @@ func ClosenessCentrality(g *graph.Graph, cfg *config.Config) map[node.ID]float64
 					continue
 				}
 				if row, ok := all[v]; ok {
-					if ps, ok2 := row[u]; ok2 && len(ps) > 0 {
-						d := len(ps[0].Nodes()) - 1
+					if ps, ok2 := row[u]; ok2 {
+						d := ps
 						if d > 0 {
 							r++
 							sumDist += float64(d)

@@ -322,3 +322,99 @@ func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 	}
 	return res
 }
+
+// AllShortestPathLength returns all-pairs unweighted shortest path lengths.
+// - For each source u, the inner map contains v -> dist(u,v) for all reachable v (including u with 0).
+// - Unreachable targets are omitted from the inner map.
+// - Uses a worker pool sized by cfg.Workers (or NumCPU when <=0).
+func AllShortestPathLength(g *graph.Graph, cfg *config.Config) path.PathLength {
+	out := make(path.PathLength)
+	if g == nil {
+		return out
+	}
+
+	gh := g.Hash()
+
+	// ---- cache hit
+	cacheMu.RLock()
+	if v, ok := cachedAllShortestPathLengths[gh]; ok {
+		cacheMu.RUnlock()
+		return v
+	}
+	cacheMu.RUnlock()
+
+	// ---- workers
+	workers := runtime.NumCPU()
+	if cfg != nil && cfg.Workers > 0 {
+		workers = cfg.Workers
+	}
+	if workers < 1 {
+		workers = 1
+	}
+
+	ids := g.Nodes()
+	n := len(ids)
+	if n == 0 {
+		return out
+	}
+
+	// Jobs: each source node runs one BFS
+	jobs := make(chan node.ID, n)
+
+	var (
+		wg sync.WaitGroup
+		mu sync.Mutex // protects 'out' map writes
+	)
+
+	// Worker: standard unweighted BFS from a single source
+	bfsFrom := func(s node.ID) map[node.ID]int {
+		dist := make(map[node.ID]int, n)
+		q := make([]node.ID, 0, 64)
+
+		dist[s] = 0
+		q = append(q, s)
+
+		for len(q) > 0 {
+			v := q[0]
+			q = q[1:]
+			dv := dist[v]
+
+			for _, w := range g.Neighbors(v) {
+				if _, seen := dist[w]; !seen {
+					dist[w] = dv + 1
+					q = append(q, w)
+				}
+			}
+		}
+		return dist
+	}
+
+	// Spin workers
+	wg.Add(workers)
+	for i := 0; i < workers; i++ {
+		go func() {
+			defer wg.Done()
+			for s := range jobs {
+				local := bfsFrom(s)
+				mu.Lock()
+				out[s] = local
+				mu.Unlock()
+			}
+		}()
+	}
+
+	// Enqueue all sources
+	for _, s := range ids {
+		jobs <- s
+	}
+	close(jobs)
+
+	wg.Wait()
+
+	// Put into cache
+	cacheMu.Lock()
+	cachedAllShortestPathLengths[gh] = out
+	cacheMu.Unlock()
+
+	return out
+}

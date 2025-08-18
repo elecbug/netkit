@@ -57,6 +57,40 @@ func TestSimple(t *testing.T) {
 	}
 }
 
+func TestPathLengths(t *testing.T) {
+	g := graph.New(false)
+
+	nodeCount := 5000
+	edgeCount := 10000
+
+	for i := 0; i < nodeCount; i++ {
+		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
+	}
+
+	for i := 0; i < edgeCount; i++ {
+		g.AddEdge(node.ID(fmt.Sprintf("%d", i)), node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
+	}
+
+	t.Run("CheckEqualShortestPaths", func(t *testing.T) {
+		var got path.GraphPaths
+		var want path.PathLength
+
+		t.Run("WithPaths", func(t *testing.T) {
+			got = algo.AllShortestPaths(g, &config.Config{Workers: 4})
+		})
+		gotLengths := got.OnlyLength()
+
+		t.Run("WithoutPaths", func(t *testing.T) {
+			want = algo.AllShortestPathLength(g, &config.Config{Workers: 4})
+		})
+
+		if !reflect.DeepEqual(gotLengths, want) {
+			t.Errorf("AllShortestPathLength() = %v, want %v", gotLengths, want)
+		}
+	})
+
+}
+
 func TestBidirectionalGraph(t *testing.T) {
 	g := graph.New(true)
 
@@ -133,11 +167,12 @@ func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 		Workers:   16,
 		Closeness: &config.ClosenessCentralityConfig{WfImproved: true, Reverse: false},
 		PageRank:  &config.PageRankConfig{Alpha: 0.85, MaxIter: 100, Tol: 1e-6},
+		Harmonic:  &config.HarmonicCentralityConfig{Reverse: false, Normalized: false},
 	}
 
 	t.Run("ShortestPaths", func(t *testing.T) {
-		p := algo.AllShortestPaths(g, cfg)
-		results["shortest_path_length"] = p.OnlyLength()
+		// results["shortest_path_length"] = algo.AllShortestPathLength(g, cfg)
+		results["shortest_paths"] = algo.AllShortestPaths(g, cfg).OnlyLength()
 	})
 	t.Run("BetweennessCentrality", func(t *testing.T) {
 		results["betweenness_centrality"] = algo.BetweennessCentrality(g, cfg)
