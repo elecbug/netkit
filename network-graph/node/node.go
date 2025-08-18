@@ -3,3 +3,7 @@ package node
 
 // ID uniquely identifies a node in a network-graph.
 type ID string
+
+func (id ID) String() string {
+	return string(id)
+}

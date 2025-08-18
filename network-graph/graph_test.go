@@ -1,6 +1,7 @@
 package network_graph_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"math/rand"
@@ -9,6 +10,7 @@ import (
 	"testing"
 
 	algo "github.com/elecbug/go-dspkg/network-graph/g-algorithm"
+	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
 	"github.com/elecbug/go-dspkg/network-graph/graph"
 	"github.com/elecbug/go-dspkg/network-graph/node"
 	"github.com/elecbug/go-dspkg/network-graph/path"
@@ -38,10 +40,10 @@ func TestSimple(t *testing.T) {
 		want    []path.Path
 		wantErr bool
 	}{
-		{start: n1, end: n3, want: []path.Path{*path.NewPath(n1, n2, n3)}, wantErr: false},
-		{start: n1, end: n1, want: []path.Path{*path.NewPath(n1)}, wantErr: false},
-		{start: n2, end: n1, want: []path.Path{*path.NewPath(n2, n1)}, wantErr: false},
-		{start: n3, end: n4, want: []path.Path{*path.NewPath(n3, n4)}, wantErr: false},
+		{start: n1, end: n3, want: []path.Path{*path.New(n1, n2, n3)}, wantErr: false},
+		{start: n1, end: n1, want: []path.Path{*path.New(n1)}, wantErr: false},
+		{start: n2, end: n1, want: []path.Path{*path.New(n2, n1)}, wantErr: false},
+		{start: n3, end: n4, want: []path.Path{*path.New(n3, n4)}, wantErr: false},
 	}
 
 	for _, tt := range tests {
@@ -58,12 +60,15 @@ func TestSimple(t *testing.T) {
 func TestBidirectionalGraph(t *testing.T) {
 	g := graph.New(true)
 
-	for i := 0; i < 10; i++ {
+	nodeCount := 100
+	edgeCount := 500
+
+	for i := 0; i < nodeCount; i++ {
 		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
 	}
 
-	for i := 0; i < 20; i++ {
-		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(10))), node.ID(fmt.Sprintf("%d", rand.Intn(10))))
+	for i := 0; i < edgeCount; i++ {
+		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))), node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
 	}
 
 	str, err := graph.Save(g)
@@ -72,7 +77,7 @@ func TestBidirectionalGraph(t *testing.T) {
 		t.Fatalf("Failed to save graph: %v", err)
 	}
 
-	os.WriteFile("bidirectional.log", []byte(str), fs.ModePerm)
+	os.WriteFile("bidirectional.graph.log", []byte(str), fs.ModePerm)
 
 	g2, err := graph.Load(str)
 
@@ -84,36 +89,21 @@ func TestBidirectionalGraph(t *testing.T) {
 		t.Errorf("Loaded graph is not equal to original graph")
 	}
 
-	t.Run("AllShortestPaths", func(t *testing.T) {
-		t.Logf("%+v", algo.AllShortestPaths(g, &algo.Config{Workers: 16}))
-	})
-
-	t.Run("AllShortestPaths-Retry", func(t *testing.T) {
-		t.Logf("%+v", algo.AllShortestPaths(g, &algo.Config{Workers: 16}))
-	})
-
-	t.Run("Diameter", func(t *testing.T) {
-		t.Logf("%+v", algo.Diameter(g, &algo.Config{Workers: 16}))
-	})
-
-	t.Run("BetweennessCentrality", func(t *testing.T) {
-		t.Logf("%+v", algo.BetweennessCentrality(g, &algo.Config{Workers: 16}))
-	})
-
-	t.Run("ClusteringCoefficient", func(t *testing.T) {
-		t.Logf("%+v", algo.ClusteringCoefficient(g, &algo.Config{Workers: 16}))
-	})
+	graphMetrics(t, g, "bidirectional.")
 }
 
 func TestDirectionalGraph(t *testing.T) {
 	g := graph.New(false)
 
-	for i := 0; i < 10; i++ {
+	nodeCount := 100
+	edgeCount := 1000
+
+	for i := 0; i < nodeCount; i++ {
 		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
 	}
 
-	for i := 0; i < 40; i++ {
-		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(10))), node.ID(fmt.Sprintf("%d", rand.Intn(10))))
+	for i := 0; i < edgeCount; i++ {
+		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))), node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
 	}
 
 	str, err := graph.Save(g)
@@ -122,7 +112,7 @@ func TestDirectionalGraph(t *testing.T) {
 		t.Fatalf("Failed to save graph: %v", err)
 	}
 
-	os.WriteFile("directional.log", []byte(str), fs.ModePerm)
+	os.WriteFile("directional.graph.log", []byte(str), fs.ModePerm)
 
 	g2, err := graph.Load(str)
 
@@ -134,23 +124,42 @@ func TestDirectionalGraph(t *testing.T) {
 		t.Errorf("Loaded graph is not equal to original graph")
 	}
 
-	t.Run("AllShortestPaths", func(t *testing.T) {
-		t.Logf("%+v", algo.AllShortestPaths(g, &algo.Config{Workers: 16}))
-	})
+	graphMetrics(t, g, "directional.")
+}
 
-	t.Run("AllShortestPaths-Retry", func(t *testing.T) {
-		t.Logf("%+v", algo.AllShortestPaths(g, &algo.Config{Workers: 16}))
-	})
+func graphMetrics(t *testing.T, g *graph.Graph, text string) {
+	results := make(map[string]interface{})
+	cfg := &config.Config{
+		Workers:   16,
+		Closeness: &config.ClosenessCentralityConfig{WfImproved: true, Reverse: false},
+		PageRank:  &config.PageRankConfig{Alpha: 0.85, MaxIter: 100, Tol: 1e-6},
+	}
 
-	t.Run("Diameter", func(t *testing.T) {
-		t.Logf("%+v", algo.Diameter(g, &algo.Config{Workers: 16}))
+	t.Run("ShortestPaths", func(t *testing.T) {
+		p := algo.AllShortestPaths(g, cfg)
+		results["shortest_path_length"] = p.OnlyLength()
 	})
-
 	t.Run("BetweennessCentrality", func(t *testing.T) {
-		t.Logf("%+v", algo.BetweennessCentrality(g, &algo.Config{Workers: 16}))
+		results["betweenness_centrality"] = algo.BetweennessCentrality(g, cfg)
+	})
+	t.Run("ClosenessCentrality", func(t *testing.T) {
+		results["closeness_centrality"] = algo.ClosenessCentrality(g, cfg)
+	})
+	t.Run("ClusteringCoefficient", func(t *testing.T) {
+		results["clustering_coefficient"] = algo.ClusteringCoefficient(g, cfg)
+	})
+	t.Run("Diameter", func(t *testing.T) {
+		results["diameter"] = algo.Diameter(g, cfg)
+	})
+	t.Run("PageRank", func(t *testing.T) {
+		results["page_rank"] = algo.PageRank(g, cfg)
 	})
 
-	t.Run("ClusteringCoefficient", func(t *testing.T) {
-		t.Logf("%+v", algo.ClusteringCoefficient(g, &algo.Config{Workers: 16}))
-	})
+	jsonResults, err := json.MarshalIndent(results, "", "  ")
+
+	if err != nil {
+		t.Fatalf("Failed to marshal results: %v", err)
+	}
+
+	os.WriteFile(text+"metrics.log", jsonResults, fs.ModePerm)
 }

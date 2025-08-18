@@ -3,12 +3,13 @@ package g_algorithm
 import (
 	"sync"
 
+	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
 	"github.com/elecbug/go-dspkg/network-graph/graph"
 	"github.com/elecbug/go-dspkg/network-graph/node"
 )
 
 // BetweennessCentrality computes the betweenness centrality for a node in the graph.
-func BetweennessCentrality(g *graph.Graph, config *Config) map[node.ID]float64 {
+func BetweennessCentrality(g *graph.Graph, cfg *config.Config) map[node.ID]float64 {
 	nodes := g.Nodes()
 	n := len(nodes)
 
@@ -24,8 +25,8 @@ func BetweennessCentrality(g *graph.Graph, config *Config) map[node.ID]float64 {
 
 	workers := 1
 
-	if config != nil && config.Workers > 1 {
-		workers = config.Workers
+	if cfg != nil && cfg.Workers > 1 {
+		workers = cfg.Workers
 
 		if workers > n {
 			workers = n

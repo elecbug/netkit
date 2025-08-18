@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
 	"github.com/elecbug/go-dspkg/network-graph/graph"
 	"github.com/elecbug/go-dspkg/network-graph/node"
 )
@@ -12,7 +13,7 @@ import (
 // - If g.IsBidirectional()==false (directed): Fagiolo (2007) directed clustering (matches NetworkX).
 // - If g.IsBidirectional()==true (undirected): standard undirected clustering.
 // Returns map[node.ID]float64 with a value for every node in g.
-func ClusteringCoefficient(g *graph.Graph, config *Config) map[node.ID]float64 {
+func ClusteringCoefficient(g *graph.Graph, cfg *config.Config) map[node.ID]float64 {
 	res := make(map[node.ID]float64)
 	if g == nil {
 		return res
@@ -25,8 +26,8 @@ func ClusteringCoefficient(g *graph.Graph, config *Config) map[node.ID]float64 {
 	}
 
 	workers := 0
-	if config != nil && config.Workers > 0 {
-		workers = config.Workers
+	if cfg != nil && cfg.Workers > 0 {
+		workers = cfg.Workers
 	}
 	if workers <= 0 {
 		workers = runtime.NumCPU()
@@ -67,12 +68,15 @@ func ClusteringCoefficient(g *graph.Graph, config *Config) map[node.ID]float64 {
 	// Edge multiplicity for Fagiolo: b(u,v) = a_uv + a_vu ∈ {0,1,2}
 	b := func(u, v node.ID) int {
 		sum := 0
+
 		if g.HasEdge(u, v) {
 			sum++
 		}
+
 		if g.HasEdge(v, u) {
 			sum++
 		}
+
 		return sum
 	}
 

@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
 	"github.com/elecbug/go-dspkg/network-graph/graph"
 	"github.com/elecbug/go-dspkg/network-graph/node"
 	"github.com/elecbug/go-dspkg/network-graph/path"
@@ -48,7 +49,7 @@ func ShortestPaths(g *graph.Graph, start, end node.ID) []path.Path {
 }
 
 // AllShortestPaths finds all shortest paths between all pairs of nodes in a graph.
-func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
+func AllShortestPaths(g *graph.Graph, cfg *config.Config) path.GraphPaths {
 	gh := g.Hash()
 
 	cacheMu.RLock()
@@ -60,11 +61,11 @@ func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
 
 	cacheMu.RUnlock()
 
-	if config == nil {
-		config = &Config{}
+	if cfg == nil {
+		cfg = &config.Config{}
 	}
 
-	workers := config.Workers
+	workers := cfg.Workers
 
 	if workers <= 0 {
 		workers = runtime.NumCPU()
@@ -117,9 +118,9 @@ func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
 			}
 
 			if isUndirected && i > j {
-
 				continue
 			}
+
 			jobs <- pair{start: s, end: e}
 		}
 	}
@@ -134,6 +135,10 @@ func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
 		out[s] = r.m
 	}
 
+	for _, id := range nodes {
+		out[id][id] = []path.Path{*path.NewSelf(id)}
+	}
+
 	cacheMu.Lock()
 	cachedAllShortestPaths[gh] = out
 	cacheMu.Unlock()
@@ -144,7 +149,7 @@ func AllShortestPaths(g *graph.Graph, config *Config) path.GraphPaths {
 // allShortestPathsBFS finds all shortest paths between two nodes in a graph using BFS.
 func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 	if start == end {
-		return []path.Path{*path.NewPath(start)}
+		return []path.Path{*path.New(start)}
 	}
 
 	queue := []node.ID{start}
@@ -172,6 +177,7 @@ func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 				if w == end {
 					targetDist = dist[w]
 				}
+
 				continue
 			}
 
@@ -214,7 +220,7 @@ func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 	res := make([]path.Path, 0, len(all))
 
 	for _, seq := range all {
-		res = append(res, *path.NewPath(seq...))
+		res = append(res, *path.New(seq...))
 	}
 	return res
 }
