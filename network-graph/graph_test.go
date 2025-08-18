@@ -163,12 +163,7 @@ func TestDirectionalGraph(t *testing.T) {
 
 func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 	results := make(map[string]interface{})
-	cfg := &config.Config{
-		Workers:   16,
-		Closeness: &config.ClosenessCentralityConfig{WfImproved: true, Reverse: false},
-		PageRank:  &config.PageRankConfig{Alpha: 0.85, MaxIter: 100, Tol: 1e-6},
-		Harmonic:  &config.HarmonicCentralityConfig{Reverse: false, Normalized: false},
-	}
+	cfg := config.Default()
 
 	t.Run("ShortestPaths", func(t *testing.T) {
 		// results["shortest_path_length"] = algo.AllShortestPathLength(g, cfg)
@@ -185,6 +180,9 @@ func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 	})
 	t.Run("Diameter", func(t *testing.T) {
 		results["diameter"] = algo.Diameter(g, cfg)
+	})
+	t.Run("EdgeBetweennessCentrality", func(t *testing.T) {
+		results["edge_betweenness_centrality"] = algo.EdgeBetweennessCentrality(g, cfg)
 	})
 	t.Run("PageRank", func(t *testing.T) {
 		results["page_rank"] = algo.PageRank(g, cfg)

@@ -4,10 +4,10 @@ import "github.com/elecbug/go-dspkg/network-graph/node"
 
 // Config holds the configuration settings for the graph algorithms.
 type Config struct {
-	Workers   int
-	Closeness *ClosenessCentralityConfig
-	PageRank  *PageRankConfig
-	Harmonic  *HarmonicCentralityConfig
+	Workers         int
+	Closeness       *ClosenessCentralityConfig
+	PageRank        *PageRankConfig
+	EdgeBetweenness *EdgeBetweennessConfig
 }
 
 // ClosenessCentralityConfig holds the configuration settings for the closeness centrality algorithm.
@@ -26,7 +26,16 @@ type PageRankConfig struct {
 	Reverse         bool
 }
 
-type HarmonicCentralityConfig struct {
-	Reverse    bool
+// EdgeBetweennessConfig holds the configuration settings for the edge betweenness centrality algorithm.
+type EdgeBetweennessConfig struct {
 	Normalized bool
+}
+
+func Default() *Config {
+	return &Config{
+		Workers:         16,
+		Closeness:       &ClosenessCentralityConfig{WfImproved: true, Reverse: false},
+		PageRank:        &PageRankConfig{Alpha: 0.85, MaxIter: 100, Tol: 1e-6},
+		EdgeBetweenness: &EdgeBetweennessConfig{Normalized: true},
+	}
 }
