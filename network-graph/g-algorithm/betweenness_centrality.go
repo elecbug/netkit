@@ -1,6 +1,7 @@
 package g_algorithm
 
 import (
+	"runtime"
 	"sync"
 
 	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
@@ -8,124 +9,144 @@ import (
 	"github.com/elecbug/go-dspkg/network-graph/node"
 )
 
-// BetweennessCentrality computes the betweenness centrality for a node in the graph.
+// BetweennessCentrality computes betweenness centrality using cached all shortest paths.
+// - Uses AllShortestPaths(g, cfg) (assumed cached/fast) to enumerate all shortest paths.
+// - For each pair (s,t), each interior node on a shortest path gets 1/|SP(s,t)| credit.
+// - Undirected graphs enqueue only i<j pairs (no double counting).
+// - Normalization matches NetworkX: undirected => 2/((n-1)(n-2)), directed => 1/((n-1)(n-2)).
 func BetweennessCentrality(g *graph.Graph, cfg *config.Config) map[node.ID]float64 {
-	nodes := g.Nodes()
-	n := len(nodes)
+	res := make(map[node.ID]float64)
+	if g == nil {
+		return res
+	}
 
+	ids := g.Nodes()
+	n := len(ids)
 	if n < 3 {
-		result := make(map[node.ID]float64)
-
-		for _, v := range nodes {
-			result[v] = 0.0
+		// With fewer than 3 nodes, BC is zero for every node.
+		for _, u := range ids {
+			res[u] = 0
 		}
-
-		return result
+		return res
 	}
 
+	// Read/normalize worker count.
 	workers := 1
-
-	if cfg != nil && cfg.Workers > 1 {
+	if cfg != nil && cfg.Workers > 0 {
 		workers = cfg.Workers
-
-		if workers > n {
-			workers = n
-		}
+	} else {
+		workers = runtime.NumCPU()
+	}
+	if workers > n {
+		workers = n
 	}
 
-	bcGlobal := make(map[node.ID]float64, n)
+	// Use cached all-pairs shortest paths.
+	// Type: map[node.ID]map[node.ID][]path.Path
+	all := AllShortestPaths(g, cfg)
 
+	// Build an index for stable iteration and pair generation.
+	idxOf := make(map[node.ID]int, n)
+	for i, u := range ids {
+		idxOf[u] = i
+	}
+
+	type pair struct{ s, t node.ID }
+	isUndirected := g.IsBidirectional()
+
+	// Generate all (s,t) jobs.
+	jobs := make(chan pair, n)
+	var wg sync.WaitGroup
+
+	// Global accumulator with lock; each worker keeps a local map to minimize contention.
+	global := make(map[node.ID]float64, n)
 	var mu sync.Mutex
 
-	tasks := make(chan node.ID, n)
+	// Worker: consume pairs and accumulate contributions into a local map, then merge.
+	workerFn := func() {
+		defer wg.Done()
+		local := make(map[node.ID]float64, n)
 
-	var wg sync.WaitGroup
+		for job := range jobs {
+			row, ok := all[job.s]
+			if !ok {
+				continue
+			}
+			pathsST, ok := row[job.t]
+			if !ok || len(pathsST) == 0 {
+				continue
+			}
+			den := float64(len(pathsST))
+
+			// For each shortest path s->...->t, every interior node gets 1/den.
+			for _, pth := range pathsST {
+				seq := pth.Nodes() // []node.ID; interior nodes are [1 : len-1)
+				if len(seq) <= 2 {
+					continue // no interior node
+				}
+				for k := 1; k < len(seq)-1; k++ {
+					v := seq[k]
+					local[v] += 1.0 / den
+				}
+			}
+		}
+
+		if len(local) > 0 {
+			mu.Lock()
+			for v, val := range local {
+				global[v] += val
+			}
+			mu.Unlock()
+		}
+	}
+
+	// Start workers.
 	wg.Add(workers)
-
-	for w := 0; w < workers; w++ {
-		go func() {
-			defer wg.Done()
-
-			localBC := make(map[node.ID]float64, n)
-
-			for s := range tasks {
-				stack := make([]node.ID, 0, n)
-				preds := make(map[node.ID][]node.ID, n)
-				sigma := make(map[node.ID]float64, n)
-				dist := make(map[node.ID]int, n)
-
-				for _, v := range nodes {
-					dist[v] = -1
-				}
-
-				sigma[s] = 1
-				dist[s] = 0
-
-				// BFS
-				q := []node.ID{s}
-				for len(q) > 0 {
-					v := q[0]
-					q = q[1:]
-					stack = append(stack, v)
-
-					for _, w := range g.Neighbors(v) {
-						if dist[w] < 0 {
-							dist[w] = dist[v] + 1
-							q = append(q, w)
-						}
-
-						if dist[w] == dist[v]+1 {
-							sigma[w] += sigma[v]
-							preds[w] = append(preds[w], v)
-						}
-					}
-				}
-
-				delta := make(map[node.ID]float64, n)
-				for len(stack) > 0 {
-					w := stack[len(stack)-1]
-					stack = stack[:len(stack)-1]
-
-					for _, v := range preds[w] {
-						if sigma[w] > 0 {
-							delta[v] += (sigma[v] / sigma[w]) * (1.0 + delta[w])
-						}
-					}
-
-					if w != s {
-						localBC[w] += delta[w]
-					}
-				}
-			}
-
-			if len(localBC) > 0 {
-				mu.Lock()
-
-				for v, val := range localBC {
-					bcGlobal[v] += val
-				}
-
-				mu.Unlock()
-			}
-		}()
+	for i := 0; i < workers; i++ {
+		go workerFn()
 	}
 
-	for _, s := range nodes {
-		tasks <- s
+	// Enqueue jobs.
+	if isUndirected {
+		// Only upper triangle (i<j) to avoid double counting undirected pairs.
+		for i := 0; i < n; i++ {
+			s := ids[i]
+			for j := i + 1; j < n; j++ {
+				t := ids[j]
+				jobs <- pair{s: s, t: t}
+			}
+		}
+	} else {
+		// Directed: all ordered pairs (i!=j).
+		for i := 0; i < n; i++ {
+			s := ids[i]
+			for j := 0; j < n; j++ {
+				if i == j {
+					continue
+				}
+				t := ids[j]
+				jobs <- pair{s: s, t: t}
+			}
+		}
 	}
 
-	close(tasks)
+	close(jobs)
 	wg.Wait()
 
-	for v := range bcGlobal {
-		bcGlobal[v] *= 0.5
+	// Normalization matching NetworkX
+	// Undirected: factor = 2/((n-1)(n-2))
+	// Directed:   factor = 1/((n-1)(n-2))
+	var norm float64
+	if isUndirected {
+		norm = 2.0 / float64((n-1)*(n-2))
+	} else {
+		norm = 1.0 / float64((n-1)*(n-2))
 	}
 
-	norm := 2.0 / float64((n-1)*(n-2))
-
-	for k := range bcGlobal {
-		bcGlobal[k] *= norm
+	// Write normalized results; include nodes that never appeared (zero).
+	for _, u := range ids {
+		res[u] = global[u] * norm
 	}
 
-	return bcGlobal
+	return res
 }
