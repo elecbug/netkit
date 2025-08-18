@@ -60,8 +60,8 @@ func TestSimple(t *testing.T) {
 func TestBidirectionalGraph(t *testing.T) {
 	g := graph.New(true)
 
-	nodeCount := 100
-	edgeCount := 500
+	nodeCount := 1000
+	edgeCount := 5000
 
 	for i := 0; i < nodeCount; i++ {
 		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
@@ -95,8 +95,8 @@ func TestBidirectionalGraph(t *testing.T) {
 func TestDirectionalGraph(t *testing.T) {
 	g := graph.New(false)
 
-	nodeCount := 100
-	edgeCount := 1000
+	nodeCount := 1000
+	edgeCount := 10000
 
 	for i := 0; i < nodeCount; i++ {
 		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
