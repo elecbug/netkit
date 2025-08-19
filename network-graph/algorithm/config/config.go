@@ -1,7 +1,11 @@
 // Package config provides configuration settings for the graph algorithms.
 package config
 
-import "github.com/elecbug/netkit/network-graph/node"
+import (
+	"runtime"
+
+	"github.com/elecbug/netkit/network-graph/node"
+)
 
 // Config holds the configuration settings for the graph algorithms.
 type Config struct {
@@ -56,7 +60,7 @@ type DegreeCentralityConfig struct {
 // Default returns the default configuration for the graph algorithms.
 func Default() *Config {
 	return &Config{
-		Workers:         16,
+		Workers:         runtime.NumCPU(),
 		Closeness:       &ClosenessCentralityConfig{WfImproved: true, Reverse: false},
 		PageRank:        &PageRankConfig{Alpha: 0.85, MaxIter: 100, Tol: 1e-6, Personalization: nil, Dangling: nil, Reverse: false},
 		Betweenness:     &BetweennessCentralityConfig{Normalized: true},
