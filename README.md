@@ -1,4 +1,4 @@
-# GO - Netkit
+# Netkit
 
 Go (generic) graph algorithms and extensible libraries focused on clarity and performance.
 
@@ -13,9 +13,16 @@ go get github.com/elecbug/netkit@latest
 
 ## Packages
 
-- `bimap`: Bidirectional map with O(1) lookups key->value and value->key.
-- `slice`: Generic helpers: binary search, stable merge sort, parallel sort, and `IsSorted`.
-- `network-graph`: Unweighted network analysis library.
+### Graph algorithm
+
+- [`network-graph`](./network-graph/): Unweighted network analysis library.
+  - [`graph`](./network-graph/graph/): Library for creating and building graphs.
+  - [`algorithm`](./network-graph/algorithm/): Library containing various graph algorithms.
+
+# Extensible
+
+- [`bimap`](./bimap/): Bidirectional map with O(1) lookups key->value and value->key.
+- [`slice`](./slice/): Generic helpers: binary search, stable merge sort, parallel sort, and `IsSorted`.
 
 ## Development
 
@@ -27,7 +34,7 @@ go test ./...
 
 ## License
 
-MIT © 2025 elecbug. See `LICENSE`.
+MIT © 2025 elecbug. See [`LICENSE`](./LICENSE).
 
 ## Credits
 

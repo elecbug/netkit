@@ -1,12 +1,18 @@
+// Package config provides configuration settings for the graph algorithms.
 package config
 
-import "github.com/elecbug/netkit/network-graph/node"
+import (
+	"runtime"
+
+	"github.com/elecbug/netkit/network-graph/node"
+)
 
 // Config holds the configuration settings for the graph algorithms.
 type Config struct {
 	Workers         int
 	Closeness       *ClosenessCentralityConfig
 	PageRank        *PageRankConfig
+	Betweenness     *BetweennessCentralityConfig
 	EdgeBetweenness *EdgeBetweennessCentralityConfig
 	Eigenvector     *EigenvectorCentralityConfig
 	Degree          *DegreeCentralityConfig
@@ -28,12 +34,17 @@ type PageRankConfig struct {
 	Reverse         bool
 }
 
+// BetweennessCentralityConfig holds the configuration settings for the edge betweenness centrality algorithm.
+type BetweennessCentralityConfig struct {
+	Normalized bool
+}
+
 // EdgeBetweennessCentralityConfig holds the configuration settings for the edge betweenness centrality algorithm.
 type EdgeBetweennessCentralityConfig struct {
 	Normalized bool
 }
 
-//
+// EigenvectorCentralityConfig holds the configuration settings for the eigenvector centrality algorithm.
 type EigenvectorCentralityConfig struct {
 	MaxIter int
 	Tol     float64
@@ -41,7 +52,7 @@ type EigenvectorCentralityConfig struct {
 	NStart  *map[node.ID]float64 // initial vector; if nil, uniform distribution
 }
 
-//
+// DegreeCentralityConfig holds the configuration settings for the degree centrality algorithm.
 type DegreeCentralityConfig struct {
 	Mode string
 }
@@ -49,9 +60,10 @@ type DegreeCentralityConfig struct {
 // Default returns the default configuration for the graph algorithms.
 func Default() *Config {
 	return &Config{
-		Workers:         16,
+		Workers:         runtime.NumCPU(),
 		Closeness:       &ClosenessCentralityConfig{WfImproved: true, Reverse: false},
-		PageRank:        &PageRankConfig{Alpha: 0.85, MaxIter: 100, Tol: 1e-6},
+		PageRank:        &PageRankConfig{Alpha: 0.85, MaxIter: 100, Tol: 1e-6, Personalization: nil, Dangling: nil, Reverse: false},
+		Betweenness:     &BetweennessCentralityConfig{Normalized: true},
 		EdgeBetweenness: &EdgeBetweennessCentralityConfig{Normalized: true},
 		Eigenvector:     &EigenvectorCentralityConfig{MaxIter: 100, Tol: 1e-6, Reverse: false, NStart: nil},
 		Degree:          &DegreeCentralityConfig{Mode: "total"},

@@ -32,8 +32,13 @@ func BetweennessCentrality(g *graph.Graph, cfg *config.Config) map[node.ID]float
 
 	// Read/normalize worker count.
 	workers := 1
+	normalized := true
 	if cfg != nil && cfg.Workers > 0 {
 		workers = cfg.Workers
+
+		if cfg.Betweenness != nil {
+			normalized = cfg.Betweenness.Normalized
+		}
 	} else {
 		workers = runtime.NumCPU()
 	}
@@ -133,19 +138,22 @@ func BetweennessCentrality(g *graph.Graph, cfg *config.Config) map[node.ID]float
 	close(jobs)
 	wg.Wait()
 
-	// Normalization matching NetworkX
-	// Undirected: factor = 2/((n-1)(n-2))
-	// Directed:   factor = 1/((n-1)(n-2))
-	var norm float64
-	if isUndirected {
-		norm = 2.0 / float64((n-1)*(n-2))
-	} else {
-		norm = 1.0 / float64((n-1)*(n-2))
-	}
+	if normalized {
+		// Normalization matching NetworkX
+		// Undirected: factor = 2/((n-1)(n-2))
+		// Directed:   factor = 1/((n-1)(n-2))
+		var norm float64
+		if isUndirected {
+			norm = 2.0 / float64((n-1)*(n-2))
+		} else {
+			norm = 1.0 / float64((n-1)*(n-2))
+		}
 
-	// Write normalized results; include nodes that never appeared (zero).
-	for _, u := range ids {
-		res[u] = global[u] * norm
+		// Write normalized results; include nodes that never appeared (zero).
+		for _, u := range ids {
+			res[u] = global[u] * norm
+		}
+
 	}
 
 	return res
