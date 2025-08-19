@@ -1,3 +1,4 @@
+// Package config provides configuration settings for the graph algorithms.
 package config
 
 import "github.com/elecbug/netkit/network-graph/node"
@@ -33,7 +34,7 @@ type EdgeBetweennessCentralityConfig struct {
 	Normalized bool
 }
 
-//
+// EigenvectorCentralityConfig holds the configuration settings for the eigenvector centrality algorithm.
 type EigenvectorCentralityConfig struct {
 	MaxIter int
 	Tol     float64
@@ -41,7 +42,7 @@ type EigenvectorCentralityConfig struct {
 	NStart  *map[node.ID]float64 // initial vector; if nil, uniform distribution
 }
 
-//
+// DegreeCentralityConfig holds the configuration settings for the degree centrality algorithm.
 type DegreeCentralityConfig struct {
 	Mode string
 }
