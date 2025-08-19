@@ -1,4 +1,4 @@
-# GO - Netkit
+# Netkit
 
 Go (generic) graph algorithms and extensible libraries focused on clarity and performance.
 
@@ -34,7 +34,7 @@ go test ./...
 
 ## License
 
-MIT © 2025 elecbug. See `LICENSE`.
+MIT © 2025 elecbug. See [`LICENSE`](./LICENSE).
 
 ## Credits
 
