@@ -190,7 +190,7 @@ func EdgeBetweennessCentrality(g *graph.Graph, cfg *config.Config) map[node.ID]m
 	// ----- Undirected: correct double counting -----
 	if isUndirected {
 		for e := range out {
-			for k, _ := range out[e] {
+			for k := range out[e] {
 				out[e][k] *= 0.5
 			}
 		}
@@ -207,7 +207,7 @@ func EdgeBetweennessCentrality(g *graph.Graph, cfg *config.Config) map[node.ID]m
 			scale = 1.0 / (float64(n-1) * float64(n-2))
 		}
 		for e := range out {
-			for k, _ := range out[e] {
+			for k := range out[e] {
 				out[e][k] *= scale
 			}
 		}
