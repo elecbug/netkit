@@ -3,7 +3,7 @@ package slice_test
 import (
 	"testing"
 
-	"github.com/elecbug/go-dspkg/slice"
+	"github.com/elecbug/netkit/slice"
 )
 
 func TestBsearch(t *testing.T) {

@@ -1,12 +1,12 @@
-package g_algorithm
+package algorithm
 
 import (
 	"runtime"
 	"sync"
 
-	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
-	"github.com/elecbug/go-dspkg/network-graph/graph"
-	"github.com/elecbug/go-dspkg/network-graph/node"
+	"github.com/elecbug/netkit/network-graph/algorithm/config"
+	"github.com/elecbug/netkit/network-graph/graph"
+	"github.com/elecbug/netkit/network-graph/node"
 )
 
 func makeEdgeKey(u, v node.ID, undirected bool) (node.ID, node.ID) {

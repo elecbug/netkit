@@ -1,14 +1,14 @@
-# GO - Data Structure PacKaGe
+# GO - Netkit
 
-Go (generic) data structures and graph algorithms with a focus on clarity and performance.
+Go (generic) graph algorithms and extensible libraries focused on clarity and performance.
 
 - Go 1.21+
-- Module: `github.com/elecbug/go-dspkg`
+- Module: `github.com/elecbug/netkit`
 
 ## Install
 
 ```powershell
-go get github.com/elecbug/go-dspkg@latest
+go get github.com/elecbug/netkit@latest
 ```
 
 ## Packages

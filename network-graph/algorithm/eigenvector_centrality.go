@@ -1,13 +1,13 @@
-package g_algorithm
+package algorithm
 
 import (
 	"math"
 	"runtime"
 	"sync"
 
-	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
-	"github.com/elecbug/go-dspkg/network-graph/graph"
-	"github.com/elecbug/go-dspkg/network-graph/node"
+	"github.com/elecbug/netkit/network-graph/algorithm/config"
+	"github.com/elecbug/netkit/network-graph/graph"
+	"github.com/elecbug/netkit/network-graph/node"
 )
 
 // EigenvectorCentrality computes eigenvector centrality using parallel power iteration.

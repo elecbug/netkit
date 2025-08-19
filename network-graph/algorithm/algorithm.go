@@ -1,10 +1,10 @@
-// Package g_algorithm provides graph algorithms for network analysis.
-package g_algorithm
+// Package algorithm provides graph algorithms for network analysis.
+package algorithm
 
 import (
 	"sync"
 
-	"github.com/elecbug/go-dspkg/network-graph/path"
+	"github.com/elecbug/netkit/network-graph/path"
 )
 
 var cachedAllShortestPaths = make(map[string]path.GraphPaths)

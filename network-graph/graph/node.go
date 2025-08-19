@@ -3,7 +3,7 @@ package graph
 import (
 	"fmt"
 
-	"github.com/elecbug/go-dspkg/network-graph/node"
+	"github.com/elecbug/netkit/network-graph/node"
 )
 
 // AddNode adds a node to the graph.

@@ -3,7 +3,7 @@ package graph
 import (
 	"fmt"
 
-	"github.com/elecbug/go-dspkg/network-graph/node"
+	"github.com/elecbug/netkit/network-graph/node"
 )
 
 // AddEdge adds an edge from -> to. If bidirectional is true, adds the reverse edge as well.

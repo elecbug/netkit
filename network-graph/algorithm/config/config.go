@@ -1,6 +1,6 @@
 package config
 
-import "github.com/elecbug/go-dspkg/network-graph/node"
+import "github.com/elecbug/netkit/network-graph/node"
 
 // Config holds the configuration settings for the graph algorithms.
 type Config struct {
