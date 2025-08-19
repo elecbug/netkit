@@ -87,16 +87,17 @@ def compute_metrics(G: nx.Graph, is_bidirectional: bool) -> Dict[str, Any]:
     metrics: Dict[str, Any] = {}
 
     # NOTE: keep key names aligned with your Go outputs for easy comparison
-    metrics["shortest_paths"] = dict(nx.all_pairs_shortest_path_length(G))
     metrics["betweenness_centrality"] = nx.betweenness_centrality(G)
     metrics["closeness_centrality"] = nx.closeness_centrality(G)  # wf_improved=True semantics in recent NX
     metrics["clustering_coefficient"] = nx.clustering(G)          # for DiGraph, NX uses underlying undirected
+    metrics["degree_centrality"] = nx.degree_centrality(G)
     metrics["edge_betweenness_centrality"] = nx.edge_betweenness_centrality(G)
+    metrics["eigenvector_centrality"] = nx.eigenvector_centrality(G)
     # print(metrics["edge_betweenness_centrality"])  # debug output
     metrics["page_rank"] = nx.pagerank(G, weight=None)            # unweighted
+    metrics["shortest_paths"] = dict(nx.all_pairs_shortest_path_length(G))
 
     # If you also want degree_centrality comparison, uncomment:
-    # metrics["degree_centrality"] = nx.degree_centrality(G)
 
     return metrics
 
@@ -115,7 +116,9 @@ NUMERIC_NODE_METRICS = {
     "betweenness_centrality",
     "closeness_centrality",
     "clustering_coefficient",
+    "degree_centrality",
     "edge_betweenness_centrality",
+    "eigenvector_centrality",
     "page_rank",
     "shortest_paths"
     # "degree_centrality",

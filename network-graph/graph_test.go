@@ -178,11 +178,17 @@ func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 	t.Run("ClusteringCoefficient", func(t *testing.T) {
 		results["clustering_coefficient"] = algo.ClusteringCoefficient(g, cfg)
 	})
+	t.Run("DegreeCentrality", func(t *testing.T) {
+		results["degree_centrality"] = algo.DegreeCentrality(g, cfg)
+	})
 	t.Run("Diameter", func(t *testing.T) {
 		results["diameter"] = algo.Diameter(g, cfg)
 	})
 	t.Run("EdgeBetweennessCentrality", func(t *testing.T) {
 		results["edge_betweenness_centrality"] = algo.EdgeBetweennessCentrality(g, cfg)
+	})
+	t.Run("EigenvectorCentrality", func(t *testing.T) {
+		results["eigenvector_centrality"] = algo.EigenvectorCentrality(g, cfg)
 	})
 	t.Run("PageRank", func(t *testing.T) {
 		results["page_rank"] = algo.PageRank(g, cfg)
