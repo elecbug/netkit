@@ -1,13 +1,13 @@
-package g_algorithm
+package algorithm
 
 import (
 	"runtime"
 	"sync"
 
-	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
-	"github.com/elecbug/go-dspkg/network-graph/graph"
-	"github.com/elecbug/go-dspkg/network-graph/node"
-	"github.com/elecbug/go-dspkg/network-graph/path"
+	"github.com/elecbug/netkit/network-graph/algorithm/config"
+	"github.com/elecbug/netkit/network-graph/graph"
+	"github.com/elecbug/netkit/network-graph/node"
+	"github.com/elecbug/netkit/network-graph/path"
 )
 
 // ShortestPaths finds all shortest paths between two nodes in a graph.

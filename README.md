@@ -1,14 +1,14 @@
-# GO - Data Structure PacKaGe
+# GO - Netkit
 
-Go (generic) data structures and graph algorithms with a focus on clarity and performance.
+Go (generic) graph algorithms and extensible libraries focused on clarity and performance.
 
 - Go 1.21+
-- Module: `github.com/elecbug/go-dspkg`
+- Module: `github.com/elecbug/netkit`
 
 ## Install
 
 ```powershell
-go get github.com/elecbug/go-dspkg@latest
+go get github.com/elecbug/netkit@latest
 ```
 
 ## Packages
@@ -28,3 +28,8 @@ go test ./...
 ## License
 
 MIT © 2025 elecbug. See `LICENSE`.
+
+## Credits
+
+This project reimplements common network algorithms in Go with results validated against NetworkX.
+NetworkX is © the NetworkX Developers and distributed under the BSD 3-Clause License.

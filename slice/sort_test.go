@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/elecbug/go-dspkg/slice"
+	"github.com/elecbug/netkit/slice"
 )
 
 func TestSort(t *testing.T) {

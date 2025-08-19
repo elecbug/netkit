@@ -1,9 +1,10 @@
 {
     "cSpell.words": [
-        "Bimap",
-        "Bsearch",
+        "betweenness",
+        "bimap",
+        "bsearch",
         "dspkg",
         "elecbug",
-        "recslice"
+        "netkit"
     ]
 }

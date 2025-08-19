@@ -9,11 +9,11 @@ import (
 	"reflect"
 	"testing"
 
-	algo "github.com/elecbug/go-dspkg/network-graph/g-algorithm"
-	"github.com/elecbug/go-dspkg/network-graph/g-algorithm/config"
-	"github.com/elecbug/go-dspkg/network-graph/graph"
-	"github.com/elecbug/go-dspkg/network-graph/node"
-	"github.com/elecbug/go-dspkg/network-graph/path"
+	"github.com/elecbug/netkit/network-graph/algorithm"
+	"github.com/elecbug/netkit/network-graph/algorithm/config"
+	"github.com/elecbug/netkit/network-graph/graph"
+	"github.com/elecbug/netkit/network-graph/node"
+	"github.com/elecbug/netkit/network-graph/path"
 )
 
 func TestSimple(t *testing.T) {
@@ -48,7 +48,7 @@ func TestSimple(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("From %s to %s", tt.start, tt.end), func(t *testing.T) {
-			got := algo.ShortestPaths(g, tt.start, tt.end)
+			got := algorithm.ShortestPaths(g, tt.start, tt.end)
 
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ShortestPath() = %v, want %v", got, tt.want)
@@ -76,12 +76,12 @@ func TestPathLengths(t *testing.T) {
 		var want path.PathLength
 
 		t.Run("WithPaths", func(t *testing.T) {
-			got = algo.AllShortestPaths(g, &config.Config{Workers: 4})
+			got = algorithm.AllShortestPaths(g, &config.Config{Workers: 4})
 		})
 		gotLengths := got.OnlyLength()
 
 		t.Run("WithoutPaths", func(t *testing.T) {
-			want = algo.AllShortestPathLength(g, &config.Config{Workers: 4})
+			want = algorithm.AllShortestPathLength(g, &config.Config{Workers: 4})
 		})
 
 		if !reflect.DeepEqual(gotLengths, want) {
@@ -167,25 +167,31 @@ func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 
 	t.Run("ShortestPaths", func(t *testing.T) {
 		// results["shortest_path_length"] = algo.AllShortestPathLength(g, cfg)
-		results["shortest_paths"] = algo.AllShortestPaths(g, cfg).OnlyLength()
+		results["shortest_paths"] = algorithm.AllShortestPaths(g, cfg).OnlyLength()
 	})
 	t.Run("BetweennessCentrality", func(t *testing.T) {
-		results["betweenness_centrality"] = algo.BetweennessCentrality(g, cfg)
+		results["betweenness_centrality"] = algorithm.BetweennessCentrality(g, cfg)
 	})
 	t.Run("ClosenessCentrality", func(t *testing.T) {
-		results["closeness_centrality"] = algo.ClosenessCentrality(g, cfg)
+		results["closeness_centrality"] = algorithm.ClosenessCentrality(g, cfg)
 	})
 	t.Run("ClusteringCoefficient", func(t *testing.T) {
-		results["clustering_coefficient"] = algo.ClusteringCoefficient(g, cfg)
+		results["clustering_coefficient"] = algorithm.ClusteringCoefficient(g, cfg)
+	})
+	t.Run("DegreeCentrality", func(t *testing.T) {
+		results["degree_centrality"] = algorithm.DegreeCentrality(g, cfg)
 	})
 	t.Run("Diameter", func(t *testing.T) {
-		results["diameter"] = algo.Diameter(g, cfg)
+		results["diameter"] = algorithm.Diameter(g, cfg)
 	})
 	t.Run("EdgeBetweennessCentrality", func(t *testing.T) {
-		results["edge_betweenness_centrality"] = algo.EdgeBetweennessCentrality(g, cfg)
+		results["edge_betweenness_centrality"] = algorithm.EdgeBetweennessCentrality(g, cfg)
+	})
+	t.Run("EigenvectorCentrality", func(t *testing.T) {
+		results["eigenvector_centrality"] = algorithm.EigenvectorCentrality(g, cfg)
 	})
 	t.Run("PageRank", func(t *testing.T) {
-		results["page_rank"] = algo.PageRank(g, cfg)
+		results["page_rank"] = algorithm.PageRank(g, cfg)
 	})
 
 	jsonResults, err := json.MarshalIndent(results, "", "  ")

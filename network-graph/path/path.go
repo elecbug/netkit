@@ -2,7 +2,7 @@
 package path
 
 import (
-	"github.com/elecbug/go-dspkg/network-graph/node"
+	"github.com/elecbug/netkit/network-graph/node"
 )
 
 // Path represents an ordered sequence of nodes with a hop distance.

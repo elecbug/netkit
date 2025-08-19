@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/elecbug/go-dspkg/network-graph/node"
+	"github.com/elecbug/netkit/network-graph/node"
 )
 
 // Graph maintains nodes and adjacency edges.
