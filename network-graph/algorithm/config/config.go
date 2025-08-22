@@ -10,12 +10,12 @@ import (
 // Config holds the configuration settings for the graph algorithms.
 type Config struct {
 	Workers         int
-	Closeness       *ClosenessCentralityConfig
-	PageRank        *PageRankConfig
 	Betweenness     *BetweennessCentralityConfig
+	Closeness       *ClosenessCentralityConfig
+	Degree          *DegreeCentralityConfig
 	EdgeBetweenness *EdgeBetweennessCentralityConfig
 	Eigenvector     *EigenvectorCentralityConfig
-	Degree          *DegreeCentralityConfig
+	PageRank        *PageRankConfig
 }
 
 // ClosenessCentralityConfig holds the configuration settings for the closeness centrality algorithm.

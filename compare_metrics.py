@@ -93,7 +93,6 @@ def compute_metrics(G: nx.Graph, is_bidirectional: bool) -> Dict[str, Any]:
     metrics["degree_centrality"] = nx.degree_centrality(G)
     metrics["edge_betweenness_centrality"] = nx.edge_betweenness_centrality(G)
     metrics["eigenvector_centrality"] = nx.eigenvector_centrality(G)
-    # print(metrics["edge_betweenness_centrality"])  # debug output
     metrics["page_rank"] = nx.pagerank(G, weight=None)            # unweighted
     metrics["shortest_paths"] = dict(nx.all_pairs_shortest_path_length(G))
 
@@ -121,7 +120,6 @@ NUMERIC_NODE_METRICS = {
     "eigenvector_centrality",
     "page_rank",
     "shortest_paths"
-    # "degree_centrality",
 }
 
 def _load_metrics_obj(path: str) -> Dict[str, Any]:
