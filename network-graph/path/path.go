@@ -28,6 +28,7 @@ func New(nodes ...node.ID) *Path {
 	}
 }
 
+// NewSelf constructs a new Path representing a self-loop at the given node.
 func NewSelf(id node.ID) *Path {
 	return &Path{
 		distance: 0,

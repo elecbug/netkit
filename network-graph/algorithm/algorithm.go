@@ -2,19 +2,48 @@
 package algorithm
 
 import (
-	"sync"
-
-	"github.com/elecbug/netkit/network-graph/path"
+	"github.com/elecbug/netkit/network-graph/algorithm/config"
+	"github.com/elecbug/netkit/network-graph/graph"
 )
 
-var cachedAllShortestPaths = make(map[string]path.GraphPaths)
-var cachedAllShortestPathLengths = make(map[string]path.PathLength)
-var cacheMu sync.RWMutex
+// MetricType represents the type of metric to be calculated.
+type MetricType int
 
-// CacheClear clears the cached shortest paths and their lengths.
-func CacheClear() {
-	cacheMu.Lock()
-	defer cacheMu.Unlock()
-	cachedAllShortestPaths = make(map[string]path.GraphPaths)
-	cachedAllShortestPathLengths = make(map[string]path.PathLength)
+// Metric types for graph analysis.
+const (
+	BETWEENNESS_CENTRALITY MetricType = iota
+	CLOSENESS_CENTRALITY
+	CLUSTERING_COEFFICIENT
+	DEGREE_CENTRALITY
+	DIAMETER
+	EDGE_BETWEENNESS_CENTRALITY
+	EIGENVECTOR_CENTRALITY
+	PAGE_RANK
+	SHORTEST_PATHS
+)
+
+// Metric calculates the specified metric for the given graph.
+func Metric(g *graph.Graph, cfg *config.Config, metricType MetricType) any {
+	switch metricType {
+	case BETWEENNESS_CENTRALITY:
+		return BetweennessCentrality(g, cfg)
+	case CLOSENESS_CENTRALITY:
+		return ClosenessCentrality(g, cfg)
+	case CLUSTERING_COEFFICIENT:
+		return ClusteringCoefficient(g, cfg)
+	case DEGREE_CENTRALITY:
+		return DegreeCentrality(g, cfg)
+	case DIAMETER:
+		return Diameter(g, cfg)
+	case EDGE_BETWEENNESS_CENTRALITY:
+		return EdgeBetweennessCentrality(g, cfg)
+	case EIGENVECTOR_CENTRALITY:
+		return EigenvectorCentrality(g, cfg)
+	case PAGE_RANK:
+		return PageRank(g, cfg)
+	case SHORTEST_PATHS:
+		return AllShortestPaths(g, cfg)
+	default:
+		return nil
+	}
 }
