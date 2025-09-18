@@ -3,8 +3,6 @@ package config
 
 import (
 	"runtime"
-
-	"github.com/elecbug/netkit/network-graph/node"
 )
 
 // Config holds the configuration settings for the graph algorithms.
@@ -16,45 +14,7 @@ type Config struct {
 	EdgeBetweenness *EdgeBetweennessCentralityConfig
 	Eigenvector     *EigenvectorCentralityConfig
 	PageRank        *PageRankConfig
-}
-
-// ClosenessCentralityConfig holds the configuration settings for the closeness centrality algorithm.
-type ClosenessCentralityConfig struct {
-	Reverse    bool
-	WfImproved bool
-}
-
-// PageRankConfig holds the configuration settings for the PageRank algorithm.
-type PageRankConfig struct {
-	Alpha           float64              // damping, default 0.85
-	MaxIter         int                  // default 100
-	Tol             float64              // L1 error, default 1e-6
-	Personalization *map[node.ID]float64 // p(u); if nil is uniform
-	Dangling        *map[node.ID]float64 // d(u); if nil p(u)
-	Reverse         bool
-}
-
-// BetweennessCentralityConfig holds the configuration settings for the edge betweenness centrality algorithm.
-type BetweennessCentralityConfig struct {
-	Normalized bool
-}
-
-// EdgeBetweennessCentralityConfig holds the configuration settings for the edge betweenness centrality algorithm.
-type EdgeBetweennessCentralityConfig struct {
-	Normalized bool
-}
-
-// EigenvectorCentralityConfig holds the configuration settings for the eigenvector centrality algorithm.
-type EigenvectorCentralityConfig struct {
-	MaxIter int
-	Tol     float64
-	Reverse bool
-	NStart  *map[node.ID]float64 // initial vector; if nil, uniform distribution
-}
-
-// DegreeCentralityConfig holds the configuration settings for the degree centrality algorithm.
-type DegreeCentralityConfig struct {
-	Mode string
+	Assortativity   *AssortativityCoefficientConfig
 }
 
 // Default returns the default configuration for the graph algorithms.
@@ -67,5 +27,6 @@ func Default() *Config {
 		EdgeBetweenness: &EdgeBetweennessCentralityConfig{Normalized: true},
 		Eigenvector:     &EigenvectorCentralityConfig{MaxIter: 100, Tol: 1e-6, Reverse: false, NStart: nil},
 		Degree:          &DegreeCentralityConfig{Mode: "total"},
+		Assortativity:   &AssortativityCoefficientConfig{Mode: AssortativityProjected, IgnoreSelfLoops: true},
 	}
 }

@@ -14,6 +14,7 @@ const (
 	BETWEENNESS_CENTRALITY MetricType = iota
 	CLOSENESS_CENTRALITY
 	CLUSTERING_COEFFICIENT
+	DEGREE_ASSORTATIVITY_COEFFICIENT
 	DEGREE_CENTRALITY
 	DIAMETER
 	EDGE_BETWEENNESS_CENTRALITY
@@ -31,6 +32,8 @@ func Metric(g *graph.Graph, cfg *config.Config, metricType MetricType) any {
 		return ClosenessCentrality(g, cfg)
 	case CLUSTERING_COEFFICIENT:
 		return ClusteringCoefficient(g, cfg)
+	case DEGREE_ASSORTATIVITY_COEFFICIENT:
+		return DegreeAssortativityCoefficient(g, cfg)
 	case DEGREE_CENTRALITY:
 		return DegreeCentrality(g, cfg)
 	case DIAMETER:
