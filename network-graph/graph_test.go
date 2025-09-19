@@ -178,6 +178,9 @@ func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 	t.Run("ClusteringCoefficient", func(t *testing.T) {
 		results["clustering_coefficient"] = algorithm.ClusteringCoefficient(g, cfg)
 	})
+	t.Run("DegreeAssortativityCoefficient", func(t *testing.T) {
+		results["degree_assortativity_coefficient"] = algorithm.DegreeAssortativityCoefficient(g, cfg)
+	})
 	t.Run("DegreeCentrality", func(t *testing.T) {
 		results["degree_centrality"] = algorithm.DegreeCentrality(g, cfg)
 	})
