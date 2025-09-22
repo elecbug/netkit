@@ -9,17 +9,41 @@ from typing import Any, Dict, Tuple
 import networkx as nx
 
 
-def _try_parse_3lines(content: str):
-    lines = [ln.strip() for ln in content.splitlines() if ln.strip()]
-    if len(lines) < 3:
-        raise ValueError("3-line format not detected")
-    nodes_map = json.loads(lines[0])
-    adj_map = json.loads(lines[1])
-    is_bidirectional = json.loads(lines[2])
-    return nodes_map, adj_map, bool(is_bidirectional)
+NUMERIC_NODE_METRICS = {
+    ("betweenness_centrality", 0),
+    ("closeness_centrality", 0),
+    ("clustering_coefficient", 0),
+    ("degree_assortativity_coefficient", 3),
+    ("degree_centrality", 0),
+    ("edge_betweenness_centrality", 1),
+    ("eigenvector_centrality", 0),
+    ("modularity", 3),
+    ("page_rank", 0),
+    ("shortest_paths", 2)
+}
 
 
-def _try_parse_flex(content: str):
+def compute_metrics(G: nx.Graph, is_bidirectional: bool) -> Dict[str, Any]:
+    metrics: Dict[str, Any] = {}
+
+    # NOTE: keep key names aligned with your Go outputs for easy comparison
+    metrics["betweenness_centrality"] = nx.betweenness_centrality(G)
+    metrics["closeness_centrality"] = nx.closeness_centrality(G)  # wf_improved=True semantics in recent NX
+    metrics["clustering_coefficient"] = nx.clustering(G)          # for DiGraph, NX uses underlying undirected
+    metrics["degree_assortativity_coefficient"] = nx.degree_assortativity_coefficient(G)
+    metrics["degree_centrality"] = nx.degree_centrality(G)
+    metrics["edge_betweenness_centrality"] = nx.edge_betweenness_centrality(G)
+    metrics["eigenvector_centrality"] = nx.eigenvector_centrality(G)
+    metrics["modularity"] = nx.algorithms.community.modularity(G, nx.algorithms.community.greedy_modularity_communities(G))
+    metrics["page_rank"] = nx.pagerank(G, weight=None)            # unweighted
+    metrics["shortest_paths"] = dict(nx.all_pairs_shortest_path_length(G))
+
+    # If you also want degree_centrality comparison, uncomment:
+
+    return metrics
+
+
+def try_parse_flex(content: str):
     """
     Accept flexible formats:
     - [nodes_map, adj_map, true]
@@ -41,14 +65,24 @@ def _try_parse_flex(content: str):
     raise ValueError("Flexible JSON format not detected")
 
 
+def try_parse_3lines(content: str):
+    lines = [ln.strip() for ln in content.splitlines() if ln.strip()]
+    if len(lines) < 3:
+        raise ValueError("3-line format not detected")
+    nodes_map = json.loads(lines[0])
+    adj_map = json.loads(lines[1])
+    is_bidirectional = json.loads(lines[2])
+    return nodes_map, adj_map, bool(is_bidirectional)
+
+
 def load_graph_file(path: str):
     content = Path(path).read_text(encoding="utf-8")
     try:
-        return _try_parse_flex(content)
+        return try_parse_flex(content)
     except Exception:
         pass
     try:
-        return _try_parse_3lines(content)
+        return try_parse_3lines(content)
     except Exception:
         pass
     raise ValueError(
@@ -83,26 +117,6 @@ def build_nx_graph(nodes_map, adj_map, is_bidirectional: bool):
     return G
 
 
-def compute_metrics(G: nx.Graph, is_bidirectional: bool) -> Dict[str, Any]:
-    metrics: Dict[str, Any] = {}
-
-    # NOTE: keep key names aligned with your Go outputs for easy comparison
-    metrics["betweenness_centrality"] = nx.betweenness_centrality(G)
-    metrics["closeness_centrality"] = nx.closeness_centrality(G)  # wf_improved=True semantics in recent NX
-    metrics["clustering_coefficient"] = nx.clustering(G)          # for DiGraph, NX uses underlying undirected
-    metrics["degree_assortativity_coefficient"] = nx.degree_assortativity_coefficient(G)
-    metrics["degree_centrality"] = nx.degree_centrality(G)
-    metrics["edge_betweenness_centrality"] = nx.edge_betweenness_centrality(G)
-    metrics["eigenvector_centrality"] = nx.eigenvector_centrality(G)
-    metrics["modularity"] = nx.algorithms.community.modularity(G, nx.algorithms.community.greedy_modularity_communities(G))
-    metrics["page_rank"] = nx.pagerank(G, weight=None)            # unweighted
-    metrics["shortest_paths"] = dict(nx.all_pairs_shortest_path_length(G))
-
-    # If you also want degree_centrality comparison, uncomment:
-
-    return metrics
-
-
 def to_jsonable(d):
     if isinstance(d, dict):
         return {str(k): to_jsonable(v) for k, v in d.items()}
@@ -111,22 +125,7 @@ def to_jsonable(d):
     return d
 
 
-# -------- comparison helpers --------
-
-NUMERIC_NODE_METRICS = {
-    "betweenness_centrality",
-    "closeness_centrality",
-    "clustering_coefficient",
-    "degree_assortativity_coefficient",
-    "degree_centrality",
-    "edge_betweenness_centrality",
-    "eigenvector_centrality",
-    "modularity",
-    "page_rank",
-    "shortest_paths"
-}
-
-def _load_metrics_obj(path: str) -> Dict[str, Any]:
+def load_metrics_obj(path: str) -> Dict[str, Any]:
     """
     Accepts either:
       - {"metrics": {...}}  (preferred)
@@ -142,29 +141,30 @@ def _load_metrics_obj(path: str) -> Dict[str, Any]:
     raise ValueError(f"Unsupported metrics JSON structure in: {path}")
 
 
-def _safe_rel_err(diff: float, ref: float, eps: float = 1e-15) -> float:
+def safe_rel_err(diff: float, ref: float, eps: float = 1e-15) -> float:
     denom = abs(ref)
     if denom < eps:
         denom = eps
     return abs(diff) / denom
 
 
-def compare_metric_maps(name: str, ref: Dict[str, float], cmp_: Dict[str, float], include_per_node: bool) -> Dict[str, Any]:
-    if name == "edge_betweenness_centrality":
+def compare_metric_maps(name: str, _type: int, ref: Dict[str, float], cmp_: Dict[str, float], include_per_node: bool) -> Dict[str, Any]:
+    if _type == 1:
         ref_s = {str(k): float(v) for k, v in ref.items()}
         cmp_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in cmp_.items() for k2, v in v1.items()}
-    elif name == "shortest_paths":
+    elif _type == 2:
         ref_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in ref.items() for k2, v in v1.items()}
         cmp_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in cmp_.items() for k2, v in v1.items()}
-    elif name == "degree_assortativity_coefficient" or name == "modularity":
+    elif _type == 3:
         # single float value
         ref_s = {"value": float(ref) if isinstance(ref, (int, float)) else 0.0}
         cmp_s = {"value": float(cmp_) if isinstance(cmp_, (int, float)) else 0.0}
-    else:
+    elif _type == 0:
         # align keys as strings
         ref_s = {str(k): float(v) for k, v in ref.items()}
         cmp_s = {str(k): float(v) for k, v in cmp_.items()}
-
+    else:
+        raise ValueError(f"Unknown metric type {_type} for {name}")
 
     common = sorted(set(ref_s.keys()) & set(cmp_s.keys()), key=lambda x: (len(x), x))
     miss_in_cmp = sorted(set(ref_s.keys()) - set(cmp_s.keys()))
@@ -190,7 +190,7 @@ def compare_metric_maps(name: str, ref: Dict[str, float], cmp_: Dict[str, float]
             max_abs_err = ad
             max_abs_err_node = k
         mae += ad
-        mape += _safe_rel_err(diff, r)
+        mape += safe_rel_err(diff, r)
 
         if include_per_node:
             per_node[k] = {"ref": r, "cmp": c, "abs_error": ad, "signed_error": diff}
@@ -236,9 +236,9 @@ def compare_shortest_path_length(ref: Dict[str, Dict[str, int]], cmp_: Dict[str,
 def compare_metrics(ref_metrics: Dict[str, Any], cmp_metrics: Dict[str, Any], include_per_node: bool) -> Dict[str, Any]:
     report: Dict[str, Any] = {"metrics_compared": []}
 
-    for name in sorted(NUMERIC_NODE_METRICS):
+    for name, _type in sorted(NUMERIC_NODE_METRICS):
         if name in ref_metrics and name in cmp_metrics:
-            report[name] = compare_metric_maps(name, ref_metrics[name], cmp_metrics[name], include_per_node)
+            report[name] = compare_metric_maps(name, _type, ref_metrics[name], cmp_metrics[name], include_per_node)
             report["metrics_compared"].append(name)
         # else: silently skip if either missing
 
@@ -276,7 +276,7 @@ def main():
     # Optional: comparison
     if args.compare:
         try:
-            cmp_metrics_raw = _load_metrics_obj(args.compare)
+            cmp_metrics_raw = load_metrics_obj(args.compare)
         except Exception as e:
             raise SystemExit(f"[compare] Failed to load comparison metrics: {e}")
 
