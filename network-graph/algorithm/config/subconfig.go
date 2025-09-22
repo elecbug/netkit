@@ -57,6 +57,7 @@ const (
 	AssortativityInOut     AssortativityMode = "in-out"
 )
 
+// AssortativityCoefficientConfig holds the configuration settings for the assortativity coefficient algorithm.
 type AssortativityCoefficientConfig struct {
 	// Mode selects which degree pairing to use.
 	// Defaults:
@@ -67,4 +68,11 @@ type AssortativityCoefficientConfig struct {
 	// IgnoreSelfLoops controls whether to ignore self loops (u==v).
 	// Default: true
 	IgnoreSelfLoops bool
+}
+
+// ModularityConfig holds the configuration settings for the modularity calculation.
+type ModularityConfig struct {
+	// Partition maps each node to its community ID.
+	// If nil, algorithm will compute greedy modularity communities automatically.
+	Partition map[node.ID]int
 }

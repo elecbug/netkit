@@ -19,6 +19,7 @@ const (
 	DIAMETER
 	EDGE_BETWEENNESS_CENTRALITY
 	EIGENVECTOR_CENTRALITY
+	MODULARITY
 	PAGE_RANK
 	SHORTEST_PATHS
 )
@@ -42,6 +43,8 @@ func Metric(g *graph.Graph, cfg *config.Config, metricType MetricType) any {
 		return EdgeBetweennessCentrality(g, cfg)
 	case EIGENVECTOR_CENTRALITY:
 		return EigenvectorCentrality(g, cfg)
+	case MODULARITY:
+		return Modularity(g, cfg)
 	case PAGE_RANK:
 		return PageRank(g, cfg)
 	case SHORTEST_PATHS:

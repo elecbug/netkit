@@ -94,6 +94,7 @@ def compute_metrics(G: nx.Graph, is_bidirectional: bool) -> Dict[str, Any]:
     metrics["degree_centrality"] = nx.degree_centrality(G)
     metrics["edge_betweenness_centrality"] = nx.edge_betweenness_centrality(G)
     metrics["eigenvector_centrality"] = nx.eigenvector_centrality(G)
+    metrics["modularity"] = nx.algorithms.community.modularity(G, nx.algorithms.community.greedy_modularity_communities(G))
     metrics["page_rank"] = nx.pagerank(G, weight=None)            # unweighted
     metrics["shortest_paths"] = dict(nx.all_pairs_shortest_path_length(G))
 
@@ -120,6 +121,7 @@ NUMERIC_NODE_METRICS = {
     "degree_centrality",
     "edge_betweenness_centrality",
     "eigenvector_centrality",
+    "modularity",
     "page_rank",
     "shortest_paths"
 }
@@ -154,7 +156,7 @@ def compare_metric_maps(name: str, ref: Dict[str, float], cmp_: Dict[str, float]
     elif name == "shortest_paths":
         ref_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in ref.items() for k2, v in v1.items()}
         cmp_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in cmp_.items() for k2, v in v1.items()}
-    elif name == "degree_assortativity_coefficient":
+    elif name == "degree_assortativity_coefficient" or name == "modularity":
         # single float value
         ref_s = {"value": float(ref) if isinstance(ref, (int, float)) else 0.0}
         cmp_s = {"value": float(cmp_) if isinstance(cmp_, (int, float)) else 0.0}
