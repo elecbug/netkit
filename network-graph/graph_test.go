@@ -193,6 +193,9 @@ func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 	t.Run("EigenvectorCentrality", func(t *testing.T) {
 		results["eigenvector_centrality"] = algorithm.EigenvectorCentrality(g, cfg)
 	})
+	t.Run("Modularity", func(t *testing.T) {
+		results["modularity"] = algorithm.Modularity(g, cfg)
+	})
 	t.Run("PageRank", func(t *testing.T) {
 		results["page_rank"] = algorithm.PageRank(g, cfg)
 	})

@@ -15,6 +15,7 @@ type Config struct {
 	Eigenvector     *EigenvectorCentralityConfig
 	PageRank        *PageRankConfig
 	Assortativity   *AssortativityCoefficientConfig
+	Modularity      *ModularityConfig
 }
 
 // Default returns the default configuration for the graph algorithms.
@@ -28,5 +29,6 @@ func Default() *Config {
 		Eigenvector:     &EigenvectorCentralityConfig{MaxIter: 100, Tol: 1e-6, Reverse: false, NStart: nil},
 		Degree:          &DegreeCentralityConfig{Mode: "total"},
 		Assortativity:   &AssortativityCoefficientConfig{Mode: AssortativityProjected, IgnoreSelfLoops: true},
+		Modularity:      &ModularityConfig{Partition: nil},
 	}
 }
