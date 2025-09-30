@@ -12,17 +12,17 @@ import (
 
 // Graph maintains nodes and adjacency edges.
 type Graph struct {
-	nodes         map[node.ID]bool
-	edges         map[node.ID]map[node.ID]bool
-	bidirectional bool
+	nodes        map[node.ID]bool
+	edges        map[node.ID]map[node.ID]bool
+	isUndirected bool
 }
 
 // New creates and returns an empty Graph.
-func New(bidirectional bool) *Graph {
+func New(isUndirected bool) *Graph {
 	return &Graph{
-		nodes:         make(map[node.ID]bool),
-		edges:         make(map[node.ID]map[node.ID]bool),
-		bidirectional: bidirectional,
+		nodes:        make(map[node.ID]bool),
+		edges:        make(map[node.ID]map[node.ID]bool),
+		isUndirected: isUndirected,
 	}
 }
 
@@ -59,7 +59,7 @@ func Save(g *Graph) (string, error) {
 		return "", fmt.Errorf("failed to marshal edges: %v", err)
 	}
 
-	bidirectional, err := json.Marshal(g.bidirectional)
+	bidirectional, err := json.Marshal(g.isUndirected)
 
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal bidirectional: %v", err)
@@ -92,15 +92,21 @@ func Load(data string) (*Graph, error) {
 	}
 
 	return &Graph{
-		nodes:         nodes,
-		edges:         edges,
-		bidirectional: bidirectional,
+		nodes:        nodes,
+		edges:        edges,
+		isUndirected: bidirectional,
 	}, nil
 }
 
+// [deprecated] This function is deprecated. Use graph.IsUndirected() instead.
 // IsBidirectional returns true if the graph is bidirectional.
 func (g *Graph) IsBidirectional() bool {
-	return g.bidirectional
+	return g.isUndirected
+}
+
+// IsUndirected returns true if the graph is undirected.
+func (g *Graph) IsUndirected() bool {
+	return g.isUndirected
 }
 
 // Hash returns the SHA-256 hash of the graph.

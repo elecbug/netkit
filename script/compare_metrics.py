@@ -8,22 +8,26 @@ from typing import Any, Dict, Tuple
 
 import networkx as nx
 
+MAP_TYPE = 0
+EDGE_BETWEENNESS_CENTRALITY_TYPE = 1
+SHORTEST_PATH_TYPE = 2
+SINGLE_VALUE_TYPE = 3
 
 NUMERIC_NODE_METRICS = {
-    ("betweenness_centrality", 0),
-    ("closeness_centrality", 0),
-    ("clustering_coefficient", 0),
-    ("degree_assortativity_coefficient", 3),
-    ("degree_centrality", 0),
-    ("edge_betweenness_centrality", 1),
-    ("eigenvector_centrality", 0),
-    ("modularity", 3),
-    ("page_rank", 0),
-    ("shortest_paths", 2)
+    ("betweenness_centrality", MAP_TYPE),
+    ("closeness_centrality", MAP_TYPE),
+    ("clustering_coefficient", MAP_TYPE),
+    ("degree_assortativity_coefficient", SINGLE_VALUE_TYPE),
+    ("degree_centrality", MAP_TYPE),
+    ("edge_betweenness_centrality", EDGE_BETWEENNESS_CENTRALITY_TYPE),
+    ("eigenvector_centrality", MAP_TYPE),
+    ("modularity", SINGLE_VALUE_TYPE),
+    ("page_rank", MAP_TYPE),
+    ("shortest_paths", SHORTEST_PATH_TYPE)
 }
 
 
-def compute_metrics(G: nx.Graph, is_bidirectional: bool) -> Dict[str, Any]:
+def compute_metrics(G: nx.Graph, is_undirected: bool) -> Dict[str, Any]:
     metrics: Dict[str, Any] = {}
 
     # NOTE: keep key names aligned with your Go outputs for easy comparison
@@ -149,17 +153,17 @@ def safe_rel_err(diff: float, ref: float, eps: float = 1e-15) -> float:
 
 
 def compare_metric_maps(name: str, _type: int, ref: Dict[str, float], cmp_: Dict[str, float], include_per_node: bool) -> Dict[str, Any]:
-    if _type == 1:
+    if _type == EDGE_BETWEENNESS_CENTRALITY_TYPE:
         ref_s = {str(k): float(v) for k, v in ref.items()}
         cmp_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in cmp_.items() for k2, v in v1.items()}
-    elif _type == 2:
+    elif _type == SHORTEST_PATH_TYPE:
         ref_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in ref.items() for k2, v in v1.items()}
         cmp_s = {f"({str(k1)}, {str(k2)})": float(v) for k1, v1 in cmp_.items() for k2, v in v1.items()}
-    elif _type == 3:
+    elif _type == SINGLE_VALUE_TYPE:
         # single float value
         ref_s = {"value": float(ref) if isinstance(ref, (int, float)) else 0.0}
         cmp_s = {"value": float(cmp_) if isinstance(cmp_, (int, float)) else 0.0}
-    elif _type == 0:
+    elif _type == MAP_TYPE:
         # align keys as strings
         ref_s = {str(k): float(v) for k, v in ref.items()}
         cmp_s = {str(k): float(v) for k, v in cmp_.items()}
@@ -254,12 +258,12 @@ def main():
     ap.add_argument("--per-node", action="store_true", help="Include per-node errors in the comparison report")
     args = ap.parse_args()
 
-    nodes_map, adj_map, is_bidirectional = load_graph_file(args.input)
-    G = build_nx_graph(nodes_map, adj_map, is_bidirectional)
+    nodes_map, adj_map, is_undirected = load_graph_file(args.input)
+    G = build_nx_graph(nodes_map, adj_map, is_undirected)
 
-    computed = compute_metrics(G, is_bidirectional)
+    computed = compute_metrics(G, is_undirected)
     out = {
-        "is_bidirectional": bool(is_bidirectional),
+        "is_bidirectional": bool(is_undirected),
         "n_nodes": G.number_of_nodes(),
         "n_edges": G.number_of_edges(),
         "metrics": to_jsonable(computed),
