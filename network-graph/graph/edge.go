@@ -25,7 +25,7 @@ func (g *Graph) AddEdge(from, to node.ID) error {
 
 	g.edges[from][to] = true
 
-	if g.bidirectional {
+	if g.isUndirected {
 		if _, ok := g.edges[to]; !ok {
 			g.edges[to] = make(map[node.ID]bool)
 		}
@@ -52,7 +52,7 @@ func (g *Graph) RemoveEdge(from, to node.ID) error {
 
 	delete(g.edges[from], to)
 
-	if g.bidirectional {
+	if g.isUndirected {
 		if _, ok := g.edges[to]; !ok {
 			g.edges[to] = make(map[node.ID]bool)
 		}
