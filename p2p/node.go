@@ -1,14 +1,18 @@
 package p2p
 
 import (
-	"math"
-	"math/rand"
 	"sync"
 	"time"
 )
 
 // ID represents a unique identifier for a node in the P2P network.
 type ID uint64
+
+// Message represents a message sent between nodes in the P2P network.
+type Message struct {
+	From    ID
+	Content string
+}
 
 // Edge represents a connection from one node to another in the P2P network.
 type Edge struct {
@@ -33,12 +37,6 @@ type Node struct {
 // Degree returns the number of edges connected to the node.
 func (n *Node) Degree() int {
 	return len(n.Edges)
-}
-
-// Message represents a message sent between nodes in the P2P network.
-type Message struct {
-	From    ID
-	Content string
 }
 
 // eachRun starts the message handling routine for the node.
@@ -111,16 +109,4 @@ func (n *Node) publish(network map[ID]*Node, content string, exclude map[ID]stru
 		}(edgeCopy)
 	}
 	n.mu.Unlock()
-}
-
-// LogNormalRand generates a log-normally distributed random number
-// with given mu and sigma parameters.
-func LogNormalRand(mu, sigma float64, src rand.Source) float64 {
-	r := rand.New(src)
-
-	u1 := r.Float64()
-	u2 := r.Float64()
-	z := math.Sqrt(-2.0*math.Log(u1)) * math.Cos(2*math.Pi*u2)
-
-	return math.Exp(mu + sigma*z)
 }
