@@ -11,6 +11,10 @@ func ErdosRenyiGraph(n int, p float64, isUndirected bool) *graph.Graph {
 
 	g := graph.New(isUndirected)
 
+	for i := 0; i < n; i++ {
+		g.AddNode(node.ID(toString(i)))
+	}
+
 	if isUndirected {
 		for i := 0; i < n; i++ {
 			for j := i + 1; j < n; j++ {
