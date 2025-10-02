@@ -27,9 +27,14 @@ func TestGenerateNetwork(t *testing.T) {
 
 	count := 0
 	for id, node := range nw {
-		c := len(node.Received["Hello, P2P Network!"])
+		c := len(node.RecvFrom["Hello, P2P Network!"])
 		t.Logf("Node %d received %d/%d\n", id, c, len(node.Edges))
-		t.Logf("Node %d received messages: %+v, %+v\n", id, node.ReceivedTime, node.Received)
+		t.Logf("Node %d received messages: %+v, %+v, %+v\n",
+			id,
+			node.RecvFrom["Hello, P2P Network!"],
+			node.SentTo["Hello, P2P Network!"],
+			node.SeenAt["Hello, P2P Network!"],
+		)
 		count += c
 	}
 
