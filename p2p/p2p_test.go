@@ -17,8 +17,11 @@ func TestGenerateNetwork(t *testing.T) {
 	nodeLatency := func() float64 { return p2p.LogNormalRand(5.704, 0.5, src) }
 	edgeLatency := func() float64 { return p2p.LogNormalRand(5.704, 0.3, src) }
 
-	nw := p2p.GenerateNetwork(g, nodeLatency, edgeLatency)
+	nw, _ := p2p.GenerateNetwork(g, nodeLatency, edgeLatency)
 	t.Logf("Generated network with %d nodes\n", len(nw))
+	for id, node := range nw {
+		t.Logf("Node %d: latency=%.2fms, edges=%v\n", id, node.Latency, node.Edges)
+	}
 
 	p2p.RunNetworkSimulation(nw)
 	p2p.Publish(nw[0], "Hello, P2P Network!")
@@ -27,9 +30,9 @@ func TestGenerateNetwork(t *testing.T) {
 
 	count := 0
 	for id, node := range nw {
-		c := len(node.RecvFrom["Hello, P2P Network!"])
-		t.Logf("Node %d received %d/%d\n", id, c, len(node.Edges))
-		t.Logf("Node %d received messages: %+v, %+v, %+v\n",
+		c := len(node.SentTo["Hello, P2P Network!"])
+		t.Logf("Node %d sent %d/%d\n", id, c, len(node.Edges))
+		t.Logf("Node %d data: recv: %v, sent: %v, seen: %v\n",
 			id,
 			node.RecvFrom["Hello, P2P Network!"],
 			node.SentTo["Hello, P2P Network!"],

@@ -1,20 +1,28 @@
 package p2p
 
 import (
+	"strconv"
+
 	"github.com/elecbug/netkit/network-graph/graph"
 	"github.com/elecbug/netkit/network-graph/node"
 )
 
 // GenerateNetwork creates a P2P network from the given graph.
 // nodeLatency and edgeLatency are functions that generate latencies for nodes and edges respectively.
-func GenerateNetwork(g *graph.Graph, nodeLatency, edgeLatency func() float64) map[ID]*Node {
+func GenerateNetwork(g *graph.Graph, nodeLatency, edgeLatency func() float64) (map[ID]*Node, error) {
 	nodes := make(map[ID]*Node)
 	maps := make(map[node.ID]ID)
 
 	// create nodes
-	for i, gn := range g.Nodes() {
+	for _, gn := range g.Nodes() {
+		num, err := strconv.Atoi(gn.String())
+
+		if err != nil {
+			return nil, err
+		}
+
 		n := &Node{
-			ID:      ID(i),
+			ID:      ID(num),
 			Latency: nodeLatency(),
 			Edges:   make(map[ID]Edge),
 		}
@@ -23,8 +31,14 @@ func GenerateNetwork(g *graph.Graph, nodeLatency, edgeLatency func() float64) ma
 		maps[gn] = n.ID
 	}
 
-	for i, gn := range g.Nodes() {
-		n := nodes[ID(i)]
+	for _, gn := range g.Nodes() {
+		num, err := strconv.Atoi(gn.String())
+
+		if err != nil {
+			return nil, err
+		}
+
+		n := nodes[ID(num)]
 
 		for _, neighbor := range g.Neighbors(gn) {
 			j := maps[neighbor]
@@ -38,7 +52,7 @@ func GenerateNetwork(g *graph.Graph, nodeLatency, edgeLatency func() float64) ma
 		}
 	}
 
-	return nodes
+	return nodes, nil
 }
 
 // RunNetworkSimulation starts the message handling routines for all nodes in the network.

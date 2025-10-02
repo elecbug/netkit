@@ -99,7 +99,9 @@ func (n *Node) publish(network map[ID]*Node, content string, exclude map[ID]stru
 		if _, already := n.SentTo[content][edge.TargetID]; already {
 			continue
 		}
-
+		if _, received := n.RecvFrom[content][edge.TargetID]; received {
+			continue
+		}
 		n.SentTo[content][edge.TargetID] = struct{}{}
 
 		edgeCopy := edge
