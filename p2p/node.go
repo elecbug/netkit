@@ -18,10 +18,13 @@ type Edge struct {
 
 // Node represents a node in the P2P network.
 type Node struct {
-	ID       ID
-	Latency  float64 // in milliseconds
-	Edges    map[ID]Edge
-	msgQueue chan Message
+	ID           ID
+	Latency      float64 // in milliseconds
+	Edges        map[ID]Edge
+	Received     map[string][]ID
+	ReceivedTime map[string]time.Time
+	msgQueue     chan Message
+	mu           sync.Mutex
 }
 
 // Degree returns the number of edges connected to the node.
@@ -30,42 +33,52 @@ func (n *Node) Degree() int {
 }
 
 // Message represents a message sent between nodes in the P2P network.
-type Message string
+type Message struct {
+	From    ID
+	Content string
+}
 
 // eachRun starts the message handling routine for the node.
 func (n *Node) eachRun(network map[ID]*Node) {
-	n.msgQueue = make(chan Message, 100)
-	receivedMap := make(map[Message][]ID)
-	mu := sync.Mutex{}
-
 	go func() {
+		n.msgQueue = make(chan Message, 1000)
+		n.Received = make(map[string][]ID)
+		n.ReceivedTime = make(map[string]time.Time)
+
+		n.mu = sync.Mutex{}
+
 		for {
 			for msg := range n.msgQueue {
-				if _, ok := receivedMap[msg]; !ok {
-					mu.Lock()
-					receivedMap[msg] = []ID{}
-					mu.Unlock()
+				if _, ok := n.ReceivedTime[msg.Content]; !ok {
+					n.mu.Lock()
+					n.ReceivedTime[msg.Content] = time.Now()
+					n.Received[msg.Content] = []ID{}
+					n.Received[msg.Content] = append(n.Received[msg.Content], msg.From)
+					n.mu.Unlock()
 
-					go func() {
+					go func(msg Message) {
 						time.Sleep(time.Duration(n.Latency) * time.Millisecond)
-						publish(n.Edges, receivedMap[msg], network, msg)
-					}()
+						n.mu.Lock()
+						n.publish(network, msg.Content)
+						n.mu.Unlock()
+					}(msg)
+				} else {
+					n.mu.Lock()
+					n.Received[msg.Content] = append(n.Received[msg.Content], msg.From)
+					n.mu.Unlock()
 				}
-				mu.Lock()
-				receivedMap[msg] = append(receivedMap[msg], n.ID)
-				mu.Unlock()
 			}
 		}
 	}()
 }
 
 // publish sends the message to all connected nodes except those in the ids slice.
-func publish(edges map[ID]Edge, ids []ID, network map[ID]*Node, msg Message) {
-	for i, edge := range edges {
+func (n *Node) publish(network map[ID]*Node, msg string) {
+	for _, edge := range n.Edges {
 		found := false
 
-		for _, id := range ids {
-			if id == i {
+		for _, id := range n.Received[msg] {
+			if id == edge.TargetID {
 				found = true
 				break
 			}
@@ -75,8 +88,11 @@ func publish(edges map[ID]Edge, ids []ID, network map[ID]*Node, msg Message) {
 			continue
 		}
 
-		time.Sleep(time.Duration(edge.Latency) * time.Millisecond)
-		network[edge.TargetID].msgQueue <- msg
+		go func(edge Edge) {
+			time.Sleep(time.Duration(edge.Latency) * time.Millisecond)
+			msg := Message{From: n.ID, Content: msg}
+			network[edge.TargetID].msgQueue <- msg
+		}(edge)
 	}
 }
 

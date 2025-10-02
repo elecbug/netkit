@@ -49,6 +49,6 @@ func RunNetworkSimulation(nodes map[ID]*Node) {
 }
 
 // Publish sends a message to the specified node's message queue.
-func Publish(node *Node, msg Message) {
-	node.msgQueue <- msg
+func Publish(node *Node, msg string) {
+	node.msgQueue <- Message{From: node.ID, Content: msg}
 }
