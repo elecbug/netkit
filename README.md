@@ -19,7 +19,7 @@ go get github.com/elecbug/netkit@latest
   - [`graph`](./network-graph/graph/): Library for creating and building graphs.
   - [`algorithm`](./network-graph/algorithm/): Library containing various graph algorithms.
 
-# Extensible
+### Extensible
 
 - [`bimap`](./bimap/): Bidirectional map with O(1) lookups key->value and value->key.
 - [`slice`](./slice/): Generic helpers: binary search, stable merge sort, parallel sort, and `IsSorted`.
