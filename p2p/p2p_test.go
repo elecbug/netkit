@@ -1,7 +1,10 @@
 package p2p_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -23,23 +26,31 @@ func TestGenerateNetwork(t *testing.T) {
 		t.Logf("Node %d: latency=%.2fms, edges=%v\n", id, node.Latency, node.Edges)
 	}
 
+	msg := "Hello, P2P World!"
+
 	p2p.RunNetworkSimulation(nw)
-	p2p.Publish(nw[0], "Hello, P2P Network!")
+	p2p.Publish(nw[0], msg)
 
 	time.Sleep(5 * time.Second)
 
 	count := 0
+	result := make(map[string]map[string]any)
+
 	for id, node := range nw {
-		c := len(node.SentTo["Hello, P2P Network!"])
+		c := len(node.SentTo[msg])
 		t.Logf("Node %d sent %d/%d\n", id, c, len(node.Edges))
-		t.Logf("Node %d data: recv: %v, sent: %v, seen: %v\n",
-			id,
-			node.RecvFrom["Hello, P2P Network!"],
-			node.SentTo["Hello, P2P Network!"],
-			node.SeenAt["Hello, P2P Network!"],
-		)
+
+		result[fmt.Sprintf("node_%d", id)] = map[string]any{}
+		result[fmt.Sprintf("node_%d", id)]["recv"] = node.RecvFrom[msg]
+		result[fmt.Sprintf("node_%d", id)]["sent"] = node.SentTo[msg]
+		result[fmt.Sprintf("node_%d", id)]["seen"] = node.SeenAt[msg]
+
 		count += c
 	}
 
 	t.Logf("Total received count: %d\n", count)
+
+	data, _ := json.Marshal(result)
+
+	os.WriteFile("p2p_result.log", data, 0644)
 }
