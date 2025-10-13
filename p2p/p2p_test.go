@@ -3,33 +3,35 @@ package p2p_test
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/elecbug/netkit/network-graph/algorithm"
 	"github.com/elecbug/netkit/network-graph/graph/standard_graph"
 	"github.com/elecbug/netkit/p2p"
 )
 
 func TestGenerateNetwork(t *testing.T) {
-	g := standard_graph.ErdosRenyiGraph(1000, 0.005, true)
+	g := standard_graph.ErdosRenyiGraph(1000, 0.05, true)
 	t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
 	src := rand.NewSource(time.Now().UnixNano())
 
 	nodeLatency := func() float64 { return p2p.LogNormalRand(5.704, 0.5, src) }
 	edgeLatency := func() float64 { return p2p.LogNormalRand(5.704, 0.3, src) }
+	queuingLatency := func() float64 { return p2p.LogNormalRand(5.0, 0.2, src) }
 
-	nw, _ := p2p.GenerateNetwork(g, nodeLatency, edgeLatency)
+	nw, _ := p2p.GenerateNetwork(g, nodeLatency, edgeLatency, queuingLatency)
 	t.Logf("Generated network with %d nodes\n", len(nw))
 	for id, node := range nw {
-		t.Logf("Node %d: latency=%.2fms, edges=%v\n", id, node.Latency, node.Edges)
+		t.Logf("Node %d: validation_latency=%.2fms, queuing_latency=%.2fms, edges=%v\n", id, node.ValidationLatency, node.QueuingLatency, node.Edges)
 	}
 
 	msg := "Hello, P2P World!"
 
 	p2p.RunNetworkSimulation(nw)
-	time.Sleep(1 * time.Second)
 	p2p.Publish(nw[0], msg)
 	time.Sleep(5 * time.Second)
 
@@ -55,50 +57,53 @@ func TestGenerateNetwork(t *testing.T) {
 	os.WriteFile("p2p_result.log", data, 0644)
 }
 
-// func TestExpCase(t *testing.T) {
-// 	for i := 4; i < 10; i++ {
-// 		for j := 0; j < 100; j++ {
-// 			filename := fmt.Sprintf("data/p2p_result-%02d-%03d.log", i, j)
+func TestExpCase(t *testing.T) {
+	run := false
 
-// 			if _, err := os.Stat(filename); err == nil {
-// 				t.Logf("File %s already exists, skipping...\n", filename)
-// 				continue
-// 			}
+	if run {
+		for i := 4; i < 10; i++ {
+			for j := 0; j < 100; j++ {
+				filename := fmt.Sprintf("temp/p2p_result-%02d-%03d.log", i, j)
 
-// 			t.Logf("Experiment case: %02d-%03d\n", i, j)
-// 			src := rand.NewSource(time.Now().UnixNano())
-// 			r := rand.New(src)
+				if _, err := os.Stat(filename); err == nil {
+					t.Logf("File %s already exists, skipping...\n", filename)
+					continue
+				}
 
-// 			n := r.Int()%(128-119) + 119
-// 			g := standard_graph.ErdosRenyiGraph(n, float64(i)/float64(n), true)
+				t.Logf("Experiment case: %02d-%03d\n", i, j)
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// 			nodeLatency := func() float64 { return p2p.LogNormalRand(5.704, 0.5, src) }
-// 			edgeLatency := func() float64 { return p2p.LogNormalRand(5.704, 0.3, src) }
+				n := r.Int()%(128-119) + 119
+				g := standard_graph.ErdosRenyiGraph(n, float64(i)/float64(n), true)
 
-// 			nw, _ := p2p.GenerateNetwork(g, nodeLatency, edgeLatency)
-// 			msg := "Hello, P2P World!"
+				nodeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.1, rand.NewSource(time.Now().UnixNano())) }
+				edgeLatency := func() float64 { return p2p.LogNormalRand(math.Log(50), 0.1, rand.NewSource(time.Now().UnixNano())) }
+				queuingLatency := func() float64 { return p2p.LogNormalRand(math.Log(50), 0.1, rand.NewSource(time.Now().UnixNano())) }
 
-// 			t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
+				nw, _ := p2p.GenerateNetwork(g, nodeLatency, edgeLatency, queuingLatency)
+				msg := "Hello, P2P World!"
 
-// 			p2p.RunNetworkSimulation(nw)
-// 			time.Sleep(1 * time.Second)
-// 			p2p.Publish(nw[0], msg)
-// 			time.Sleep(5 * time.Second)
+				t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
 
-// 			result := make(map[string]map[string]any)
+				p2p.RunNetworkSimulation(nw)
+				p2p.Publish(nw[0], msg)
+				time.Sleep(4 * time.Second)
 
-// 			for id, node := range nw {
-// 				result[fmt.Sprintf("node_%d", id)] = map[string]any{}
-// 				result[fmt.Sprintf("node_%d", id)]["recv"] = node.RecvFrom[msg]
-// 				result[fmt.Sprintf("node_%d", id)]["sent"] = node.SentTo[msg]
-// 				result[fmt.Sprintf("node_%d", id)]["seen"] = node.SeenAt[msg]
-// 			}
+				result := make(map[string]map[string]any)
 
-// 			data, _ := json.Marshal(result)
+				for id, node := range nw {
+					result[fmt.Sprintf("node_%d", id)] = map[string]any{}
+					result[fmt.Sprintf("node_%d", id)]["recv"] = node.RecvFrom[msg]
+					result[fmt.Sprintf("node_%d", id)]["sent"] = node.SentTo[msg]
+					result[fmt.Sprintf("node_%d", id)]["seen"] = node.SeenAt[msg]
+				}
 
-// 			os.WriteFile(filename, data, 0644)
+				data, _ := json.Marshal(result)
 
-// 			algorithm.CacheClear()
-// 		}
-// 	}
-// }
+				os.WriteFile(filename, data, 0644)
+
+				algorithm.CacheClear()
+			}
+		}
+	}
+}

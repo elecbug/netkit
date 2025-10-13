@@ -22,9 +22,10 @@ type Edge struct {
 
 // Node represents a node in the P2P network.
 type Node struct {
-	ID      ID
-	Latency float64
-	Edges   map[ID]Edge
+	ID                ID
+	ValidationLatency float64
+	QueuingLatency    float64
+	Edges             map[ID]Edge
 
 	RecvFrom map[string]map[ID]struct{} // content -> set of senders
 	SentTo   map[string]map[ID]struct{} // content -> set of targets
@@ -40,13 +41,15 @@ func (n *Node) Degree() int {
 }
 
 // eachRun starts the message handling routine for the node.
-func (n *Node) eachRun(network map[ID]*Node) {
-	go func() {
-		n.msgQueue = make(chan Message, 1000)
-		n.RecvFrom = make(map[string]map[ID]struct{})
-		n.SentTo = make(map[string]map[ID]struct{})
-		n.SeenAt = make(map[string]time.Time)
+func (n *Node) eachRun(network map[ID]*Node, wg *sync.WaitGroup) {
+	defer wg.Done()
 
+	n.msgQueue = make(chan Message, 1000)
+	n.RecvFrom = make(map[string]map[ID]struct{})
+	n.SentTo = make(map[string]map[ID]struct{})
+	n.SeenAt = make(map[string]time.Time)
+
+	go func() {
 		for msg := range n.msgQueue {
 			first := false
 			var excludeSnapshot map[ID]struct{}
@@ -66,7 +69,7 @@ func (n *Node) eachRun(network map[ID]*Node) {
 
 			if first {
 				go func(content string, exclude map[ID]struct{}) {
-					time.Sleep(time.Duration(n.Latency) * time.Millisecond)
+					time.Sleep(time.Duration(n.ValidationLatency) * time.Millisecond)
 					n.publish(network, content, exclude)
 				}(msg.Content, excludeSnapshot)
 			}
@@ -86,6 +89,10 @@ func copyIDSet(src map[ID]struct{}) map[ID]struct{} {
 // publish sends the message to neighbors, excluding 'exclude' and already-sent targets.
 func (n *Node) publish(network map[ID]*Node, content string, exclude map[ID]struct{}) {
 	n.mu.Lock()
+	defer n.mu.Unlock()
+
+	time.Sleep(time.Duration(n.QueuingLatency) * time.Millisecond)
+
 	if _, ok := n.SentTo[content]; !ok {
 		n.SentTo[content] = make(map[ID]struct{})
 	}
@@ -103,10 +110,10 @@ func (n *Node) publish(network map[ID]*Node, content string, exclude map[ID]stru
 		n.SentTo[content][edge.TargetID] = struct{}{}
 
 		edgeCopy := edge
+
 		go func(e Edge) {
 			time.Sleep(time.Duration(e.Latency) * time.Millisecond)
 			network[e.TargetID].msgQueue <- Message{From: n.ID, Content: content}
 		}(edgeCopy)
 	}
-	n.mu.Unlock()
 }
