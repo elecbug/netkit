@@ -61,7 +61,7 @@ func TestExpCase(t *testing.T) {
 	run := false
 
 	if run {
-		for i := 4; i < 10; i++ {
+		for i := 4; i < 16; i++ {
 			for j := 0; j < 100; j++ {
 				filename := fmt.Sprintf("temp/p2p_result-%02d-%03d.log", i, j)
 
@@ -73,7 +73,7 @@ func TestExpCase(t *testing.T) {
 				t.Logf("Experiment case: %02d-%03d\n", i, j)
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-				n := r.Int()%(128-119) + 119
+				n := r.Int()%(144-126) + 126
 				g := standard_graph.ErdosRenyiGraph(n, float64(i)/float64(n), true)
 
 				nodeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.1, rand.NewSource(time.Now().UnixNano())) }
