@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"context"
 	"sync"
 	"time"
 )
@@ -8,73 +9,82 @@ import (
 // ID represents a unique identifier for a node in the P2P network.
 type ID uint64
 
-// Message represents a message sent between nodes in the P2P network.
-type Message struct {
-	From    ID
-	Content string
+// p2pNode represents a node in the P2P network.
+type p2pNode struct {
+	id          ID
+	nodeLatency float64
+	edges       map[ID]p2pEdge
+
+	recvFrom map[string]map[ID]struct{} // content -> set of senders
+	sentTo   map[string]map[ID]struct{} // content -> set of targets
+	seenAt   map[string]time.Time       // content -> first arrival time
+
+	msgQueue chan Message
+	mu       sync.Mutex
+
+	alive bool
 }
 
-// Edge represents a connection from one node to another in the P2P network.
-type Edge struct {
+// p2pEdge represents a connection from one node to another in the P2P network.
+type p2pEdge struct {
 	TargetID ID
 	Latency  float64 // in milliseconds
 }
 
-// Node represents a node in the P2P network.
-type Node struct {
-	ID                ID
-	ValidationLatency float64
-	QueuingLatency    float64
-	Edges             map[ID]Edge
+// newNode creates a new Node with the given ID and node latency.
+func newNode(id ID, nodeLatency float64) *p2pNode {
+	return &p2pNode{
+		id:          id,
+		nodeLatency: nodeLatency,
+		edges:       make(map[ID]p2pEdge),
 
-	RecvFrom map[string]map[ID]struct{} // content -> set of senders
-	SentTo   map[string]map[ID]struct{} // content -> set of targets
-	SeenAt   map[string]time.Time       // content -> first arrival time
+		recvFrom: make(map[string]map[ID]struct{}),
+		sentTo:   make(map[string]map[ID]struct{}),
+		seenAt:   make(map[string]time.Time),
 
-	msgQueue chan Message
-	mu       sync.Mutex
-}
-
-// Degree returns the number of edges connected to the node.
-func (n *Node) Degree() int {
-	return len(n.Edges)
+		msgQueue: make(chan Message, 1000),
+		mu:       sync.Mutex{},
+	}
 }
 
 // eachRun starts the message handling routine for the node.
-func (n *Node) eachRun(network map[ID]*Node, wg *sync.WaitGroup) {
+func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Context) {
 	defer wg.Done()
 
-	n.msgQueue = make(chan Message, 1000)
-	n.RecvFrom = make(map[string]map[ID]struct{})
-	n.SentTo = make(map[string]map[ID]struct{})
-	n.SeenAt = make(map[string]time.Time)
+	go func(ctx context.Context) {
+		n.alive = true
 
-	go func() {
 		for msg := range n.msgQueue {
-			first := false
-			var excludeSnapshot map[ID]struct{}
+			select {
+			case <-ctx.Done():
+				n.alive = false
+				return
+			default:
+				first := false
+				var excludeSnapshot map[ID]struct{}
 
-			n.mu.Lock()
-			if _, ok := n.RecvFrom[msg.Content]; !ok {
-				n.RecvFrom[msg.Content] = make(map[ID]struct{})
-			}
-			n.RecvFrom[msg.Content][msg.From] = struct{}{}
+				n.mu.Lock()
+				if _, ok := n.recvFrom[msg.Content]; !ok {
+					n.recvFrom[msg.Content] = make(map[ID]struct{})
+				}
+				n.recvFrom[msg.Content][msg.From] = struct{}{}
 
-			if _, ok := n.SeenAt[msg.Content]; !ok {
-				n.SeenAt[msg.Content] = time.Now()
-				first = true
-				excludeSnapshot = copyIDSet(n.RecvFrom[msg.Content])
-			}
-			n.mu.Unlock()
+				if _, ok := n.seenAt[msg.Content]; !ok {
+					n.seenAt[msg.Content] = time.Now()
+					first = true
+					excludeSnapshot = copyIDSet(n.recvFrom[msg.Content])
+				}
+				n.mu.Unlock()
 
-			if first {
-				go func(content string, exclude map[ID]struct{}) {
-					time.Sleep(time.Duration(n.ValidationLatency) * time.Millisecond)
-					n.publish(network, content, exclude)
-				}(msg.Content, excludeSnapshot)
+				if first {
+					go func(msg Message, exclude map[ID]struct{}) {
+						time.Sleep(time.Duration(n.nodeLatency) * time.Millisecond)
+						n.publish(network, msg, exclude)
+					}(msg, excludeSnapshot)
+				}
 			}
 		}
-	}()
+	}(ctx)
 }
 
 // copyIDSet creates a shallow copy of a set of IDs.
@@ -87,33 +97,45 @@ func copyIDSet(src map[ID]struct{}) map[ID]struct{} {
 }
 
 // publish sends the message to neighbors, excluding 'exclude' and already-sent targets.
-func (n *Node) publish(network map[ID]*Node, content string, exclude map[ID]struct{}) {
+func (n *p2pNode) publish(network *Network, msg Message, exclude map[ID]struct{}) {
+	content := msg.Content
+	protocol := msg.Protocol
+
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
-	time.Sleep(time.Duration(n.QueuingLatency) * time.Millisecond)
-
-	if _, ok := n.SentTo[content]; !ok {
-		n.SentTo[content] = make(map[ID]struct{})
+	if _, ok := n.sentTo[content]; !ok {
+		n.sentTo[content] = make(map[ID]struct{})
 	}
 
-	for _, edge := range n.Edges {
+	willSendEdges := make([]p2pEdge, 0)
+
+	for _, edge := range n.edges {
 		if _, wasSender := exclude[edge.TargetID]; wasSender {
 			continue
 		}
-		if _, already := n.SentTo[content][edge.TargetID]; already {
+		if _, already := n.sentTo[content][edge.TargetID]; already {
 			continue
 		}
-		if _, received := n.RecvFrom[content][edge.TargetID]; received {
+		if _, received := n.recvFrom[content][edge.TargetID]; received {
 			continue
 		}
-		n.SentTo[content][edge.TargetID] = struct{}{}
+		n.sentTo[content][edge.TargetID] = struct{}{}
 
+		willSendEdges = append(willSendEdges, edge)
+	}
+
+	if protocol == Gossiping && len(willSendEdges) > 0 {
+		k := int(float64(len(willSendEdges)) * network.cfg.GossipFactor)
+		willSendEdges = willSendEdges[:k]
+	}
+
+	for _, edge := range willSendEdges {
 		edgeCopy := edge
 
-		go func(e Edge) {
+		go func(e p2pEdge) {
 			time.Sleep(time.Duration(e.Latency) * time.Millisecond)
-			network[e.TargetID].msgQueue <- Message{From: n.ID, Content: content}
+			network.nodes[e.TargetID].msgQueue <- Message{From: n.id, Content: content, Protocol: protocol}
 		}(edgeCopy)
 	}
 }
