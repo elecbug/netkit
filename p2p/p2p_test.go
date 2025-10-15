@@ -12,6 +12,7 @@ import (
 
 	"github.com/elecbug/netkit/network-graph/graph/standard_graph"
 	"github.com/elecbug/netkit/p2p"
+	"github.com/elecbug/netkit/p2p/broadcast"
 )
 
 func TestGenerateNetwork(t *testing.T) {
@@ -38,7 +39,7 @@ func TestGenerateNetwork(t *testing.T) {
 	nw.RunNetworkSimulation(ctx)
 
 	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.NodeIDs()[0])
-	err = nw.Publish(nw.NodeIDs()[0], msg1, p2p.Flooding)
+	err = nw.Publish(nw.NodeIDs()[0], msg1, broadcast.Flooding)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -46,7 +47,7 @@ func TestGenerateNetwork(t *testing.T) {
 	t.Logf("Reachability of message '%s': %f\n", msg1, nw.Reachability(msg1))
 
 	t.Logf("Publishing message '%s' from node %d\n", msg2, nw.NodeIDs()[1])
-	err = nw.Publish(nw.NodeIDs()[1], msg2, p2p.Gossiping)
+	err = nw.Publish(nw.NodeIDs()[1], msg2, broadcast.Gossiping)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -57,7 +58,7 @@ func TestGenerateNetwork(t *testing.T) {
 
 	nw.RunNetworkSimulation(context.Background())
 	t.Logf("Publishing message '%s' from node %d\n", msg3, nw.NodeIDs()[2])
-	err = nw.Publish(nw.NodeIDs()[2], msg3, p2p.Gossiping)
+	err = nw.Publish(nw.NodeIDs()[2], msg3, broadcast.Gossiping)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -81,4 +82,37 @@ func TestGenerateNetwork(t *testing.T) {
 	data, _ := json.Marshal(result)
 
 	os.WriteFile("p2p_result.log", data, 0644)
+}
+
+func TestMetrics(t *testing.T) {
+	g := standard_graph.ErdosRenyiGraph(1000, 50.000/1000, true)
+	t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
+	src := rand.NewSource(time.Now().UnixNano())
+
+	nodeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.5, src) }
+	edgeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.3, src) }
+
+	nw, err := p2p.GenerateNetwork(g, nodeLatency, edgeLatency, &p2p.Config{GossipFactor: 0.35})
+	if err != nil {
+		t.Fatalf("Failed to generate network: %v", err)
+	}
+
+	t.Logf("Generated network with %d nodes\n", len(nw.NodeIDs()))
+
+	msg1 := "Hello, P2P World!"
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	nw.RunNetworkSimulation(ctx)
+
+	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.NodeIDs()[0])
+	err = nw.Publish(nw.NodeIDs()[0], msg1, broadcast.Flooding)
+	if err != nil {
+		t.Fatalf("Failed to publish message: %v", err)
+	}
+	time.Sleep(1000 * time.Millisecond)
+	t.Logf("Number of nodes: %d\n", len(nw.NodeIDs()))
+	t.Logf("Reachability of message '%s': %f\n", msg1, nw.Reachability(msg1))
+	t.Logf("First message reception times of message '%s': %v\n", msg1, nw.FirstMessageReceptionTimes(msg1))
+	t.Logf("Number of duplicate messages of message '%s': %d\n", msg1, nw.NumberOfDuplicateMessages(msg1))
 }

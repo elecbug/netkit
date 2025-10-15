@@ -4,10 +4,9 @@ import (
 	"context"
 	"sync"
 	"time"
-)
 
-// ID represents a unique identifier for a node in the P2P network.
-type ID uint64
+	"github.com/elecbug/netkit/p2p/broadcast"
+)
 
 // p2pNode represents a node in the P2P network.
 type p2pNode struct {
@@ -125,7 +124,7 @@ func (n *p2pNode) publish(network *Network, msg Message, exclude map[ID]struct{}
 		willSendEdges = append(willSendEdges, edge)
 	}
 
-	if protocol == Gossiping && len(willSendEdges) > 0 {
+	if protocol == broadcast.Gossiping && len(willSendEdges) > 0 {
 		k := int(float64(len(willSendEdges)) * network.cfg.GossipFactor)
 		willSendEdges = willSendEdges[:k]
 	}

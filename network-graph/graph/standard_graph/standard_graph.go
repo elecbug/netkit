@@ -23,7 +23,7 @@ func (s STANDARD_GRAPH_TYPE) String(onlyAlphabet bool) string {
 			return "Erdős-Rényi"
 		}
 	case RANDOM_REGULAR:
-		return "Random-Regular"
+		return "Random Regular"
 	case BARABASI_ALBERT:
 		if onlyAlphabet {
 			return "Barabasi-Albert"
@@ -33,7 +33,7 @@ func (s STANDARD_GRAPH_TYPE) String(onlyAlphabet bool) string {
 	case WATTS_STROGATZ:
 		return "Watts-Strogatz"
 	case RANDOM_GEOMETRIC:
-		return "Random-Geometric"
+		return "Random Geometric"
 	case WAXMAN:
 		return "Waxman"
 	default:

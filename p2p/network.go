@@ -5,22 +5,12 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/elecbug/netkit/network-graph/graph"
 	"github.com/elecbug/netkit/network-graph/node"
+	"github.com/elecbug/netkit/p2p/broadcast"
 )
-
-// Message represents a message sent between nodes in the P2P network.
-type Message struct {
-	From     ID
-	Content  string
-	Protocol BroadcastProtocol
-}
-
-// Config holds configuration parameters for the P2P network.
-type Config struct {
-	GossipFactor float64 // fraction of neighbors to gossip to
-}
 
 // Config holds configuration parameters for the P2P network.
 type Network struct {
@@ -96,13 +86,8 @@ func (n *Network) NodeIDs() []ID {
 	return ids
 }
 
-// GetNode retrieves a node by its ID.
-func (n *Network) GetNode(id ID) *p2pNode {
-	return n.nodes[id]
-}
-
 // Publish sends a message to the specified node's message queue.
-func (n *Network) Publish(nodeID ID, msg string, protocol BroadcastProtocol) error {
+func (n *Network) Publish(nodeID ID, msg string, protocol broadcast.Protocol) error {
 	if node, ok := n.nodes[nodeID]; ok {
 		if !node.alive {
 			return fmt.Errorf("node %d is not alive", nodeID)
@@ -130,6 +115,37 @@ func (n *Network) Reachability(msg string) float64 {
 	}
 
 	return float64(reached) / float64(total)
+}
+
+// FirstMessageReceptionTimes returns the first reception times of the specified message across all nodes.
+func (n *Network) FirstMessageReceptionTimes(msg string) []time.Time {
+	firstTimes := make([]time.Time, 0)
+
+	for _, node := range n.nodes {
+		node.mu.Lock()
+		if t, ok := node.seenAt[msg]; ok {
+			firstTimes = append(firstTimes, t)
+		}
+
+		node.mu.Unlock()
+	}
+
+	return firstTimes
+}
+
+// NumberOfDuplicateMessages counts how many duplicate messages were received across all nodes.
+func (n *Network) NumberOfDuplicateMessages(msg string) int {
+	dupCount := 0
+
+	for _, node := range n.nodes {
+		node.mu.Lock()
+		if count, ok := node.recvFrom[msg]; ok {
+			dupCount += len(count) - 1
+		}
+		node.mu.Unlock()
+	}
+
+	return dupCount
 }
 
 // MessageInfo returns a snapshot of the node's message-related information.
