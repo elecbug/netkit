@@ -7,4 +7,5 @@ type Protocol int
 var (
 	Flooding  Protocol = 0
 	Gossiping Protocol = 1
+	Custom    Protocol = 2
 )
