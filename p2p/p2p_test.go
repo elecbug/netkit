@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/elecbug/netkit/network-graph/graph/standard_graph"
+	"github.com/elecbug/netkit/graph/standard_graph"
 	"github.com/elecbug/netkit/p2p"
 	"github.com/elecbug/netkit/p2p/broadcast"
 )

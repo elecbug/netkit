@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/elecbug/netkit/network-graph/graph"
-	"github.com/elecbug/netkit/network-graph/node"
+	"github.com/elecbug/netkit/graph"
+	"github.com/elecbug/netkit/graph/node"
 	"github.com/elecbug/netkit/p2p/broadcast"
 )
 
