@@ -2,12 +2,10 @@ package graph
 
 import (
 	"fmt"
-
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // AddEdge adds an edge from -> to. If bidirectional is true, adds the reverse edge as well.
-func (g *Graph) AddEdge(from, to node.ID) error {
+func (g *Graph) AddEdge(from, to NodeID) error {
 	if _, ok := g.nodes[from]; !ok {
 		return fmt.Errorf("from node %s does not exist", from)
 	}
@@ -16,7 +14,7 @@ func (g *Graph) AddEdge(from, to node.ID) error {
 	}
 
 	if _, ok := g.edges[from]; !ok {
-		g.edges[from] = make(map[node.ID]bool)
+		g.edges[from] = make(map[NodeID]bool)
 	}
 
 	if g.edges[from][to] {
@@ -27,7 +25,7 @@ func (g *Graph) AddEdge(from, to node.ID) error {
 
 	if g.isUndirected {
 		if _, ok := g.edges[to]; !ok {
-			g.edges[to] = make(map[node.ID]bool)
+			g.edges[to] = make(map[NodeID]bool)
 		}
 
 		if g.edges[to][from] {
@@ -41,7 +39,7 @@ func (g *Graph) AddEdge(from, to node.ID) error {
 }
 
 // RemoveEdge removes the edge from -> to. If bidirectional is true, removes the reverse edge as well.
-func (g *Graph) RemoveEdge(from, to node.ID) error {
+func (g *Graph) RemoveEdge(from, to NodeID) error {
 	if _, ok := g.edges[from]; !ok {
 		return fmt.Errorf("no edges from node %s", from)
 	}
@@ -54,7 +52,7 @@ func (g *Graph) RemoveEdge(from, to node.ID) error {
 
 	if g.isUndirected {
 		if _, ok := g.edges[to]; !ok {
-			g.edges[to] = make(map[node.ID]bool)
+			g.edges[to] = make(map[NodeID]bool)
 		}
 
 		delete(g.edges[to], from)
@@ -64,7 +62,7 @@ func (g *Graph) RemoveEdge(from, to node.ID) error {
 }
 
 // HasEdge checks if an edge exists from -> to.
-func (g *Graph) HasEdge(from, to node.ID) bool {
+func (g *Graph) HasEdge(from, to NodeID) bool {
 	if edges, ok := g.edges[from]; ok {
 		return edges[to]
 	}

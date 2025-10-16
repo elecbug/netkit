@@ -2,7 +2,6 @@ package standard_graph
 
 import (
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // WattsStrogatzGraph generates a Watts–Strogatz small-world graph.
@@ -19,14 +18,14 @@ func WattsStrogatzGraph(n, k int, beta float64, isUndirected bool) *graph.Graph 
 
 	// --- 1. Generate Nodes ---
 	for i := 0; i < n; i++ {
-		g.AddNode(node.ID(toString(i)))
+		g.AddNode(graph.NodeID(toString(i)))
 	}
 
 	// --- 2. Generate Regular Ring Lattice ---
 	for i := 0; i < n; i++ {
 		for j := 1; j <= k/2; j++ {
 			neighbor := (i + j) % n
-			g.AddEdge(node.ID(toString(i)), node.ID(toString(neighbor)))
+			g.AddEdge(graph.NodeID(toString(i)), graph.NodeID(toString(neighbor)))
 		}
 	}
 
@@ -36,13 +35,13 @@ func WattsStrogatzGraph(n, k int, beta float64, isUndirected bool) *graph.Graph 
 			neighbor := (i + j) % n
 			if ra.Float64() < beta {
 				// Remove existing edge
-				g.RemoveEdge(node.ID(toString(i)), node.ID(toString(neighbor)))
+				g.RemoveEdge(graph.NodeID(toString(i)), graph.NodeID(toString(neighbor)))
 
 				// Select a random other node (self-loop, duplicate prevention)
 				for {
-					newNeighbor := node.ID(toString(ra.Intn(n)))
-					if newNeighbor != node.ID(toString(i)) && !g.HasEdge(node.ID(toString(i)), newNeighbor) {
-						g.AddEdge(node.ID(toString(i)), newNeighbor)
+					newNeighbor := graph.NodeID(toString(ra.Intn(n)))
+					if newNeighbor != graph.NodeID(toString(i)) && !g.HasEdge(graph.NodeID(toString(i)), newNeighbor) {
+						g.AddEdge(graph.NodeID(toString(i)), newNeighbor)
 						break
 					}
 				}

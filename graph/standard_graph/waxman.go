@@ -4,7 +4,6 @@ import (
 	"math"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // WaxmanGraph generates a Waxman random graph.
@@ -21,10 +20,10 @@ func WaxmanGraph(n int, alpha, beta float64, isUndirected bool) *graph.Graph {
 
 	// --- 1. Generate Node Positions ---
 	type point struct{ x, y float64 }
-	positions := make(map[node.ID]point)
+	positions := make(map[graph.NodeID]point)
 
 	for i := 0; i < n; i++ {
-		id := node.ID(toString(i))
+		id := graph.NodeID(toString(i))
 		g.AddNode(id)
 		positions[id] = point{
 			x: ra.Float64(),
@@ -38,8 +37,8 @@ func WaxmanGraph(n int, alpha, beta float64, isUndirected bool) *graph.Graph {
 	// --- 2. Generate Edges Based on Distance ---
 	for i := 0; i < n; i++ {
 		for j := i + 1; j < n; j++ {
-			id1 := node.ID(toString(i))
-			id2 := node.ID(toString(j))
+			id1 := graph.NodeID(toString(i))
+			id2 := graph.NodeID(toString(j))
 			p1, p2 := positions[id1], positions[id2]
 
 			dx := p1.x - p2.x

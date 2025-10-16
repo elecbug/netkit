@@ -8,21 +8,19 @@ import (
 	"time"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
-	"github.com/elecbug/netkit/p2p/broadcast"
 )
 
 // Config holds configuration parameters for the P2P network.
 type Network struct {
-	nodes map[ID]*p2pNode
+	nodes map[PeerID]*p2pNode
 	cfg   *Config
 }
 
 // GenerateNetwork creates a P2P network from the given graph.
 // nodeLatency and edgeLatency are functions that generate latencies for nodes and edges respectively.
 func GenerateNetwork(g *graph.Graph, nodeLatency, edgeLatency func() float64, cfg *Config) (*Network, error) {
-	nodes := make(map[ID]*p2pNode)
-	maps := make(map[node.ID]ID)
+	nodes := make(map[PeerID]*p2pNode)
+	maps := make(map[graph.NodeID]PeerID)
 
 	// create nodes
 	for _, gn := range g.Nodes() {
@@ -32,8 +30,8 @@ func GenerateNetwork(g *graph.Graph, nodeLatency, edgeLatency func() float64, cf
 			return nil, err
 		}
 
-		n := newNode(ID(num), nodeLatency())
-		n.edges = make(map[ID]p2pEdge)
+		n := newNode(PeerID(num), nodeLatency())
+		n.edges = make(map[PeerID]p2pEdge)
 
 		nodes[n.id] = n
 		maps[gn] = n.id
@@ -46,13 +44,13 @@ func GenerateNetwork(g *graph.Graph, nodeLatency, edgeLatency func() float64, cf
 			return nil, err
 		}
 
-		n := nodes[ID(num)]
+		n := nodes[PeerID(num)]
 
 		for _, neighbor := range g.Neighbors(gn) {
 			j := maps[neighbor]
 
 			edge := p2pEdge{
-				TargetID: ID(j),
+				TargetID: PeerID(j),
 				Latency:  edgeLatency(),
 			}
 
@@ -76,8 +74,8 @@ func (n *Network) RunNetworkSimulation(ctx context.Context) {
 }
 
 // NodeIDs returns a slice of all node IDs in the network.
-func (n *Network) NodeIDs() []ID {
-	ids := make([]ID, 0, len(n.nodes))
+func (n *Network) NodeIDs() []PeerID {
+	ids := make([]PeerID, 0, len(n.nodes))
 
 	for id := range n.nodes {
 		ids = append(ids, id)
@@ -87,7 +85,7 @@ func (n *Network) NodeIDs() []ID {
 }
 
 // Publish sends a message to the specified node's message queue.
-func (n *Network) Publish(nodeID ID, msg string, protocol broadcast.Protocol) error {
+func (n *Network) Publish(nodeID PeerID, msg string, protocol BroadcastProtocol) error {
 	if node, ok := n.nodes[nodeID]; ok {
 		if !node.alive {
 			return fmt.Errorf("node %d is not alive", nodeID)
@@ -149,7 +147,7 @@ func (n *Network) NumberOfDuplicateMessages(msg string) int {
 }
 
 // MessageInfo returns a snapshot of the node's message-related information.
-func (n *Network) MessageInfo(nodeID ID, content string) (map[string]any, error) {
+func (n *Network) MessageInfo(nodeID PeerID, content string) (map[string]any, error) {
 	node := n.nodes[nodeID]
 
 	if node == nil {
@@ -161,14 +159,14 @@ func (n *Network) MessageInfo(nodeID ID, content string) (map[string]any, error)
 
 	info := make(map[string]any)
 
-	info["recv"] = make([]ID, 0)
+	info["recv"] = make([]PeerID, 0)
 	for k := range node.recvFrom[content] {
-		info["recv"] = append(info["recv"].([]ID), k)
+		info["recv"] = append(info["recv"].([]PeerID), k)
 	}
 
-	info["sent"] = make([]ID, 0)
+	info["sent"] = make([]PeerID, 0)
 	for k := range node.sentTo[content] {
-		info["sent"] = append(info["sent"].([]ID), k)
+		info["sent"] = append(info["sent"].([]PeerID), k)
 	}
 
 	info["seen"] = node.seenAt[content].String()

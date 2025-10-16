@@ -7,7 +7,6 @@ import (
 	"math"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // Modularity computes Newman-Girvan modularity Q.
@@ -33,7 +32,7 @@ func Modularity(g *graph.Graph, cfg *Config) float64 {
 // - m = number_of_undirected_edges
 // - inv2m = 1/(2m); each undirected edge contributes inv2m twice (symmetrically)
 // Returns a partition map: nodeID -> compact community label.
-func GreedyModularityCommunitiesNX(g *graph.Graph) map[node.ID]int {
+func GreedyModularityCommunitiesNX(g *graph.Graph) map[graph.NodeID]int {
 	ids := g.Nodes()
 	n := len(ids)
 	if n == 0 {
@@ -41,7 +40,7 @@ func GreedyModularityCommunitiesNX(g *graph.Graph) map[node.ID]int {
 	}
 
 	// Build stable indices
-	idxOf := make(map[node.ID]int, n)
+	idxOf := make(map[graph.NodeID]int, n)
 	for i, u := range ids {
 		idxOf[u] = i
 	}
@@ -49,7 +48,7 @@ func GreedyModularityCommunitiesNX(g *graph.Graph) map[node.ID]int {
 	// Build undirected edge set and degrees for the projection
 	edges, deg, m := undirectedEdgesAndDegrees(g, ids, idxOf)
 	if m == 0 {
-		part := make(map[node.ID]int, n)
+		part := make(map[graph.NodeID]int, n)
 		for i, u := range ids {
 			part[u] = i
 		}
@@ -188,7 +187,7 @@ func GreedyModularityCommunitiesNX(g *graph.Graph) map[node.ID]int {
 		next++
 	}
 
-	part := make(map[node.ID]int, n)
+	part := make(map[graph.NodeID]int, n)
 	for oldComm, label := range labelOf {
 		for _, idx := range members[oldComm] {
 			part[ids[idx]] = label
@@ -202,13 +201,13 @@ func GreedyModularityCommunitiesNX(g *graph.Graph) map[node.ID]int {
 //	m = number_of_undirected_edges
 //	inv2m = 1/(2m)
 //	Q = (1/2m) * sum_{(i,j) in undirected edges, c(i)=c(j)} [ 1 - (k_i k_j)/(2m) ]
-func modularityQNX(g *graph.Graph, partition map[node.ID]int) float64 {
+func modularityQNX(g *graph.Graph, partition map[graph.NodeID]int) float64 {
 	ids := g.Nodes()
 	n := len(ids)
 	if n == 0 {
 		return 0.0
 	}
-	idxOf := make(map[node.ID]int, n)
+	idxOf := make(map[graph.NodeID]int, n)
 	for i, u := range ids {
 		idxOf[u] = i
 	}
@@ -240,7 +239,7 @@ func modularityQNX(g *graph.Graph, partition map[node.ID]int) float64 {
 // undirectedEdgesAndDegrees builds the undirected projection (unique i<j pairs),
 // returns: list of edges as pairs of indices, degree per node in the projection, and m (=|E|).
 // An undirected edge contributes exactly once as (i<j).
-func undirectedEdgesAndDegrees(g *graph.Graph, ids []node.ID, idxOf map[node.ID]int) ([][2]int, []int, int) {
+func undirectedEdgesAndDegrees(g *graph.Graph, ids []graph.NodeID, idxOf map[graph.NodeID]int) ([][2]int, []int, int) {
 	n := len(ids)
 	seen := make(map[int]map[int]bool, n)
 	edges := make([][2]int, 0)

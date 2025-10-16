@@ -5,12 +5,10 @@ import (
 	"sync"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
-	"github.com/elecbug/netkit/graph/path"
 )
 
 // ShortestPaths finds all shortest paths between two nodes in a graph.
-func ShortestPaths(g *graph.Graph, start, end node.ID) []path.Path {
+func ShortestPaths(g *graph.Graph, start, end graph.NodeID) []graph.Path {
 	gh := g.Hash()
 
 	cacheMu.RLock()
@@ -31,11 +29,11 @@ func ShortestPaths(g *graph.Graph, start, end node.ID) []path.Path {
 	cacheMu.Lock()
 
 	if _, ok := cachedAllShortestPaths[gh]; !ok {
-		cachedAllShortestPaths[gh] = make(map[node.ID]map[node.ID][]path.Path)
+		cachedAllShortestPaths[gh] = make(map[graph.NodeID]map[graph.NodeID][]graph.Path)
 	}
 
 	if _, ok := cachedAllShortestPaths[gh][start]; !ok {
-		cachedAllShortestPaths[gh][start] = make(map[node.ID][]path.Path)
+		cachedAllShortestPaths[gh][start] = make(map[graph.NodeID][]graph.Path)
 	}
 
 	if _, exists := cachedAllShortestPaths[gh][start][end]; !exists {
@@ -47,7 +45,7 @@ func ShortestPaths(g *graph.Graph, start, end node.ID) []path.Path {
 	return res
 }
 
-// AllShortestPaths computes all-pairs shortest paths while keeping the same return structure (path.GraphPaths).
+// AllShortestPaths computes all-pairs shortest paths while keeping the same return structure (graph.Paths).
 // Performance improvements over the (s,t)-pair BFS approach:
 //   - Run exactly one BFS per source node (O(n*(m+n)) instead of O(n^2*(m+n)) in the worst case).
 //   - Reconstruct all shortest paths to every target using predecessors (no repeated BFS).
@@ -58,9 +56,9 @@ func ShortestPaths(g *graph.Graph, start, end node.ID) []path.Path {
 //     (matching prior behavior and saving work). If you need reversed node order per entry, that can be changed,
 //     but be aware of the extra cost.
 //   - Self paths [u][u] are set to a single self path.
-func AllShortestPaths(g *graph.Graph, cfg *Config) path.GraphPaths {
+func AllShortestPaths(g *graph.Graph, cfg *Config) graph.Paths {
 	if g == nil {
-		return path.GraphPaths{}
+		return graph.Paths{}
 	}
 
 	gh := g.Hash()
@@ -85,11 +83,11 @@ func AllShortestPaths(g *graph.Graph, cfg *Config) path.GraphPaths {
 	ids := g.Nodes()
 	n := len(ids)
 	if n == 0 {
-		return path.GraphPaths{}
+		return graph.Paths{}
 	}
 
 	// Precompute adjacency lists once to avoid per-step allocations in g.Neighbors.
-	adj := make(map[node.ID][]node.ID, n)
+	adj := make(map[graph.NodeID][]graph.NodeID, n)
 	for _, u := range ids {
 		adj[u] = g.Neighbors(u)
 	}
@@ -97,17 +95,17 @@ func AllShortestPaths(g *graph.Graph, cfg *Config) path.GraphPaths {
 	// Per-source row buckets with independent locks.
 	type row struct {
 		mu sync.Mutex
-		m  map[node.ID][]path.Path
+		m  map[graph.NodeID][]graph.Path
 	}
-	rows := make(map[node.ID]*row, n)
+	rows := make(map[graph.NodeID]*row, n)
 	for _, s := range ids {
-		rows[s] = &row{m: make(map[node.ID][]path.Path, n-1)}
+		rows[s] = &row{m: make(map[graph.NodeID][]graph.Path, n-1)}
 	}
 
 	isUndirected := g.IsBidirectional()
 
 	// Jobs are source nodes (one BFS per source).
-	srcJobs := make(chan node.ID, workers*2)
+	srcJobs := make(chan graph.NodeID, workers*2)
 
 	var wg sync.WaitGroup
 	wg.Add(workers)
@@ -118,15 +116,15 @@ func AllShortestPaths(g *graph.Graph, cfg *Config) path.GraphPaths {
 
 		for s := range srcJobs {
 			// --- BFS from s to get dist and preds on shortest-path DAG ---
-			dist := make(map[node.ID]int, n)
-			preds := make(map[node.ID][]node.ID, n)
+			dist := make(map[graph.NodeID]int, n)
+			preds := make(map[graph.NodeID][]graph.NodeID, n)
 
 			for _, u := range ids {
 				dist[u] = -1
 			}
 			dist[s] = 0
 
-			q := []node.ID{s}
+			q := []graph.NodeID{s}
 			for len(q) > 0 {
 				v := q[0]
 				q = q[1:]
@@ -146,24 +144,24 @@ func AllShortestPaths(g *graph.Graph, cfg *Config) path.GraphPaths {
 			}
 
 			// --- Memoized enumeration of ALL shortest paths s->u for all u reachable ---
-			// returns list of sequences (each sequence is []node.ID from s to x).
-			memo := make(map[node.ID][][]node.ID, n)
-			var enum func(u node.ID) [][]node.ID
-			enum = func(u node.ID) [][]node.ID {
+			// returns list of sequences (each sequence is []graph.NodeID from s to x).
+			memo := make(map[graph.NodeID][][]graph.NodeID, n)
+			var enum func(u graph.NodeID) [][]graph.NodeID
+			enum = func(u graph.NodeID) [][]graph.NodeID {
 				if paths, ok := memo[u]; ok {
 					return paths
 				}
 				if u == s {
-					out := [][]node.ID{{s}}
+					out := [][]graph.NodeID{{s}}
 					memo[u] = out
 					return out
 				}
-				var out [][]node.ID
+				var out [][]graph.NodeID
 				for _, p := range preds[u] {
 					if dist[p] >= 0 && dist[p] == dist[u]-1 {
 						pfxs := enum(p)
 						for _, pfx := range pfxs {
-							seq := make([]node.ID, len(pfx)+1)
+							seq := make([]graph.NodeID, len(pfx)+1)
 							copy(seq, pfx)
 							seq[len(pfx)] = u
 							out = append(out, seq)
@@ -176,7 +174,7 @@ func AllShortestPaths(g *graph.Graph, cfg *Config) path.GraphPaths {
 
 			// Build result slice for this source s and write into rows.
 			rS := rows[s]
-			loc := make(map[node.ID][]path.Path, n-1)
+			loc := make(map[graph.NodeID][]graph.Path, n-1)
 
 			for _, t := range ids {
 				if t == s {
@@ -190,9 +188,9 @@ func AllShortestPaths(g *graph.Graph, cfg *Config) path.GraphPaths {
 				if len(seqs) == 0 {
 					continue
 				}
-				pp := make([]path.Path, 0, len(seqs))
+				pp := make([]graph.Path, 0, len(seqs))
 				for _, seq := range seqs {
-					pp = append(pp, *path.New(seq...))
+					pp = append(pp, *graph.NewPath(seq...))
 				}
 				loc[t] = pp
 
@@ -225,14 +223,14 @@ func AllShortestPaths(g *graph.Graph, cfg *Config) path.GraphPaths {
 	wg.Wait()
 
 	// Assemble final output
-	out := make(path.GraphPaths, n)
+	out := make(graph.Paths, n)
 	for s, r := range rows {
 		out[s] = r.m
 	}
 
 	// Ensure self paths exist
 	for _, u := range ids {
-		out[u][u] = []path.Path{*path.NewSelf(u)}
+		out[u][u] = []graph.Path{*graph.NewPath(u)}
 	}
 
 	// Cache the result
@@ -244,15 +242,15 @@ func AllShortestPaths(g *graph.Graph, cfg *Config) path.GraphPaths {
 }
 
 // allShortestPathsBFS finds all shortest paths between two nodes in a graph using BFS.
-func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
+func allShortestPathsBFS(g *graph.Graph, start, end graph.NodeID) []graph.Path {
 	if start == end {
-		return []path.Path{*path.New(start)}
+		return []graph.Path{*graph.NewPath(start)}
 	}
 
-	queue := []node.ID{start}
-	dist := make(map[node.ID]int)
+	queue := []graph.NodeID{start}
+	dist := make(map[graph.NodeID]int)
 	dist[start] = 0
-	preds := make(map[node.ID][]node.ID)
+	preds := make(map[graph.NodeID][]graph.NodeID)
 	targetDist := -1
 
 	for len(queue) > 0 {
@@ -285,16 +283,16 @@ func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 	}
 
 	if targetDist < 0 {
-		return []path.Path{}
+		return []graph.Path{}
 	}
 
-	var all [][]node.ID
-	cur := []node.ID{end}
+	var all [][]graph.NodeID
+	cur := []graph.NodeID{end}
 
-	var dfs func(u node.ID)
-	dfs = func(u node.ID) {
+	var dfs func(u graph.NodeID)
+	dfs = func(u graph.NodeID) {
 		if u == start {
-			seq := make([]node.ID, len(cur))
+			seq := make([]graph.NodeID, len(cur))
 
 			for i := range cur {
 				seq[i] = cur[len(cur)-1-i]
@@ -314,10 +312,10 @@ func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 
 	dfs(end)
 
-	res := make([]path.Path, 0, len(all))
+	res := make([]graph.Path, 0, len(all))
 
 	for _, seq := range all {
-		res = append(res, *path.New(seq...))
+		res = append(res, *graph.NewPath(seq...))
 	}
 	return res
 }
@@ -326,8 +324,8 @@ func allShortestPathsBFS(g *graph.Graph, start, end node.ID) []path.Path {
 // - For each source u, the inner map contains v -> dist(u,v) for all reachable v (including u with 0).
 // - Unreachable targets are omitted from the inner map.
 // - Uses a worker pool sized by cfg.Workers (or NumCPU when <=0).
-func AllShortestPathLength(g *graph.Graph, cfg *Config) path.PathLength {
-	out := make(path.PathLength)
+func AllShortestPathLength(g *graph.Graph, cfg *Config) graph.PathLength {
+	out := make(graph.PathLength)
 	if g == nil {
 		return out
 	}
@@ -358,7 +356,7 @@ func AllShortestPathLength(g *graph.Graph, cfg *Config) path.PathLength {
 	}
 
 	// Jobs: each source node runs one BFS
-	jobs := make(chan node.ID, n)
+	jobs := make(chan graph.NodeID, n)
 
 	var (
 		wg sync.WaitGroup
@@ -366,9 +364,9 @@ func AllShortestPathLength(g *graph.Graph, cfg *Config) path.PathLength {
 	)
 
 	// Worker: standard unweighted BFS from a single source
-	bfsFrom := func(s node.ID) map[node.ID]int {
-		dist := make(map[node.ID]int, n)
-		q := make([]node.ID, 0, 64)
+	bfsFrom := func(s graph.NodeID) map[graph.NodeID]int {
+		dist := make(map[graph.NodeID]int, n)
+		q := make([]graph.NodeID, 0, 64)
 
 		dist[s] = 0
 		q = append(q, s)

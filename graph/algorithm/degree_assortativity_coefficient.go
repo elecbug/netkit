@@ -6,7 +6,6 @@ import (
 	"math"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // DegreeAssortativityCoefficient computes Newman's degree assortativity coefficient (Pearson correlation)
@@ -54,16 +53,16 @@ func DegreeAssortativityCoefficient(g *graph.Graph, cfg *Config) float64 {
 	}
 
 	// Build an index for upper-triangle filtering on undirected graphs.
-	idxOf := make(map[node.ID]int, n)
+	idxOf := make(map[graph.NodeID]int, n)
 	for i, u := range ids {
 		idxOf[u] = i
 	}
 
 	// Degree caches
 	// NOTE: Replace the neighbor getters with your graph API if needed.
-	outDeg := make(map[node.ID]int, n)
-	inDeg := make(map[node.ID]int, n)
-	undeg := make(map[node.ID]int, n)
+	outDeg := make(map[graph.NodeID]int, n)
+	inDeg := make(map[graph.NodeID]int, n)
+	undeg := make(map[graph.NodeID]int, n)
 
 	if isUndirected {
 		for _, u := range ids {

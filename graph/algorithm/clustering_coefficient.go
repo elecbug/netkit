@@ -5,15 +5,14 @@ import (
 	"sync"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // ClusteringCoefficientAll computes local clustering coefficients for all nodes.
 // - If g.IsBidirectional()==false (directed): Fagiolo (2007) directed clustering (matches NetworkX).
 // - If g.IsBidirectional()==true (undirected): standard undirected clustering.
-// Returns map[node.ID]float64 with a value for every node in g.
-func ClusteringCoefficient(g *graph.Graph, cfg *Config) map[node.ID]float64 {
-	res := make(map[node.ID]float64)
+// Returns map[graph.NodeID]float64 with a value for every node in g.
+func ClusteringCoefficient(g *graph.Graph, cfg *Config) map[graph.NodeID]float64 {
+	res := make(map[graph.NodeID]float64)
 	if g == nil {
 		return res
 	}
@@ -35,10 +34,10 @@ func ClusteringCoefficient(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	// Build helper structures
 	// outNeighbors[v] = slice of out-neighbors of v (exclude self)
 	// inNeighbors[v]  = slice of in-neighbors of v (exclude self) - only needed for directed
-	outNeighbors := make(map[node.ID][]node.ID, n)
+	outNeighbors := make(map[graph.NodeID][]graph.NodeID, n)
 	for _, v := range nodes {
 		ns := g.Neighbors(v)
-		buf := make([]node.ID, 0, len(ns))
+		buf := make([]graph.NodeID, 0, len(ns))
 		for _, w := range ns {
 			if w != v {
 				buf = append(buf, w)
@@ -48,9 +47,9 @@ func ClusteringCoefficient(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	}
 
 	isDirected := !g.IsBidirectional()
-	var inNeighbors map[node.ID][]node.ID
+	var inNeighbors map[graph.NodeID][]graph.NodeID
 	if isDirected {
-		inNeighbors = make(map[node.ID][]node.ID, n)
+		inNeighbors = make(map[graph.NodeID][]graph.NodeID, n)
 		for _, u := range nodes {
 			for _, w := range outNeighbors[u] {
 				// u -> w, so u is in-neighbor of w
@@ -59,13 +58,13 @@ func ClusteringCoefficient(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 		}
 	}
 
-	type job struct{ v node.ID }
+	type job struct{ v graph.NodeID }
 	jobs := make(chan job, workers*2)
 	var wg sync.WaitGroup
 	var mu sync.Mutex // protects res map
 
 	// Edge multiplicity for Fagiolo: b(u,v) = a_uv + a_vu ∈ {0,1,2}
-	b := func(u, v node.ID) int {
+	b := func(u, v graph.NodeID) int {
 		sum := 0
 
 		if g.HasEdge(u, v) {
@@ -98,7 +97,7 @@ func ClusteringCoefficient(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 					mu.Unlock()
 					continue
 				}
-				outSet := make(map[node.ID]struct{}, kOut)
+				outSet := make(map[graph.NodeID]struct{}, kOut)
 				for _, w := range outNeighbors[v] {
 					outSet[w] = struct{}{}
 				}
@@ -119,7 +118,7 @@ func ClusteringCoefficient(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 
 				// T_v = sum_{j != k} b(v,j) * b(j,k) * b(k,v)
 				// with j,k in tot = in(v) ∪ out(v)
-				totSet := make(map[node.ID]struct{}, kTot) // upper bound
+				totSet := make(map[graph.NodeID]struct{}, kTot) // upper bound
 				for _, u := range outNeighbors[v] {
 					totSet[u] = struct{}{}
 				}
@@ -127,7 +126,7 @@ func ClusteringCoefficient(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 					totSet[u] = struct{}{}
 				}
 				// Make a slice to iterate
-				tot := make([]node.ID, 0, len(totSet))
+				tot := make([]graph.NodeID, 0, len(totSet))
 				for u := range totSet {
 					if u != v { // guard (shouldn't be in set anyway)
 						tot = append(tot, u)

@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // EigenvectorCentrality computes eigenvector centrality using parallel power iteration.
@@ -16,8 +15,8 @@ import (
 //     Set Reverse=true to use successors/out-edges (right eigenvector).
 //
 // Unweighted edges are assumed. The result vector is L2-normalized (sum of squares == 1).
-func EigenvectorCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
-	out := make(map[node.ID]float64)
+func EigenvectorCentrality(g *graph.Graph, cfg *Config) map[graph.NodeID]float64 {
+	out := make(map[graph.NodeID]float64)
 	if g == nil {
 		return out
 	}
@@ -26,7 +25,7 @@ func EigenvectorCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	maxIter := 100
 	tol := 1e-6
 	reverse := false
-	var nstart *map[node.ID]float64
+	var nstart *map[graph.NodeID]float64
 	workers := runtime.NumCPU()
 
 	if cfg != nil {
@@ -54,7 +53,7 @@ func EigenvectorCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	if n == 0 {
 		return out
 	}
-	idxOf := make(map[node.ID]int, n)
+	idxOf := make(map[graph.NodeID]int, n)
 	for i, u := range ids {
 		idxOf[u] = i
 	}
