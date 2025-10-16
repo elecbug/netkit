@@ -27,7 +27,6 @@ go get github.com/elecbug/netkit@latest
 ### Extensible
 
 - [`bimap`](./bimap/): Bidirectional map with O(1) lookups key->value and value->key.
-- [`slice`](./slice/): Generic helpers: binary search, stable merge sort, parallel sort, and `IsSorted`.
 
 ## Development
 
