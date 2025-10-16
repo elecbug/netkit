@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // DegreeCentralityConfig (suggested to be added inside your config package)
@@ -32,8 +31,8 @@ import (
 // - Undirected: deg(u)/(n-1).
 // - Directed (default "total"): (in(u)+out(u))/(n-1). Use "in"/"out" for the specific variants.
 // Self-loops are ignored for centrality.
-func DegreeCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
-	res := make(map[node.ID]float64)
+func DegreeCentrality(g *graph.Graph, cfg *Config) map[graph.NodeID]float64 {
+	res := make(map[graph.NodeID]float64)
 	if g == nil {
 		return res
 	}
@@ -55,7 +54,7 @@ func DegreeCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	}
 
 	// --- indexing ---
-	idxOf := make(map[node.ID]int, n)
+	idxOf := make(map[graph.NodeID]int, n)
 	for i, u := range ids {
 		idxOf[u] = i
 	}

@@ -2,7 +2,6 @@ package standard_graph
 
 import (
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // RandomRegularGraph generates a random k-regular graph with n nodes.
@@ -21,14 +20,14 @@ func RandomRegularGraph(n, k int, isUndirected bool) *graph.Graph {
 
 	// add nodes
 	for i := 0; i < n; i++ {
-		g.AddNode(node.ID(toString(i)))
+		g.AddNode(graph.NodeID(toString(i)))
 	}
 
 	// duplicate each node k times as stubs
-	stubs := make([]node.ID, 0, n*k)
+	stubs := make([]graph.NodeID, 0, n*k)
 	for i := 0; i < n; i++ {
 		for j := 0; j < k; j++ {
-			stubs = append(stubs, node.ID(toString(i)))
+			stubs = append(stubs, graph.NodeID(toString(i)))
 		}
 	}
 

@@ -1,6 +1,6 @@
 package algorithm
 
-import "github.com/elecbug/netkit/graph/node"
+import "github.com/elecbug/netkit/graph"
 
 // ClosenessCentralityConfig holds the configuration settings for the closeness centrality algorithm.
 type ClosenessCentralityConfig struct {
@@ -10,11 +10,11 @@ type ClosenessCentralityConfig struct {
 
 // PageRankConfig holds the configuration settings for the PageRank algorithm.
 type PageRankConfig struct {
-	Alpha           float64              // damping, default 0.85
-	MaxIter         int                  // default 100
-	Tol             float64              // L1 error, default 1e-6
-	Personalization *map[node.ID]float64 // p(u); if nil is uniform
-	Dangling        *map[node.ID]float64 // d(u); if nil p(u)
+	Alpha           float64                   // damping, default 0.85
+	MaxIter         int                       // default 100
+	Tol             float64                   // L1 error, default 1e-6
+	Personalization *map[graph.NodeID]float64 // p(u); if nil is uniform
+	Dangling        *map[graph.NodeID]float64 // d(u); if nil p(u)
 	Reverse         bool
 }
 
@@ -33,7 +33,7 @@ type EigenvectorCentralityConfig struct {
 	MaxIter int
 	Tol     float64
 	Reverse bool
-	NStart  *map[node.ID]float64 // initial vector; if nil, uniform distribution
+	NStart  *map[graph.NodeID]float64 // initial vector; if nil, uniform distribution
 }
 
 // DegreeCentralityConfig holds the configuration settings for the degree centrality algorithm.
@@ -74,5 +74,5 @@ type AssortativityCoefficientConfig struct {
 type ModularityConfig struct {
 	// Partition maps each node to its community ID.
 	// If nil, algorithm will compute greedy modularity communities automatically.
-	Partition map[node.ID]int
+	Partition map[graph.NodeID]int
 }

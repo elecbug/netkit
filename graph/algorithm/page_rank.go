@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // PageRank computes PageRank using a parallel power-iteration that mirrors NetworkX semantics:
@@ -16,8 +15,8 @@ import (
 //   - For directed graphs, Reverse=false is the standard PageRank (incoming influence).
 //     Reverse=true flips direction (treat in-neighbors as outs).
 //   - For undirected graphs, neighbors are used as outs (degree-based normalization).
-func PageRank(g *graph.Graph, cfg *Config) map[node.ID]float64 {
-	res := make(map[node.ID]float64)
+func PageRank(g *graph.Graph, cfg *Config) map[graph.NodeID]float64 {
+	res := make(map[graph.NodeID]float64)
 	if g == nil {
 		return res
 	}
@@ -28,8 +27,8 @@ func PageRank(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	maxIter := 1000 // a bit larger than NX default to ensure tighter match
 	tol := 1e-6
 	reverse := false
-	var pers *map[node.ID]float64
-	var dang *map[node.ID]float64
+	var pers *map[graph.NodeID]float64
+	var dang *map[graph.NodeID]float64
 
 	if cfg != nil {
 		if cfg.Workers > 0 {
@@ -60,7 +59,7 @@ func PageRank(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	if n == 0 {
 		return res
 	}
-	idxOf := make(map[node.ID]int, n)
+	idxOf := make(map[graph.NodeID]int, n)
 	for i, u := range ids {
 		idxOf[u] = i
 	}
@@ -71,7 +70,7 @@ func PageRank(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	outs := make([][]int, n)
 	outdeg := make([]int, n)
 
-	getOuts := func(u node.ID) []int {
+	getOuts := func(u graph.NodeID) []int {
 		nbrs := g.Neighbors(u)
 		if bidir {
 			// Undirected: treat neighbors as outs directly.

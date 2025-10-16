@@ -5,10 +5,9 @@ import (
 	"sync"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
-func makeEdgeKey(u, v node.ID, undirected bool) (node.ID, node.ID) {
+func makeEdgeKey(u, v graph.NodeID, undirected bool) (graph.NodeID, graph.NodeID) {
 	if undirected && v < u {
 		u, v = v, u
 	}
@@ -34,11 +33,11 @@ func makeEdgeKey(u, v node.ID, undirected bool) (node.ID, node.ID) {
 // in Brandes accumulation (same practice as NetworkX).
 //
 // Returns:
-//   - map[node.ID]map[node.ID]float64 where:
+//   - map[graph.NodeID]map[graph.NodeID]float64 where:
 //   - Undirected: key is canonical [min(u,v), max(u,v)]
 //   - Directed:   key is (u,v) ordered
-func EdgeBetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]map[node.ID]float64 {
-	out := make(map[node.ID]map[node.ID]float64)
+func EdgeBetweennessCentrality(g *graph.Graph, cfg *Config) map[graph.NodeID]map[graph.NodeID]float64 {
+	out := make(map[graph.NodeID]map[graph.NodeID]float64)
 	if g == nil {
 		return out
 	}
@@ -79,7 +78,7 @@ func EdgeBetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]map[node
 			u, v := makeEdgeKey(u, v, isUndirected)
 
 			if out[u] == nil {
-				out[u] = make(map[node.ID]float64)
+				out[u] = make(map[graph.NodeID]float64)
 			}
 
 			out[u][v] = 0.0
@@ -87,7 +86,7 @@ func EdgeBetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]map[node
 	}
 
 	// ----- worker pool over source nodes -----
-	type job struct{ s node.ID }
+	type job struct{ s graph.NodeID }
 	jobs := make(chan job, n)
 
 	var mu sync.Mutex
@@ -97,16 +96,16 @@ func EdgeBetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]map[node
 		defer wg.Done()
 
 		// Local accumulator to reduce lock contention
-		local := make(map[node.ID]map[node.ID]float64, 64)
+		local := make(map[graph.NodeID]map[graph.NodeID]float64, 64)
 
 		for jb := range jobs {
 			s := jb.s
 
 			// Brandes data structures
-			stack := make([]node.ID, 0, n)
-			preds := make(map[node.ID][]node.ID, n)
-			sigma := make(map[node.ID]float64, n)
-			dist := make(map[node.ID]int, n)
+			stack := make([]graph.NodeID, 0, n)
+			preds := make(map[graph.NodeID][]graph.NodeID, n)
+			sigma := make(map[graph.NodeID]float64, n)
+			dist := make(map[graph.NodeID]int, n)
 
 			for _, v := range ids {
 				dist[v] = -1
@@ -115,7 +114,7 @@ func EdgeBetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]map[node
 			dist[s] = 0
 
 			// BFS (unweighted)
-			q := []node.ID{s}
+			q := []graph.NodeID{s}
 			for len(q) > 0 {
 				v := q[0]
 				q = q[1:]
@@ -136,7 +135,7 @@ func EdgeBetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]map[node
 			}
 
 			// Dependency accumulation
-			delta := make(map[node.ID]float64, n)
+			delta := make(map[graph.NodeID]float64, n)
 			for len(stack) > 0 {
 				w := stack[len(stack)-1]
 				stack = stack[:len(stack)-1]
@@ -150,7 +149,7 @@ func EdgeBetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]map[node
 					eu, ev := makeEdgeKey(v, w, isUndirected)
 
 					if local[eu] == nil {
-						local[eu] = make(map[node.ID]float64)
+						local[eu] = make(map[graph.NodeID]float64)
 					}
 
 					local[eu][ev] += c

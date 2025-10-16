@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // BetweennessCentrality computes betweenness centrality using cached all shortest paths.
@@ -13,8 +12,8 @@ import (
 // - For each pair (s,t), each interior node on a shortest path gets 1/|SP(s,t)| credit.
 // - Undirected graphs enqueue only i<j pairs (no double counting).
 // - Normalization matches NetworkX: undirected => 2/((n-1)(n-2)), directed => 1/((n-1)(n-2)).
-func BetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
-	res := make(map[node.ID]float64)
+func BetweennessCentrality(g *graph.Graph, cfg *Config) map[graph.NodeID]float64 {
+	res := make(map[graph.NodeID]float64)
 	if g == nil {
 		return res
 	}
@@ -46,16 +45,16 @@ func BetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	}
 
 	// Use cached all-pairs shortest paths.
-	// Type: map[node.ID]map[node.ID][]path.Path
+	// Type: map[graph.NodeID]map[graph.NodeID][]path.Path
 	all := AllShortestPaths(g, cfg)
 
 	// Build an index for stable iteration and pair generation.
-	idxOf := make(map[node.ID]int, n)
+	idxOf := make(map[graph.NodeID]int, n)
 	for i, u := range ids {
 		idxOf[u] = i
 	}
 
-	type pair struct{ s, t node.ID }
+	type pair struct{ s, t graph.NodeID }
 	isUndirected := g.IsBidirectional()
 
 	// Generate all (s,t) jobs.
@@ -63,13 +62,13 @@ func BetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 	var wg sync.WaitGroup
 
 	// Global accumulator with lock; each worker keeps a local map to minimize contention.
-	global := make(map[node.ID]float64, n)
+	global := make(map[graph.NodeID]float64, n)
 	var mu sync.Mutex
 
 	// Worker: consume pairs and accumulate contributions into a local map, then merge.
 	workerFn := func() {
 		defer wg.Done()
-		local := make(map[node.ID]float64, n)
+		local := make(map[graph.NodeID]float64, n)
 
 		for job := range jobs {
 			row, ok := all[job.s]
@@ -84,7 +83,7 @@ func BetweennessCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
 
 			// For each shortest path s->...->t, every interior node gets 1/den.
 			for _, pth := range pathsST {
-				seq := pth.Nodes() // []node.ID; interior nodes are [1 : len-1)
+				seq := pth.Nodes() // []graph.NodeID; interior nodes are [1 : len-1)
 				if len(seq) <= 2 {
 					continue // no interior node
 				}

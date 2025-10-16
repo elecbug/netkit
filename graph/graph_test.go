@@ -11,18 +11,16 @@ import (
 
 	"github.com/elecbug/netkit/graph"
 	"github.com/elecbug/netkit/graph/algorithm"
-	"github.com/elecbug/netkit/graph/node"
-	"github.com/elecbug/netkit/graph/path"
 )
 
 func TestSimple(t *testing.T) {
 	// Create a sample graph
 	g := graph.New(true)
 
-	n1 := node.ID("1")
-	n2 := node.ID("2")
-	n3 := node.ID("3")
-	n4 := node.ID("4")
+	n1 := graph.NodeID("1")
+	n2 := graph.NodeID("2")
+	n3 := graph.NodeID("3")
+	n4 := graph.NodeID("4")
 
 	g.AddNode(n1)
 	g.AddNode(n2)
@@ -34,15 +32,15 @@ func TestSimple(t *testing.T) {
 	g.AddEdge(n4, n3)
 
 	tests := []struct {
-		start   node.ID
-		end     node.ID
-		want    []path.Path
+		start   graph.NodeID
+		end     graph.NodeID
+		want    []graph.Path
 		wantErr bool
 	}{
-		{start: n1, end: n3, want: []path.Path{*path.New(n1, n2, n3)}, wantErr: false},
-		{start: n1, end: n1, want: []path.Path{*path.New(n1)}, wantErr: false},
-		{start: n2, end: n1, want: []path.Path{*path.New(n2, n1)}, wantErr: false},
-		{start: n3, end: n4, want: []path.Path{*path.New(n3, n4)}, wantErr: false},
+		{start: n1, end: n3, want: []graph.Path{*graph.NewPath(n1, n2, n3)}, wantErr: false},
+		{start: n1, end: n1, want: []graph.Path{*graph.NewPath(n1)}, wantErr: false},
+		{start: n2, end: n1, want: []graph.Path{*graph.NewPath(n2, n1)}, wantErr: false},
+		{start: n3, end: n4, want: []graph.Path{*graph.NewPath(n3, n4)}, wantErr: false},
 	}
 
 	for _, tt := range tests {
@@ -63,16 +61,16 @@ func TestPathLengths(t *testing.T) {
 	edgeCount := 10000
 
 	for i := 0; i < nodeCount; i++ {
-		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
+		g.AddNode(graph.NodeID(fmt.Sprintf("%d", i)))
 	}
 
 	for i := 0; i < edgeCount; i++ {
-		g.AddEdge(node.ID(fmt.Sprintf("%d", i)), node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
+		g.AddEdge(graph.NodeID(fmt.Sprintf("%d", i)), graph.NodeID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
 	}
 
 	t.Run("CheckEqualShortestPaths", func(t *testing.T) {
-		var got path.GraphPaths
-		var want path.PathLength
+		var got graph.Paths
+		var want graph.PathLength
 
 		t.Run("WithPaths", func(t *testing.T) {
 			got = algorithm.AllShortestPaths(g, &algorithm.Config{Workers: 4})
@@ -97,11 +95,11 @@ func TestBidirectionalGraph(t *testing.T) {
 	edgeCount := 5000
 
 	for i := 0; i < nodeCount; i++ {
-		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
+		g.AddNode(graph.NodeID(fmt.Sprintf("%d", i)))
 	}
 
 	for i := 0; i < edgeCount; i++ {
-		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))), node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
+		g.AddEdge(graph.NodeID(fmt.Sprintf("%d", rand.Intn(nodeCount))), graph.NodeID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
 	}
 
 	str, err := graph.Save(g)
@@ -132,11 +130,11 @@ func TestDirectionalGraph(t *testing.T) {
 	edgeCount := 10000
 
 	for i := 0; i < nodeCount; i++ {
-		g.AddNode(node.ID(fmt.Sprintf("%d", i)))
+		g.AddNode(graph.NodeID(fmt.Sprintf("%d", i)))
 	}
 
 	for i := 0; i < edgeCount; i++ {
-		g.AddEdge(node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))), node.ID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
+		g.AddEdge(graph.NodeID(fmt.Sprintf("%d", rand.Intn(nodeCount))), graph.NodeID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
 	}
 
 	str, err := graph.Save(g)

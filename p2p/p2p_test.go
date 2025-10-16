@@ -12,7 +12,6 @@ import (
 
 	"github.com/elecbug/netkit/graph/standard_graph"
 	"github.com/elecbug/netkit/p2p"
-	"github.com/elecbug/netkit/p2p/broadcast"
 )
 
 func TestGenerateNetwork(t *testing.T) {
@@ -39,7 +38,7 @@ func TestGenerateNetwork(t *testing.T) {
 	nw.RunNetworkSimulation(ctx)
 
 	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.NodeIDs()[0])
-	err = nw.Publish(nw.NodeIDs()[0], msg1, broadcast.Flooding)
+	err = nw.Publish(nw.NodeIDs()[0], msg1, p2p.Flooding)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -47,7 +46,7 @@ func TestGenerateNetwork(t *testing.T) {
 	t.Logf("Reachability of message '%s': %f\n", msg1, nw.Reachability(msg1))
 
 	t.Logf("Publishing message '%s' from node %d\n", msg2, nw.NodeIDs()[1])
-	err = nw.Publish(nw.NodeIDs()[1], msg2, broadcast.Gossiping)
+	err = nw.Publish(nw.NodeIDs()[1], msg2, p2p.Gossiping)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -58,7 +57,7 @@ func TestGenerateNetwork(t *testing.T) {
 
 	nw.RunNetworkSimulation(context.Background())
 	t.Logf("Publishing message '%s' from node %d\n", msg3, nw.NodeIDs()[2])
-	err = nw.Publish(nw.NodeIDs()[2], msg3, broadcast.Gossiping)
+	err = nw.Publish(nw.NodeIDs()[2], msg3, p2p.Gossiping)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -106,7 +105,7 @@ func TestMetrics(t *testing.T) {
 	nw.RunNetworkSimulation(ctx)
 
 	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.NodeIDs()[0])
-	err = nw.Publish(nw.NodeIDs()[0], msg1, broadcast.Flooding)
+	err = nw.Publish(nw.NodeIDs()[0], msg1, p2p.Flooding)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}

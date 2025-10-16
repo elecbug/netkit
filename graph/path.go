@@ -1,39 +1,40 @@
-// Package path defines path structures used by network-graph algorithms.
-package path
-
-import (
-	"github.com/elecbug/netkit/graph/node"
-)
+package graph
 
 // Path represents an ordered sequence of nodes with a hop distance.
 type Path struct {
 	distance int
-	nodes    []node.ID
+	nodes    []NodeID
 	isInf    bool
 }
 
-// GraphPaths is a mapping of start node IDs to end node IDs and their corresponding paths.
-type GraphPaths map[node.ID]map[node.ID][]Path
+// Paths is a mapping of start node IDs to end node IDs and their corresponding paths.
+type Paths map[NodeID]map[NodeID][]Path
 
 // PathLength represents the length of a path between two nodes.
-type PathLength map[node.ID]map[node.ID]int
+type PathLength map[NodeID]map[NodeID]int
 
 // New constructs a Path from the given nodes. Distance is hops (edges).
 // If no nodes are provided, the path is considered infinite (unreachable).
-func New(nodes ...node.ID) *Path {
-	return &Path{
-		distance: len(nodes) - 1, // Assuming distance is the number of edges
-		isInf:    len(nodes) == 0,
-		nodes:    nodes,
-	}
-}
+func NewPath(nodes ...NodeID) *Path {
+	if len(nodes) == 0 {
+		return &Path{
+			distance: 0,
+			isInf:    true,
+			nodes:    []NodeID{},
+		}
+	} else if len(nodes) == 1 {
+		return &Path{
+			distance: 0,
+			isInf:    false,
+			nodes:    []NodeID{nodes[0]},
+		}
+	} else {
+		return &Path{
+			distance: len(nodes) - 1, // Assuming distance is the number of edges
+			isInf:    len(nodes) == 0,
+			nodes:    nodes,
+		}
 
-// NewSelf constructs a new Path representing a self-loop at the given node.
-func NewSelf(id node.ID) *Path {
-	return &Path{
-		distance: 0,
-		isInf:    false,
-		nodes:    []node.ID{id},
 	}
 }
 
@@ -48,12 +49,12 @@ func (p *Path) Distance() int {
 }
 
 // Nodes returns the node IDs in the path.
-func (p *Path) Nodes() []node.ID {
+func (p *Path) Nodes() []NodeID {
 	return p.nodes
 }
 
 // OnlyLength returns a slice of PathLength representing the lengths of all paths in the graph.
-func (g GraphPaths) OnlyLength() PathLength {
+func (g Paths) OnlyLength() PathLength {
 	results := make(PathLength, 0)
 
 	for start, endMap := range g {
@@ -63,7 +64,7 @@ func (g GraphPaths) OnlyLength() PathLength {
 			}
 
 			if results[start] == nil {
-				results[start] = make(map[node.ID]int)
+				results[start] = make(map[NodeID]int)
 			}
 
 			results[start][end] = paths[0].Distance()

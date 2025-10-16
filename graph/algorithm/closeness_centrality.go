@@ -2,7 +2,6 @@ package algorithm
 
 import (
 	"github.com/elecbug/netkit/graph"
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // ClosenessCentrality computes NetworkX-compatible closeness centrality.
@@ -17,8 +16,8 @@ import (
 // Requirements:
 // - AllShortestPaths(g, cfg) must respect directedness of g.
 // - cfg.Closeness.WfImproved follows NetworkX default (true) unless overridden.
-func ClosenessCentrality(g *graph.Graph, cfg *Config) map[node.ID]float64 {
-	out := make(map[node.ID]float64)
+func ClosenessCentrality(g *graph.Graph, cfg *Config) map[graph.NodeID]float64 {
+	out := make(map[graph.NodeID]float64)
 	if g == nil {
 		return out
 	}

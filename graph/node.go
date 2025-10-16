@@ -2,12 +2,17 @@ package graph
 
 import (
 	"fmt"
-
-	"github.com/elecbug/netkit/graph/node"
 )
 
+// NodeID uniquely identifies a node in a network-graph.
+type NodeID string
+
+func (id NodeID) String() string {
+	return string(id)
+}
+
 // AddNode adds a node to the graph.
-func (g *Graph) AddNode(id node.ID) error {
+func (g *Graph) AddNode(id NodeID) error {
 	if _, ok := g.nodes[id]; !ok {
 		g.nodes[id] = true
 
@@ -18,7 +23,7 @@ func (g *Graph) AddNode(id node.ID) error {
 }
 
 // RemoveNode removes a node and its incident edges from the graph.
-func (g *Graph) RemoveNode(id node.ID) error {
+func (g *Graph) RemoveNode(id NodeID) error {
 	if _, ok := g.nodes[id]; !ok {
 		return fmt.Errorf("node %s does not exist", id)
 	}
@@ -34,7 +39,7 @@ func (g *Graph) RemoveNode(id node.ID) error {
 }
 
 // HasNode reports whether a node with the given id exists.
-func (g *Graph) HasNode(id node.ID) bool {
+func (g *Graph) HasNode(id NodeID) bool {
 	if _, ok := g.nodes[id]; ok {
 		return true
 	} else {
@@ -43,8 +48,8 @@ func (g *Graph) HasNode(id node.ID) bool {
 }
 
 // Nodes returns a slice of all node IDs in the graph.
-func (g *Graph) Nodes() []node.ID {
-	var nodes []node.ID
+func (g *Graph) Nodes() []NodeID {
+	var nodes []NodeID
 
 	for id := range g.nodes {
 		nodes = append(nodes, id)
@@ -54,9 +59,9 @@ func (g *Graph) Nodes() []node.ID {
 }
 
 // Neighbors returns the list of neighbors reachable from the given node id.
-func (g *Graph) Neighbors(id node.ID) []node.ID {
+func (g *Graph) Neighbors(id NodeID) []NodeID {
 	if edges, ok := g.edges[id]; ok {
-		var result []node.ID
+		var result []NodeID
 
 		for to, v := range edges {
 			if v {

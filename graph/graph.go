@@ -6,22 +6,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/elecbug/netkit/graph/node"
 )
 
 // Graph maintains nodes and adjacency edges.
 type Graph struct {
-	nodes        map[node.ID]bool
-	edges        map[node.ID]map[node.ID]bool
+	nodes        map[NodeID]bool
+	edges        map[NodeID]map[NodeID]bool
 	isUndirected bool
 }
 
 // New creates and returns an empty Graph.
 func New(isUndirected bool) *Graph {
 	return &Graph{
-		nodes:        make(map[node.ID]bool),
-		edges:        make(map[node.ID]map[node.ID]bool),
+		nodes:        make(map[NodeID]bool),
+		edges:        make(map[NodeID]map[NodeID]bool),
 		isUndirected: isUndirected,
 	}
 }
@@ -33,7 +31,7 @@ func FromMatrix(matrix [][]bool, bidirectional bool) *Graph {
 	for i := 0; i < len(matrix); i++ {
 		for j := 0; j < len(matrix[i]); j++ {
 			if matrix[i][j] {
-				g.AddEdge(node.ID(fmt.Sprintf("%d", i)), node.ID(fmt.Sprintf("%d", j)))
+				g.AddEdge(NodeID(fmt.Sprintf("%d", i)), NodeID(fmt.Sprintf("%d", j)))
 			}
 		}
 	}
@@ -75,8 +73,8 @@ func Load(data string) (*Graph, error) {
 		return nil, fmt.Errorf("invalid graph data")
 	}
 
-	nodes := make(map[node.ID]bool)
-	edges := make(map[node.ID]map[node.ID]bool)
+	nodes := make(map[NodeID]bool)
+	edges := make(map[NodeID]map[NodeID]bool)
 	var bidirectional bool
 
 	if err := json.Unmarshal([]byte(lines[0]), &nodes); err != nil {
