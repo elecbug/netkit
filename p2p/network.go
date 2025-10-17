@@ -91,7 +91,7 @@ func (n *Network) Publish(nodeID PeerID, msg string, protocol BroadcastProtocol)
 			return fmt.Errorf("node %d is not alive", nodeID)
 		}
 
-		node.msgQueue <- Message{From: nodeID, Content: msg, Protocol: protocol}
+		node.msgQueue <- Message{From: nodeID, Content: msg, Protocol: protocol, HopCount: 0}
 		return nil
 	}
 

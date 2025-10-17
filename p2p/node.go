@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"context"
+	"math/rand"
 	"sync"
 	"time"
 )
@@ -47,8 +48,8 @@ func newNode(id PeerID, nodeLatency float64) *p2pNode {
 // eachRun starts the message handling routine for the node.
 func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Context) {
 	go func(ctx context.Context, wg *sync.WaitGroup) {
-		defer wg.Done()
 		n.alive = true
+		wg.Done()
 
 		for msg := range n.msgQueue {
 			select {
@@ -96,6 +97,7 @@ func copyIDSet(src map[PeerID]struct{}) map[PeerID]struct{} {
 func (n *p2pNode) publish(network *Network, msg Message, exclude map[PeerID]struct{}) {
 	content := msg.Content
 	protocol := msg.Protocol
+	hopCount := msg.HopCount
 
 	n.mu.Lock()
 	defer n.mu.Unlock()
@@ -122,6 +124,10 @@ func (n *p2pNode) publish(network *Network, msg Message, exclude map[PeerID]stru
 	}
 
 	if protocol == Gossiping && len(willSendEdges) > 0 {
+		rand.Shuffle(len(willSendEdges), func(i, j int) {
+			willSendEdges[i], willSendEdges[j] = willSendEdges[j], willSendEdges[i]
+		})
+
 		k := int(float64(len(willSendEdges)) * network.cfg.GossipFactor)
 		willSendEdges = willSendEdges[:k]
 	}
@@ -131,7 +137,13 @@ func (n *p2pNode) publish(network *Network, msg Message, exclude map[PeerID]stru
 
 		go func(e p2pEdge) {
 			time.Sleep(time.Duration(e.Latency) * time.Millisecond)
-			network.nodes[e.TargetID].msgQueue <- Message{From: n.id, Content: content, Protocol: protocol}
+
+			network.nodes[e.TargetID].msgQueue <- Message{
+				From:     n.id,
+				Content:  content,
+				Protocol: protocol,
+				HopCount: hopCount + 1,
+			}
 		}(edgeCopy)
 	}
 }

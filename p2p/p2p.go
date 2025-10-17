@@ -9,6 +9,7 @@ type Message struct {
 	From     PeerID
 	Content  string
 	Protocol BroadcastProtocol
+	HopCount int
 }
 
 // Config holds configuration parameters for the P2P network.
