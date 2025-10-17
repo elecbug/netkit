@@ -36,9 +36,17 @@ type EigenvectorCentralityConfig struct {
 	NStart  *map[graph.NodeID]float64 // initial vector; if nil, uniform distribution
 }
 
+type DegreeCentralityMode string
+
+const (
+	DegreeCentralityTotal DegreeCentralityMode = "total"
+	DegreeCentralityIn    DegreeCentralityMode = "in"
+	DegreeCentralityOut   DegreeCentralityMode = "out"
+)
+
 // DegreeCentralityConfig holds the configuration settings for the degree centrality algorithm.
 type DegreeCentralityConfig struct {
-	Mode string
+	Mode DegreeCentralityMode
 }
 
 // AssortativityMode defines how degree pairs (j,k) are taken on each edge/arc.

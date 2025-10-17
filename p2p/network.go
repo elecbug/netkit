@@ -73,8 +73,8 @@ func (n *Network) RunNetworkSimulation(ctx context.Context) {
 	wg.Wait()
 }
 
-// NodeIDs returns a slice of all node IDs in the network.
-func (n *Network) NodeIDs() []PeerID {
+// PeerIDs returns a slice of all node IDs in the network.
+func (n *Network) PeerIDs() []PeerID {
 	ids := make([]PeerID, 0, len(n.nodes))
 
 	for id := range n.nodes {

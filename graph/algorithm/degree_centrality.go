@@ -48,7 +48,7 @@ func DegreeCentrality(g *graph.Graph, cfg *Config) map[graph.NodeID]float64 {
 	denom := float64(n - 1)
 
 	// --- read config ---
-	mode := "total"
+	mode := DegreeCentralityTotal
 	if cfg != nil && cfg.Degree != nil && cfg.Degree.Mode != "" {
 		mode = cfg.Degree.Mode
 	}

@@ -27,7 +27,7 @@ func Default() *Config {
 		Betweenness:     &BetweennessCentralityConfig{Normalized: true},
 		EdgeBetweenness: &EdgeBetweennessCentralityConfig{Normalized: true},
 		Eigenvector:     &EigenvectorCentralityConfig{MaxIter: 100, Tol: 1e-6, Reverse: false, NStart: nil},
-		Degree:          &DegreeCentralityConfig{Mode: "total"},
+		Degree:          &DegreeCentralityConfig{Mode: DegreeCentralityTotal},
 		Assortativity:   &AssortativityCoefficientConfig{Mode: AssortativityProjected, IgnoreSelfLoops: true},
 		Modularity:      &ModularityConfig{Partition: nil},
 	}

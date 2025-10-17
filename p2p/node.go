@@ -46,9 +46,8 @@ func newNode(id PeerID, nodeLatency float64) *p2pNode {
 
 // eachRun starts the message handling routine for the node.
 func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Context) {
-	defer wg.Done()
-
-	go func(ctx context.Context) {
+	go func(ctx context.Context, wg *sync.WaitGroup) {
+		defer wg.Done()
 		n.alive = true
 
 		for msg := range n.msgQueue {
@@ -81,7 +80,7 @@ func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Cont
 				}
 			}
 		}
-	}(ctx)
+	}(ctx, wg)
 }
 
 // copyIDSet creates a shallow copy of a set of IDs.

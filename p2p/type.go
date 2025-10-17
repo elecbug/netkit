@@ -1,5 +1,8 @@
 package p2p
 
+// PeerID represents a unique identifier for a node in the P2P network.
+type PeerID uint64
+
 // Message represents a message sent between nodes in the P2P network.
 type Message struct {
 	From     PeerID
@@ -11,6 +14,3 @@ type Message struct {
 type Config struct {
 	GossipFactor float64 // fraction of neighbors to gossip to
 }
-
-// PeerID represents a unique identifier for a node in the P2P network.
-type PeerID uint64
