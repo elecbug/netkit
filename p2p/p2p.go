@@ -1,3 +1,4 @@
+// Package p2p provides types and interfaces for a peer-to-peer networking simulation.
 package p2p
 
 // PeerID represents a unique identifier for a node in the P2P network.
