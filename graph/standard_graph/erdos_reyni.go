@@ -5,8 +5,8 @@ import (
 )
 
 // ErdosRenyiGraph generates a random graph based on the Erdős-Rényi model.
-func ErdosRenyiGraph(n int, p float64, isUndirected bool) *graph.Graph {
-	ra := genRand()
+func (sg *StandardGraph) ErdosRenyiGraph(n int, p float64, isUndirected bool) *graph.Graph {
+	ra := sg.genRand()
 
 	g := graph.New(isUndirected)
 

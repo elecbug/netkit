@@ -8,12 +8,12 @@ import (
 // n = number of nodes
 // k = each node is connected to k nearest neighbors in ring (must be even)
 // beta = rewiring probability (0 = regular lattice, 1 = random graph)
-func WattsStrogatzGraph(n, k int, beta float64, isUndirected bool) *graph.Graph {
+func (sg *StandardGraph) WattsStrogatzGraph(n, k int, beta float64, isUndirected bool) *graph.Graph {
 	if n < 1 || k < 2 || k >= n || k%2 != 0 {
 		return nil
 	}
 
-	ra := genRand()
+	ra := sg.genRand()
 	g := graph.New(isUndirected)
 
 	// --- 1. Generate Nodes ---

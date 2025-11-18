@@ -15,7 +15,8 @@ import (
 )
 
 func TestGenerateNetwork(t *testing.T) {
-	g := standard_graph.ErdosRenyiGraph(1000, 50.000/1000, true)
+	sg := standard_graph.NewStandardGraph()
+	g := sg.ErdosRenyiGraph(1000, 50.000/1000, true)
 	t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
 	src := rand.NewSource(time.Now().UnixNano())
 
@@ -84,7 +85,8 @@ func TestGenerateNetwork(t *testing.T) {
 }
 
 func TestMetrics(t *testing.T) {
-	g := standard_graph.ErdosRenyiGraph(1000, 50.000/1000, true)
+	sg := standard_graph.NewStandardGraph()
+	g := sg.ErdosRenyiGraph(1000, 50.000/1000, true)
 	t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
 	src := rand.NewSource(time.Now().UnixNano())
 

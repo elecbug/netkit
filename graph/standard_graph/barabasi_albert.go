@@ -5,12 +5,12 @@ import (
 )
 
 // BarabasiAlbertGraph generates a graph based on the Barabási–Albert preferential attachment model.
-func BarabasiAlbertGraph(n int, m int, isUndirected bool) *graph.Graph {
+func (sg *StandardGraph) BarabasiAlbertGraph(n int, m int, isUndirected bool) *graph.Graph {
 	if m < 1 || n <= m {
 		return nil
 	}
 
-	ra := genRand()
+	ra := sg.genRand()
 	g := graph.New(isUndirected)
 
 	// --- 1. initialize ---

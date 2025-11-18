@@ -7,22 +7,30 @@ import (
 
 const randCode = 42
 
-var seed = int64(randCode)
+type StandardGraph struct {
+	seed int64
+}
+
+func NewStandardGraph() *StandardGraph {
+	return &StandardGraph{
+		seed: randCode,
+	}
+}
 
 // SetSeed sets the seed for random operations in the graph.
-func SetSeed(value int64) {
-	seed = value
+func (g *StandardGraph) SetSeed(value int64) {
+	g.seed = value
 }
 
 // SetSeedRandom sets the seed to a random value for non-deterministic behavior.
-func SetSeedRandom() {
-	seed = randCode
+func (g *StandardGraph) SetSeedRandom() {
+	g.seed = randCode
 }
 
-func genRand() *rand.Rand {
-	localSeed := seed
+func (g *StandardGraph) genRand() *rand.Rand {
+	localSeed := g.seed
 
-	if seed == randCode {
+	if g.seed == randCode {
 		localSeed = rand.Int63()
 	}
 
