@@ -15,9 +15,8 @@ go get github.com/elecbug/netkit@latest
 
 ### Graph
 
-- [`network-graph`](./network-graph/): Unweighted network analysis library.
-  - [`graph`](./network-graph/graph/): Library for creating and building graphs.
-    - [`standard_graph`](./network-graph/graph/standard_graph/): Library for generating standard graphs like Erdos-Reyni graph.
+- [`graph`](./network-graph/graph/): Library for creating and building unweighted graphs.
+  - [`standard_graph`](./network-graph/graph/standard_graph/): Library for generating standard graphs like Erdos-Reyni graph.
   - [`algorithm`](./network-graph/algorithm/): Library containing various graph algorithms.
 
 ### P2P

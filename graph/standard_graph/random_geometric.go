@@ -10,12 +10,12 @@ import (
 // n = number of nodes
 // r = connection radius (0~1)
 // isUndirected = undirected or directed graph
-func RandomGeometricGraph(n int, r float64, isUndirected bool) *graph.Graph {
+func (sg *StandardGraph) RandomGeometricGraph(n int, r float64, isUndirected bool) *graph.Graph {
 	if n < 1 || r <= 0 {
 		return nil
 	}
 
-	ra := genRand()
+	ra := sg.genRand()
 	g := graph.New(isUndirected)
 
 	// --- 1. Generate Nodes ---

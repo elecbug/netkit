@@ -15,7 +15,8 @@ import (
 )
 
 func TestGenerateNetwork(t *testing.T) {
-	g := standard_graph.ErdosRenyiGraph(1000, 50.000/1000, true)
+	sg := standard_graph.NewStandardGraph()
+	g := sg.ErdosRenyiGraph(1000, 50.000/1000, true)
 	t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
 	src := rand.NewSource(time.Now().UnixNano())
 
@@ -27,7 +28,7 @@ func TestGenerateNetwork(t *testing.T) {
 		t.Fatalf("Failed to generate network: %v", err)
 	}
 
-	t.Logf("Generated network with %d nodes\n", len(nw.NodeIDs()))
+	t.Logf("Generated network with %d nodes\n", len(nw.PeerIDs()))
 
 	msg1 := "Hello, P2P World!"
 	msg2 := "Goodbye, P2P World!"
@@ -37,16 +38,16 @@ func TestGenerateNetwork(t *testing.T) {
 	defer cancel()
 	nw.RunNetworkSimulation(ctx)
 
-	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.NodeIDs()[0])
-	err = nw.Publish(nw.NodeIDs()[0], msg1, p2p.Flooding)
+	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.PeerIDs()[0])
+	err = nw.Publish(nw.PeerIDs()[0], msg1, p2p.Flooding)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
 	time.Sleep(1000 * time.Millisecond)
 	t.Logf("Reachability of message '%s': %f\n", msg1, nw.Reachability(msg1))
 
-	t.Logf("Publishing message '%s' from node %d\n", msg2, nw.NodeIDs()[1])
-	err = nw.Publish(nw.NodeIDs()[1], msg2, p2p.Gossiping)
+	t.Logf("Publishing message '%s' from node %d\n", msg2, nw.PeerIDs()[1])
+	err = nw.Publish(nw.PeerIDs()[1], msg2, p2p.Gossiping)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -56,8 +57,8 @@ func TestGenerateNetwork(t *testing.T) {
 	t.Logf("Reachability of message '%s': %f\n", msg2, nw.Reachability(msg2))
 
 	nw.RunNetworkSimulation(context.Background())
-	t.Logf("Publishing message '%s' from node %d\n", msg3, nw.NodeIDs()[2])
-	err = nw.Publish(nw.NodeIDs()[2], msg3, p2p.Gossiping)
+	t.Logf("Publishing message '%s' from node %d\n", msg3, nw.PeerIDs()[2])
+	err = nw.Publish(nw.PeerIDs()[2], msg3, p2p.Gossiping)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -66,7 +67,7 @@ func TestGenerateNetwork(t *testing.T) {
 
 	result := make(map[string]map[string]any)
 
-	for _, nodeID := range nw.NodeIDs() {
+	for _, nodeID := range nw.PeerIDs() {
 		if info, err := nw.MessageInfo(nodeID, msg1); err == nil {
 			result[fmt.Sprintf("msg_1-node_%d", nodeID)] = info
 		}
@@ -84,7 +85,8 @@ func TestGenerateNetwork(t *testing.T) {
 }
 
 func TestMetrics(t *testing.T) {
-	g := standard_graph.ErdosRenyiGraph(1000, 50.000/1000, true)
+	sg := standard_graph.NewStandardGraph()
+	g := sg.ErdosRenyiGraph(1000, 50.000/1000, true)
 	t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
 	src := rand.NewSource(time.Now().UnixNano())
 
@@ -96,7 +98,7 @@ func TestMetrics(t *testing.T) {
 		t.Fatalf("Failed to generate network: %v", err)
 	}
 
-	t.Logf("Generated network with %d nodes\n", len(nw.NodeIDs()))
+	t.Logf("Generated network with %d nodes\n", len(nw.PeerIDs()))
 
 	msg1 := "Hello, P2P World!"
 
@@ -104,13 +106,13 @@ func TestMetrics(t *testing.T) {
 	defer cancel()
 	nw.RunNetworkSimulation(ctx)
 
-	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.NodeIDs()[0])
-	err = nw.Publish(nw.NodeIDs()[0], msg1, p2p.Flooding)
+	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.PeerIDs()[0])
+	err = nw.Publish(nw.PeerIDs()[0], msg1, p2p.Flooding)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
 	time.Sleep(1000 * time.Millisecond)
-	t.Logf("Number of nodes: %d\n", len(nw.NodeIDs()))
+	t.Logf("Number of nodes: %d\n", len(nw.PeerIDs()))
 	t.Logf("Reachability of message '%s': %f\n", msg1, nw.Reachability(msg1))
 	t.Logf("First message reception times of message '%s': %v\n", msg1, nw.FirstMessageReceptionTimes(msg1))
 	t.Logf("Number of duplicate messages of message '%s': %d\n", msg1, nw.NumberOfDuplicateMessages(msg1))

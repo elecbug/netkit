@@ -10,12 +10,12 @@ import (
 // n = number of nodes
 // alpha, beta = Waxman parameters (0<alpha<=1, 0<beta<=1)
 // isUndirected = undirected or directed graph
-func WaxmanGraph(n int, alpha, beta float64, isUndirected bool) *graph.Graph {
+func (sg *StandardGraph) WaxmanGraph(n int, alpha, beta float64, isUndirected bool) *graph.Graph {
 	if n < 1 || alpha <= 0 || alpha > 1 || beta <= 0 || beta > 1 {
 		return nil
 	}
 
-	ra := genRand()
+	ra := sg.genRand()
 	g := graph.New(isUndirected)
 
 	// --- 1. Generate Node Positions ---

@@ -6,7 +6,7 @@ import (
 
 // RandomRegularGraph generates a random k-regular graph with n nodes.
 // Each node has exactly degree k. Returns nil if impossible.
-func RandomRegularGraph(n, k int, isUndirected bool) *graph.Graph {
+func (sg *StandardGraph) RandomRegularGraph(n, k int, isUndirected bool) *graph.Graph {
 	if k < 0 || n < 1 || k >= n {
 		return nil
 	}
@@ -15,7 +15,7 @@ func RandomRegularGraph(n, k int, isUndirected bool) *graph.Graph {
 		return nil
 	}
 
-	ra := genRand()
+	ra := sg.genRand()
 	g := graph.New(isUndirected)
 
 	// add nodes
