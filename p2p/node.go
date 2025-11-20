@@ -58,7 +58,6 @@ func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Cont
 				return
 			default:
 				first := false
-				var excludeSnapshot map[PeerID]struct{}
 
 				n.mu.Lock()
 				if _, ok := n.recvFrom[msg.Content]; !ok {
@@ -69,32 +68,31 @@ func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Cont
 				if _, ok := n.seenAt[msg.Content]; !ok {
 					n.seenAt[msg.Content] = time.Now()
 					first = true
-					excludeSnapshot = copyIDSet(n.recvFrom[msg.Content])
 				}
 				n.mu.Unlock()
 
 				if first {
-					go func(msg Message, exclude map[PeerID]struct{}) {
+					go func(msg Message) {
 						time.Sleep(time.Duration(n.nodeLatency) * time.Millisecond)
-						n.publish(network, msg, exclude)
-					}(msg, excludeSnapshot)
+						n.publish(network, msg)
+					}(msg)
 				}
 			}
 		}
 	}(ctx, wg)
 }
 
-// copyIDSet creates a shallow copy of a set of IDs.
-func copyIDSet(src map[PeerID]struct{}) map[PeerID]struct{} {
-	dst := make(map[PeerID]struct{}, len(src))
-	for k := range src {
-		dst[k] = struct{}{}
-	}
-	return dst
-}
+// // copyIDSet creates a shallow copy of a set of IDs.
+// func copyIDSet(src map[PeerID]struct{}) map[PeerID]struct{} {
+// 	dst := make(map[PeerID]struct{}, len(src))
+// 	for k := range src {
+// 		dst[k] = struct{}{}
+// 	}
+// 	return dst
+// }
 
 // publish sends the message to neighbors, excluding 'exclude' and already-sent targets.
-func (n *p2pNode) publish(network *Network, msg Message, exclude map[PeerID]struct{}) {
+func (n *p2pNode) publish(network *Network, msg Message) {
 	content := msg.Content
 	protocol := msg.Protocol
 	hopCount := msg.HopCount
@@ -113,9 +111,6 @@ func (n *p2pNode) publish(network *Network, msg Message, exclude map[PeerID]stru
 
 	if protocol == Flooding || protocol == Gossiping {
 		for _, edge := range n.edges {
-			if _, wasSender := exclude[edge.targetID]; wasSender {
-				continue
-			}
 			if _, already := n.sentTo[content][edge.targetID]; already {
 				continue
 			}
