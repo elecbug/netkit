@@ -105,31 +105,40 @@ func (n *p2pNode) publish(network *Network, msg Message, exclude map[PeerID]stru
 	if _, ok := n.sentTo[content]; !ok {
 		n.sentTo[content] = make(map[PeerID]struct{})
 	}
+	if _, ok := n.recvFrom[content]; !ok {
+		n.recvFrom[content] = make(map[PeerID]struct{})
+	}
 
 	willSendEdges := make([]p2pEdge, 0)
 
-	for _, edge := range n.edges {
-		if _, wasSender := exclude[edge.targetID]; wasSender {
-			continue
-		}
-		if _, already := n.sentTo[content][edge.targetID]; already {
-			continue
-		}
-		if _, received := n.recvFrom[content][edge.targetID]; received {
-			continue
-		}
-		n.sentTo[content][edge.targetID] = struct{}{}
+	if protocol == Flooding || protocol == Gossiping {
+		for _, edge := range n.edges {
+			if _, wasSender := exclude[edge.targetID]; wasSender {
+				continue
+			}
+			if _, already := n.sentTo[content][edge.targetID]; already {
+				continue
+			}
+			if _, received := n.recvFrom[content][edge.targetID]; received {
+				continue
+			}
+			n.sentTo[content][edge.targetID] = struct{}{}
 
-		willSendEdges = append(willSendEdges, edge)
-	}
+			willSendEdges = append(willSendEdges, edge)
+		}
 
-	if protocol == Gossiping && len(willSendEdges) > 0 {
-		rand.Shuffle(len(willSendEdges), func(i, j int) {
-			willSendEdges[i], willSendEdges[j] = willSendEdges[j], willSendEdges[i]
-		})
+		if protocol == Gossiping && len(willSendEdges) > 0 {
+			rand.Shuffle(len(willSendEdges), func(i, j int) {
+				willSendEdges[i], willSendEdges[j] = willSendEdges[j], willSendEdges[i]
+			})
 
-		k := int(float64(len(willSendEdges)) * network.cfg.GossipFactor)
-		willSendEdges = willSendEdges[:k]
+			k := int(float64(len(willSendEdges)) * network.cfg.GossipFactor)
+			willSendEdges = willSendEdges[:k]
+		}
+	} else if protocol == Custom {
+
+	} else {
+		return
 	}
 
 	for _, edge := range willSendEdges {
