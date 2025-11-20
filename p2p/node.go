@@ -25,8 +25,8 @@ type p2pNode struct {
 
 // p2pEdge represents a connection from one node to another in the P2P network.
 type p2pEdge struct {
-	TargetID PeerID
-	Latency  float64 // in milliseconds
+	targetID    PeerID
+	edgeLatency float64 // in milliseconds
 }
 
 // newNode creates a new Node with the given ID and node latency.
@@ -109,16 +109,16 @@ func (n *p2pNode) publish(network *Network, msg Message, exclude map[PeerID]stru
 	willSendEdges := make([]p2pEdge, 0)
 
 	for _, edge := range n.edges {
-		if _, wasSender := exclude[edge.TargetID]; wasSender {
+		if _, wasSender := exclude[edge.targetID]; wasSender {
 			continue
 		}
-		if _, already := n.sentTo[content][edge.TargetID]; already {
+		if _, already := n.sentTo[content][edge.targetID]; already {
 			continue
 		}
-		if _, received := n.recvFrom[content][edge.TargetID]; received {
+		if _, received := n.recvFrom[content][edge.targetID]; received {
 			continue
 		}
-		n.sentTo[content][edge.TargetID] = struct{}{}
+		n.sentTo[content][edge.targetID] = struct{}{}
 
 		willSendEdges = append(willSendEdges, edge)
 	}
@@ -136,9 +136,9 @@ func (n *p2pNode) publish(network *Network, msg Message, exclude map[PeerID]stru
 		edgeCopy := edge
 
 		go func(e p2pEdge) {
-			time.Sleep(time.Duration(e.Latency) * time.Millisecond)
+			time.Sleep(time.Duration(e.edgeLatency) * time.Millisecond)
 
-			network.nodes[e.TargetID].msgQueue <- Message{
+			network.nodes[e.targetID].msgQueue <- Message{
 				From:     n.id,
 				Content:  content,
 				Protocol: protocol,

@@ -50,11 +50,11 @@ func GenerateNetwork(g *graph.Graph, nodeLatency, edgeLatency func() float64, cf
 			j := maps[neighbor]
 
 			edge := p2pEdge{
-				TargetID: PeerID(j),
-				Latency:  edgeLatency(),
+				targetID:    PeerID(j),
+				edgeLatency: edgeLatency(),
 			}
 
-			n.edges[edge.TargetID] = edge
+			n.edges[edge.targetID] = edge
 		}
 	}
 
