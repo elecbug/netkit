@@ -5,58 +5,58 @@ import (
 	"math/rand"
 )
 
-// LogNormalRand generates a log-normally distributed random number
-// with given mu and sigma parameters.
-func LogNormalRand(mu, sigma float64, src rand.Source) float64 {
-	r := rand.New(src)
-
-	u1 := r.Float64()
-	u2 := r.Float64()
-	z := math.Sqrt(-2.0*math.Log(u1)) * math.Cos(2*math.Pi*u2)
-
-	return math.Exp(mu + sigma*z)
-}
-
-// PoissonRand generates a Poisson-distributed random integer
-// with given lambda parameter.
-func PoissonRand(lambda float64, src rand.Source) int {
+// Poisson(λ): discrete distribution.
+func PoissonRandom(lambda float64) int {
 	L := math.Exp(-lambda)
 	k := 0
 	p := 1.0
-
-	r := rand.New(src)
-
 	for p > L {
 		k++
-		p *= r.Float64()
+		p *= rand.Float64()
 	}
-
 	return k - 1
 }
 
-// ExponentialRand generates an exponentially distributed random number
-// with given rate parameter.
-func ExponentialRand(rate float64, src rand.Source) float64 {
-	r := rand.New(src)
-	u := r.Float64()
-	return -math.Log(1-u) / rate
-}
-
-// UniformRand generates a uniformly distributed random number
-// between min and max.
-func UniformRand(min, max float64, src rand.Source) float64 {
-	r := rand.New(src)
-	return min + r.Float64()*(max-min)
-}
-
-// NormalRand generates a normally distributed random number
-// with given mean and standard deviation.
-func NormalRand(mean, stddev float64, src rand.Source) float64 {
-	r := rand.New(src)
-
-	u1 := r.Float64()
-	u2 := r.Float64()
+// LogNormal(μ, σ): continuous distribution.
+func LogNormalRand(mu, sigma float64) float64 {
+	u1 := rand.Float64()
+	u2 := rand.Float64()
 	z := math.Sqrt(-2.0*math.Log(u1)) * math.Cos(2*math.Pi*u2)
+	return math.Exp(mu + sigma*z)
+}
 
-	return mean + stddev*z
+// Exponential(λ): continuous distribution.
+func ExponentialRandom(lambda float64) float64 {
+	u := rand.Float64()
+	return -math.Log(1.0-u) / lambda
+}
+
+// Normal(μ, σ): Box-Muller transform.
+func NormalRandom(mu, sigma float64) float64 {
+	u1 := rand.Float64()
+	u2 := rand.Float64()
+	z := math.Sqrt(-2.0*math.Log(u1)) * math.Cos(2*math.Pi*u2)
+	return mu + sigma*z
+}
+
+// Binomial(n, p): discrete distribution.
+func BinomialRandom(n int, p float64) int {
+	count := 0
+	for i := 0; i < n; i++ {
+		if rand.Float64() < p {
+			count++
+		}
+	}
+	return count
+}
+
+// Uniform(a, b): continuous distribution.
+func UniformRandom(a, b float64) float64 {
+	return a + (b-a)*rand.Float64()
+}
+
+// Pareto(xm, α): continuous heavy-tailed distribution.
+func ParetoRandom(xm, alpha float64) float64 {
+	u := rand.Float64()
+	return xm / math.Pow(1.0-u, 1.0/alpha)
 }
