@@ -148,7 +148,7 @@ func (n *p2pNode) publish(network *Network, msg Message) {
 
 		targets := msg.CustomProtocol(msg, allEdges, sentEdges, receivedEdges, network.cfg.CustomParams)
 
-		for _, targetID := range targets {
+		for _, targetID := range *targets {
 			for _, edge := range n.edges {
 				if edge.targetID == targetID {
 					willSendEdges = append(willSendEdges, edge)
@@ -168,10 +168,11 @@ func (n *p2pNode) publish(network *Network, msg Message) {
 			time.Sleep(time.Duration(e.edgeLatency) * time.Millisecond)
 
 			network.nodes[e.targetID].msgQueue <- Message{
-				From:     n.id,
-				Content:  content,
-				Protocol: protocol,
-				HopCount: hopCount + 1,
+				From:           n.id,
+				Content:        content,
+				Protocol:       protocol,
+				HopCount:       hopCount + 1,
+				CustomProtocol: msg.CustomProtocol,
 			}
 		}(edgeCopy)
 	}

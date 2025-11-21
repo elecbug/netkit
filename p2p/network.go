@@ -85,7 +85,7 @@ func (n *Network) PeerIDs() []PeerID {
 }
 
 // Publish sends a message to the specified node's message queue.
-func (n *Network) Publish(nodeID PeerID, msg string, protocol BroadcastProtocol, customProtocol func(msg Message, known []PeerID, sent []PeerID, received []PeerID, params map[string]any) []PeerID) error {
+func (n *Network) Publish(nodeID PeerID, msg string, protocol BroadcastProtocol, customProtocol func(msg Message, known []PeerID, sent []PeerID, received []PeerID, params map[string]any) *[]PeerID) error {
 	if node, ok := n.nodes[nodeID]; ok {
 		if !node.alive {
 			return fmt.Errorf("node %d is not alive", nodeID)

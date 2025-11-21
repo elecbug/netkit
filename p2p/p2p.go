@@ -10,7 +10,7 @@ type Message struct {
 	Content        string
 	Protocol       BroadcastProtocol
 	HopCount       int
-	CustomProtocol func(Message, []PeerID, []PeerID, []PeerID, map[string]any) []PeerID
+	CustomProtocol func(Message, []PeerID, []PeerID, []PeerID, map[string]any) *[]PeerID
 }
 
 // Config holds configuration parameters for the P2P network.
