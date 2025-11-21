@@ -51,12 +51,12 @@ func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Cont
 		n.alive = true
 		wg.Done()
 
-		for msg := range n.msgQueue {
-			select {
-			case <-ctx.Done():
-				n.alive = false
-				return
-			default:
+		select {
+		case <-ctx.Done():
+			n.alive = false
+			return
+		default:
+			for msg := range n.msgQueue {
 				first := false
 
 				n.mu.Lock()
