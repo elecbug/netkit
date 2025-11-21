@@ -117,7 +117,6 @@ func (n *p2pNode) publish(network *Network, msg Message) {
 			if _, received := n.recvFrom[content][edge.targetID]; received {
 				continue
 			}
-			n.sentTo[content][edge.targetID] = struct{}{}
 
 			willSendEdges = append(willSendEdges, edge)
 		}
@@ -128,16 +127,42 @@ func (n *p2pNode) publish(network *Network, msg Message) {
 			})
 
 			k := int(float64(len(willSendEdges)) * network.cfg.GossipFactor)
+
 			willSendEdges = willSendEdges[:k]
 		}
 	} else if protocol == Custom {
+		allEdges := make([]PeerID, 0)
+		for _, edge := range n.edges {
+			allEdges = append(allEdges, edge.targetID)
+		}
 
+		sentEdges := make([]PeerID, 0)
+		for targetID := range n.sentTo[content] {
+			sentEdges = append(sentEdges, targetID)
+		}
+
+		receivedEdges := make([]PeerID, 0)
+		for senderID := range n.recvFrom[content] {
+			receivedEdges = append(receivedEdges, senderID)
+		}
+
+		targets := msg.CustomProtocol(msg, allEdges, sentEdges, receivedEdges, network.cfg.CustomParams)
+
+		for _, targetID := range targets {
+			for _, edge := range n.edges {
+				if edge.targetID == targetID {
+					willSendEdges = append(willSendEdges, edge)
+					break
+				}
+			}
+		}
 	} else {
 		return
 	}
 
 	for _, edge := range willSendEdges {
 		edgeCopy := edge
+		n.sentTo[content][edge.targetID] = struct{}{}
 
 		go func(e p2pEdge) {
 			time.Sleep(time.Duration(e.edgeLatency) * time.Millisecond)

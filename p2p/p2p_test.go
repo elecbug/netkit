@@ -37,7 +37,7 @@ func TestGenerateNetwork(t *testing.T) {
 	nw.RunNetworkSimulation(ctx)
 
 	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.PeerIDs()[0])
-	err = nw.Publish(nw.PeerIDs()[0], msg1, p2p.Flooding)
+	err = nw.Publish(nw.PeerIDs()[0], msg1, p2p.Flooding, nil)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestGenerateNetwork(t *testing.T) {
 	t.Logf("Reachability of message '%s': %f\n", msg1, nw.Reachability(msg1))
 
 	t.Logf("Publishing message '%s' from node %d\n", msg2, nw.PeerIDs()[1])
-	err = nw.Publish(nw.PeerIDs()[1], msg2, p2p.Gossiping)
+	err = nw.Publish(nw.PeerIDs()[1], msg2, p2p.Gossiping, nil)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestGenerateNetwork(t *testing.T) {
 
 	nw.RunNetworkSimulation(context.Background())
 	t.Logf("Publishing message '%s' from node %d\n", msg3, nw.PeerIDs()[2])
-	err = nw.Publish(nw.PeerIDs()[2], msg3, p2p.Gossiping)
+	err = nw.Publish(nw.PeerIDs()[2], msg3, p2p.Gossiping, nil)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestMetrics(t *testing.T) {
 	nw.RunNetworkSimulation(ctx)
 
 	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.PeerIDs()[0])
-	err = nw.Publish(nw.PeerIDs()[0], msg1, p2p.Flooding)
+	err = nw.Publish(nw.PeerIDs()[0], msg1, p2p.Flooding, nil)
 	if err != nil {
 		t.Fatalf("Failed to publish message: %v", err)
 	}
