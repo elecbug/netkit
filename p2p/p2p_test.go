@@ -21,7 +21,7 @@ func TestGenerateNetwork(t *testing.T) {
 	nodeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.5) }
 	edgeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.3) }
 
-	nw, err := p2p.GenerateNetwork(g, nodeLatency, edgeLatency, &p2p.Config{GossipFactor: 0.35})
+	nw, err := p2p.GenerateP2P(g, nodeLatency, edgeLatency, &p2p.Config{GossipFactor: 0.35})
 	if err != nil {
 		t.Fatalf("Failed to generate network: %v", err)
 	}
@@ -34,7 +34,7 @@ func TestGenerateNetwork(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	nw.RunNetworkSimulation(ctx)
+	nw.SimulateP2P(ctx)
 
 	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.PeerIDs()[0])
 	err = nw.Publish(nw.PeerIDs()[0], msg1, p2p.Flooding, nil)
@@ -54,7 +54,7 @@ func TestGenerateNetwork(t *testing.T) {
 	time.Sleep(700 * time.Millisecond)
 	t.Logf("Reachability of message '%s': %f\n", msg2, nw.Reachability(msg2))
 
-	nw.RunNetworkSimulation(context.Background())
+	nw.SimulateP2P(context.Background())
 	t.Logf("Publishing message '%s' from node %d\n", msg3, nw.PeerIDs()[2])
 	err = nw.Publish(nw.PeerIDs()[2], msg3, p2p.Gossiping, nil)
 	if err != nil {
@@ -90,7 +90,7 @@ func TestMetrics(t *testing.T) {
 	nodeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.5) }
 	edgeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.3) }
 
-	nw, err := p2p.GenerateNetwork(g, nodeLatency, edgeLatency, &p2p.Config{GossipFactor: 0.35})
+	nw, err := p2p.GenerateP2P(g, nodeLatency, edgeLatency, &p2p.Config{GossipFactor: 0.35})
 	if err != nil {
 		t.Fatalf("Failed to generate network: %v", err)
 	}
@@ -101,7 +101,7 @@ func TestMetrics(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	nw.RunNetworkSimulation(ctx)
+	nw.SimulateP2P(ctx)
 
 	t.Logf("Publishing message '%s' from node %d\n", msg1, nw.PeerIDs()[0])
 	err = nw.Publish(nw.PeerIDs()[0], msg1, p2p.Flooding, nil)
