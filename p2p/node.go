@@ -46,7 +46,7 @@ func newNode(id PeerID, nodeLatency float64) *p2pNode {
 }
 
 // eachRun starts the message handling routine for the node.
-func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Context) {
+func (n *p2pNode) eachRun(network *P2P, wg *sync.WaitGroup, ctx context.Context) {
 	go func(ctx context.Context, wg *sync.WaitGroup) {
 		n.alive = true
 		wg.Done()
@@ -74,7 +74,7 @@ func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Cont
 				if first {
 					go func(msg Message) {
 						time.Sleep(time.Duration(n.nodeLatency) * time.Millisecond)
-						n.publish(network, msg)
+						n.eachPublish(network, msg)
 					}(msg)
 				}
 			}
@@ -82,17 +82,8 @@ func (n *p2pNode) eachRun(network *Network, wg *sync.WaitGroup, ctx context.Cont
 	}(ctx, wg)
 }
 
-// // copyIDSet creates a shallow copy of a set of IDs.
-// func copyIDSet(src map[PeerID]struct{}) map[PeerID]struct{} {
-// 	dst := make(map[PeerID]struct{}, len(src))
-// 	for k := range src {
-// 		dst[k] = struct{}{}
-// 	}
-// 	return dst
-// }
-
-// publish sends the message to neighbors, excluding 'exclude' and already-sent targets.
-func (n *p2pNode) publish(network *Network, msg Message) {
+// eachPublish sends the message to neighbors, excluding 'exclude' and already-sent targets.
+func (n *p2pNode) eachPublish(network *P2P, msg Message) {
 	content := msg.Content
 	protocol := msg.Protocol
 	hopCount := msg.HopCount

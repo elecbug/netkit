@@ -21,7 +21,7 @@ go get github.com/elecbug/netkit@latest
 
 ### P2P
 
-- [`p2p`](./p2p/): Library that integrates with graph libraries to form networks and enable p2p broadcast experiments.
+- [`p2p`](./p2p/): Library that integrates with graph libraries to form networks and enable P2P broadcast experiments.
 
 ### Extensible
 
