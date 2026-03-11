@@ -18,4 +18,4 @@ type Config struct {
 	CustomParams map[string]any // parameters for custom protocols
 }
 
-type CustomProtocolFunc func(msg Message, neighbours []PeerID, sentPeers []PeerID, receivedPeers []PeerID, customParams map[string]any) *[]PeerID
+type CustomProtocolFunc func(id PeerID, msg Message, neighbours []PeerID, sentPeers []PeerID, receivedPeers []PeerID, customParams map[string]any) *[]PeerID
