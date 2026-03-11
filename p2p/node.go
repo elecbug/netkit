@@ -137,7 +137,7 @@ func (n *p2pNode) eachPublish(network *P2P, msg Message) {
 			receivedEdges = append(receivedEdges, senderID)
 		}
 
-		targets := msg.CustomProtocol(msg, allEdges, sentEdges, receivedEdges, network.cfg.CustomParams)
+		targets := msg.CustomProtocol(n.id, msg, allEdges, sentEdges, receivedEdges, network.cfg.CustomParams)
 
 		for _, targetID := range *targets {
 			for _, edge := range n.edges {

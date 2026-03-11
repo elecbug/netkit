@@ -19,7 +19,7 @@ type P2P struct {
 
 // GenerateP2P creates a P2P network from the given graph.
 // nodeLatency and edgeLatency are functions that generate latencies for nodes and edges respectively.
-func GenerateP2P(g *graph.Graph, nodeLatency, edgeLatency func() float64, cfg *Config) (*P2P, error) {
+func GenerateP2P(g *graph.Graph, nodeLatency func(src PeerID) float64, edgeLatency func(src PeerID, dst PeerID) float64, cfg *Config) (*P2P, error) {
 	nodes := make(map[PeerID]*p2pNode)
 	maps := make(map[graph.NodeID]PeerID)
 
@@ -31,7 +31,7 @@ func GenerateP2P(g *graph.Graph, nodeLatency, edgeLatency func() float64, cfg *C
 			return nil, err
 		}
 
-		n := newNode(PeerID(num), nodeLatency())
+		n := newNode(PeerID(num), nodeLatency(PeerID(num)))
 		n.edges = make(map[PeerID]p2pEdge)
 
 		nodes[n.id] = n
@@ -52,7 +52,7 @@ func GenerateP2P(g *graph.Graph, nodeLatency, edgeLatency func() float64, cfg *C
 
 			edge := p2pEdge{
 				targetID:    PeerID(j),
-				edgeLatency: edgeLatency(),
+				edgeLatency: edgeLatency(PeerID(num), PeerID(j)),
 			}
 
 			n.edges[edge.targetID] = edge
@@ -72,6 +72,33 @@ func (p *P2P) SimulateP2P(ctx context.Context) {
 	}
 
 	wg.Wait()
+}
+
+// ExpireSimulation runs the simulation until the reachability of the specified message stabilizes or a timeout occurs.
+func (p *P2P) ExpireSimulation(cancel context.CancelFunc, msg string, expirationDuration, timeoutDuration, checkInterval time.Duration) {
+	startTime := time.Now()
+	lastChangeTime := startTime
+	beforeRch := p.Reachability(msg)
+
+	for {
+		currentRch := p.Reachability(msg)
+
+		if currentRch > beforeRch {
+			beforeRch = currentRch
+			lastChangeTime = time.Now()
+		}
+
+		if time.Since(lastChangeTime) > expirationDuration {
+			break
+		}
+		if time.Since(startTime) > timeoutDuration {
+			break
+		}
+
+		time.Sleep(checkInterval)
+	}
+
+	cancel()
 }
 
 // PeerIDs returns a slice of all node IDs in the network.

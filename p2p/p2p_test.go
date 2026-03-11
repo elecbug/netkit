@@ -18,8 +18,8 @@ func TestGenerateNetwork(t *testing.T) {
 	g := sg.ErdosRenyiGraph(1000, 50.000/1000, true)
 	t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
 
-	nodeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.5) }
-	edgeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.3) }
+	nodeLatency := func(id p2p.PeerID) float64 { return p2p.LogNormalRand(math.Log(100), 0.5) }
+	edgeLatency := func(id1, id2 p2p.PeerID) float64 { return p2p.LogNormalRand(math.Log(100), 0.3) }
 
 	nw, err := p2p.GenerateP2P(g, nodeLatency, edgeLatency, &p2p.Config{GossipFactor: 0.35})
 	if err != nil {
@@ -87,8 +87,8 @@ func TestMetrics(t *testing.T) {
 	g := sg.ErdosRenyiGraph(1000, 50.000/1000, true)
 	t.Logf("Generated graph with %d nodes and %d edges\n", len(g.Nodes()), g.EdgeCount())
 
-	nodeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.5) }
-	edgeLatency := func() float64 { return p2p.LogNormalRand(math.Log(100), 0.3) }
+	nodeLatency := func(id p2p.PeerID) float64 { return p2p.LogNormalRand(math.Log(100), 0.5) }
+	edgeLatency := func(id1, id2 p2p.PeerID) float64 { return p2p.LogNormalRand(math.Log(100), 0.3) }
 
 	nw, err := p2p.GenerateP2P(g, nodeLatency, edgeLatency, &p2p.Config{GossipFactor: 0.35})
 	if err != nil {
