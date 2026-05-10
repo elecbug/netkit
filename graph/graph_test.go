@@ -183,6 +183,7 @@ func graphMetrics(t *testing.T, g *graph.Graph, text string) {
 	})
 	t.Run("Diameter", func(t *testing.T) {
 		results["diameter"] = algorithm.Diameter(g, cfg)
+		results["only_diameter"] = algorithm.OnlyDiameter(g, cfg)
 	})
 	t.Run("EdgeBetweennessCentrality", func(t *testing.T) {
 		results["edge_betweenness_centrality"] = algorithm.EdgeBetweennessCentrality(g, cfg)
