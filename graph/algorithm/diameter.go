@@ -23,3 +23,20 @@ func Diameter(g *graph.Graph, cfg *Config) int {
 
 	return result
 }
+
+// OnlyDiameter computes the diameter of the graph using only the lengths of all-pairs shortest paths.
+func OnlyDiameter(g *graph.Graph, cfg *Config) int {
+	result := 0
+
+	paths := AllShortestPathLength(g, cfg)
+
+	for _, v := range paths {
+		for _, d := range v {
+			if d > result {
+				result = d
+			}
+		}
+	}
+
+	return result
+}
