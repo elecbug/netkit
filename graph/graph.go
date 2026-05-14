@@ -39,8 +39,8 @@ func FromMatrix(matrix [][]bool, bidirectional bool) *Graph {
 	return g
 }
 
-// Save serializes the graph to a string.
-func Save(g *Graph) (string, error) {
+// Serialize serializes the graph to a string.
+func Serialize(g *Graph) (string, error) {
 	if g == nil {
 		return "", fmt.Errorf("graph is nil")
 	}
@@ -66,8 +66,8 @@ func Save(g *Graph) (string, error) {
 	return fmt.Sprintf("%s\n%s\n%s", nodes, edges, bidirectional), nil
 }
 
-// Load deserializes the graph from a string.
-func Load(data string) (*Graph, error) {
+// Deserialize deserializes the graph from a string.
+func Deserialize(data string) (*Graph, error) {
 	lines := strings.Split(data, "\n")
 	if len(lines) < 3 {
 		return nil, fmt.Errorf("invalid graph data")

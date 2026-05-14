@@ -102,7 +102,7 @@ func TestBidirectionalGraph(t *testing.T) {
 		g.AddEdge(graph.NodeID(fmt.Sprintf("%d", rand.Intn(nodeCount))), graph.NodeID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
 	}
 
-	str, err := graph.Save(g)
+	str, err := graph.Serialize(g)
 
 	if err != nil {
 		t.Fatalf("Failed to save graph: %v", err)
@@ -110,7 +110,7 @@ func TestBidirectionalGraph(t *testing.T) {
 
 	os.WriteFile("bidirectional.graph.log", []byte(str), fs.ModePerm)
 
-	g2, err := graph.Load(str)
+	g2, err := graph.Deserialize(str)
 
 	if err != nil {
 		t.Fatalf("Failed to load graph: %v", err)
@@ -137,7 +137,7 @@ func TestDirectionalGraph(t *testing.T) {
 		g.AddEdge(graph.NodeID(fmt.Sprintf("%d", rand.Intn(nodeCount))), graph.NodeID(fmt.Sprintf("%d", rand.Intn(nodeCount))))
 	}
 
-	str, err := graph.Save(g)
+	str, err := graph.Serialize(g)
 
 	if err != nil {
 		t.Fatalf("Failed to save graph: %v", err)
@@ -145,7 +145,7 @@ func TestDirectionalGraph(t *testing.T) {
 
 	os.WriteFile("directional.graph.log", []byte(str), fs.ModePerm)
 
-	g2, err := graph.Load(str)
+	g2, err := graph.Deserialize(str)
 
 	if err != nil {
 		t.Fatalf("Failed to load graph: %v", err)
