@@ -165,6 +165,38 @@ func (p *P2P) FirstMessageReceptionTimes(msg string) []time.Time {
 	return firstTimes
 }
 
+func (p *P2P) FirstMessageReceptions(msg string) []struct {
+	PeerID    graph.NodeID `json:"peer_id"`
+	From      graph.NodeID `json:"from"`
+	Timestamp time.Time    `json:"timestamp"`
+} {
+	receptions := make([]struct {
+		PeerID    graph.NodeID `json:"peer_id"`
+		From      graph.NodeID `json:"from"`
+		Timestamp time.Time    `json:"timestamp"`
+	}, 0)
+
+	for _, node := range p.nodes {
+		node.mu.Lock()
+		if t, ok := node.seenAt[msg]; ok {
+			from := node.firstFrom[msg]
+
+			receptions = append(receptions, struct {
+				PeerID    graph.NodeID `json:"peer_id"`
+				From      graph.NodeID `json:"from"`
+				Timestamp time.Time    `json:"timestamp"`
+			}{
+				PeerID:    graph.NodeID(fmt.Sprintf("%d", node.id)),
+				From:      graph.NodeID(fmt.Sprintf("%d", from)),
+				Timestamp: t,
+			})
+		}
+		node.mu.Unlock()
+	}
+
+	return receptions
+}
+
 // NumberOfDuplicateMessages counts how many duplicate messages were received across all nodes.
 func (p *P2P) NumberOfDuplicateMessages(msg string) int {
 	dupCount := 0

@@ -13,9 +13,10 @@ type p2pNode struct {
 	nodeLatency float64
 	edges       map[PeerID]p2pEdge
 
-	recvFrom map[string]map[PeerID]struct{} // content -> set of senders
-	sentTo   map[string]map[PeerID]struct{} // content -> set of targets
-	seenAt   map[string]time.Time           // content -> first arrival time
+	recvFrom  map[string]map[PeerID]struct{} // content -> set of senders
+	sentTo    map[string]map[PeerID]struct{} // content -> set of targets
+	seenAt    map[string]time.Time           // content -> first arrival time
+	firstFrom map[string]PeerID              // content -> first sender
 
 	msgQueue chan Message
 	mu       sync.Mutex
@@ -36,9 +37,10 @@ func newNode(id PeerID, nodeLatency float64) *p2pNode {
 		nodeLatency: nodeLatency,
 		edges:       make(map[PeerID]p2pEdge),
 
-		recvFrom: make(map[string]map[PeerID]struct{}),
-		sentTo:   make(map[string]map[PeerID]struct{}),
-		seenAt:   make(map[string]time.Time),
+		recvFrom:  make(map[string]map[PeerID]struct{}),
+		sentTo:    make(map[string]map[PeerID]struct{}),
+		seenAt:    make(map[string]time.Time),
+		firstFrom: make(map[string]PeerID),
 
 		msgQueue: make(chan Message, 1000),
 		mu:       sync.Mutex{},
@@ -67,6 +69,7 @@ func (n *p2pNode) eachRun(network *P2P, wg *sync.WaitGroup, ctx context.Context)
 
 				if _, ok := n.seenAt[msg.Content]; !ok {
 					n.seenAt[msg.Content] = time.Now()
+					n.firstFrom[msg.Content] = msg.From
 					first = true
 				}
 				n.mu.Unlock()
