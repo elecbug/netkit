@@ -311,6 +311,7 @@ func testPath(t *testing.T) {
 	g.AddNode("C")
 	g.AddNode("D")
 	g.AddNode("E")
+	g.AddNode("F")
 
 	g.AddEdge("A", "B", graph.NewWeight(1))
 	g.AddEdge("B", "C", graph.NewWeight(2))
@@ -323,17 +324,16 @@ func testPath(t *testing.T) {
 		t.Fatalf("unexpected error finding path from A to E: %v", err)
 	}
 
-	// Verify path properties
-	if path.IsInfinite() {
-		t.Fatalf("expected finite path from A to E, got infinite path")
-	}
-
 	if !equalNodeSlices(path.Nodes(), []graph.NodeID{"A", "B", "C", "D", "E"}) {
 		t.Fatalf("expected path nodes [A B C D E], got %v", path.Nodes())
 	}
 
 	if path.TotalDistance() != 10.14 {
 		t.Fatalf("expected total distance 10.14, got %v", path.TotalDistance())
+	}
+
+	if _, err := g.Path("A", "F"); err == nil {
+		t.Fatalf("expected error finding path from A to F, got nil")
 	}
 }
 

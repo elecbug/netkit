@@ -5,7 +5,6 @@ import "fmt"
 // Path represents a path through the graph, consisting of a sequence of node IDs and the total distance (weight) of the path.
 type Path struct {
 	distances []distance
-	isInf     bool
 }
 
 // distance represents a single hop in the path, containing the destination node and the weight of the edge to that node.
@@ -22,13 +21,11 @@ func (g *Graph) Path(nodes ...NodeID) (*Path, error) {
 	if len(nodes) == 0 {
 		return &Path{
 			distances: []distance{},
-			isInf:     true,
 		}, nil
 	}
 
 	path := &Path{
 		distances: make([]distance, 0, len(nodes)),
-		isInf:     false,
 	}
 	path.distances = append(path.distances, distance{
 		node:   nodes[0],
@@ -43,7 +40,6 @@ func (g *Graph) Path(nodes ...NodeID) (*Path, error) {
 		if err != nil {
 			return &Path{
 				distances: []distance{},
-				isInf:     true,
 			}, fmt.Errorf("no edge from %s to %s: %w", from, to, err)
 		}
 
@@ -54,11 +50,6 @@ func (g *Graph) Path(nodes ...NodeID) (*Path, error) {
 	}
 
 	return path, nil
-}
-
-// IsInfinite reports whether the path is infinite (unreachable).
-func (p *Path) IsInfinite() bool {
-	return p.isInf
 }
 
 // Nodes returns the sequence of node IDs in the path, including the starting node.
