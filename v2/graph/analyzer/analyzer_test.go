@@ -1,14 +1,28 @@
 package analyzer_test
 
 import (
+	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/elecbug/netkit/v2/graph"
 	"github.com/elecbug/netkit/v2/graph/analyzer"
+	"github.com/elecbug/netkit/v2/graph/standard"
 )
 
 // TestShortestPaths tests the ShortestPaths method of the Analyzer to ensure it correctly finds the shortest path between two nodes in a graph.
 func TestShortestPaths(t *testing.T) {
+	fmt.Println("Test Shortest Paths")
+	testComputeShortestPath(t)
+	testPerformance(t)
+}
+
+// testComputeShortestPath sets up a simple graph and tests the ComputeAllShortestPaths and ShortestPaths
+// methods of the Analyzer to verify that it correctly computes and caches shortest paths, and that
+// it updates the cache when the graph changes. It checks for correct path results and proper error handling when paths are removed.
+func testComputeShortestPath(t *testing.T) {
+	fmt.Println("- Test Compute Shortest Paths")
 	g := graph.New(true, true)
 	g.AddNode("A")
 	g.AddNode("B")
@@ -19,7 +33,7 @@ func TestShortestPaths(t *testing.T) {
 	g.AddEdge("A", "C", graph.NewWeight(2))
 	g.AddEdge("C", "D", graph.NewWeight(1))
 
-	a := analyzer.NewAnalyzer(g)
+	a := analyzer.NewAnalyzer(g, 1)
 
 	paths, err := a.ShortestPaths("A", "D")
 	if err != nil {
@@ -70,6 +84,69 @@ func TestShortestPaths(t *testing.T) {
 	if len(paths) != 0 {
 		t.Fatalf("expected 0 paths, got %d", len(paths))
 	}
+}
+
+func testPerformance(t *testing.T) {
+	fmt.Println("- Test Performance")
+
+	g, err := standard.ErdosRenyiGraph(
+		42,
+		false,
+		func(from, to graph.NodeID) *graph.Weight { return graph.NewWeight(rand.Float64() * 100) },
+		1000,
+		0.01,
+	)
+	if err != nil {
+		t.Fatalf("failed to create graph: %v", err)
+	}
+
+	a := analyzer.NewAnalyzer(g, 1)
+
+	startTime := time.Now()
+	_, err = a.ShortestPaths("0", "999")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	duration := time.Since(startTime)
+	fmt.Printf("  - Time taken to compute shortest paths: %v\n", duration)
+
+	a = analyzer.NewAnalyzer(g, 4)
+
+	startTime = time.Now()
+	_, err = a.ShortestPaths("0", "999")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	duration = time.Since(startTime)
+	fmt.Printf("  - Time taken to compute shortest paths with 4 cores: %v\n", duration)
+
+	a = analyzer.NewAnalyzer(g, 16)
+
+	startTime = time.Now()
+	_, err = a.ShortestPaths("0", "999")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	duration = time.Since(startTime)
+	fmt.Printf("  - Time taken to compute shortest paths with 16 cores: %v\n", duration)
+
+	a = analyzer.NewAnalyzer(g, 32)
+
+	startTime = time.Now()
+	_, err = a.ShortestPaths("0", "999")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	duration = time.Since(startTime)
+	fmt.Printf("  - Time taken to compute shortest paths with 32 cores: %v\n", duration)
+
+	startTime = time.Now()
+	_, err = a.ShortestPaths("0", "999")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	duration = time.Since(startTime)
+	fmt.Printf("  - Time taken to retrieve cached shortest paths: %v\n", duration)
 }
 
 // equalPathSlices compares two graph.Path values by node sequence and total distance.
