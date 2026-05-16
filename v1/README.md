@@ -2,7 +2,7 @@
 
 Go (generic) graph algorithms and extensible libraries focused on clarity and performance.
 
-- Go 1.25+
+- Go 1.21+
 - Module: `github.com/elecbug/netkit`
 
 ## Install
