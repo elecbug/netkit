@@ -11,7 +11,8 @@ import (
 	"github.com/elecbug/netkit/v2/graph/standard"
 )
 
-// TestShortestPaths tests the ShortestPaths method of the Analyzer to ensure it correctly finds the shortest path between two nodes in a graph.
+// TestShortestPaths tests the functionality of the Analyzer's shortest path computations, including
+// cache management and performance with different parallel core counts.
 func TestShortestPaths(t *testing.T) {
 	fmt.Println("Test Shortest Paths")
 	testComputeShortestPath(t)
@@ -86,6 +87,9 @@ func testComputeShortestPath(t *testing.T) {
 	}
 }
 
+// testPerformance creates a larger random graph and tests the performance of the ShortestPaths method with different
+// parallel core counts. It measures the time taken to compute shortest paths and to retrieve cached results, ensuring
+// that the method works correctly and efficiently under various conditions.
 func testPerformance(t *testing.T) {
 	fmt.Println("- Test Performance")
 
