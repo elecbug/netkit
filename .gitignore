@@ -25,12 +25,18 @@ go.work.sum
 .env
 
 # log file
+logs/
+log/
+*.log
 log
 
-*.log
-
+# Python virtual environment and cache files
 venv/
 __pycache__/
 *.pyc
-temp
+
+# Temporary files
 temp/
+tmp/
+*.temp
+*.tmp

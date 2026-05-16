@@ -11,21 +11,7 @@ Go (generic) graph algorithms and extensible libraries focused on clarity and pe
 go get github.com/elecbug/netkit@latest
 ```
 
-## Packages
-
-### Graph
-
-- [`graph`](./network-graph/graph/): Library for creating and building unweighted graphs.
-  - [`standard_graph`](./network-graph/graph/standard_graph/): Library for generating standard graphs like Erdos-Reyni graph.
-  - [`algorithm`](./network-graph/algorithm/): Library containing various graph algorithms.
-
-### P2P
-
-- [`p2p`](./p2p/): Library that integrates with graph libraries to form networks and enable P2P broadcast experiments.
-
-### Extensible
-
-- [`bimap`](./bimap/): Bidirectional map with O(1) lookups key->value and value->key.
+<!-- ## Packages -->
 
 ## Development
 
