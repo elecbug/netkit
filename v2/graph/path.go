@@ -2,7 +2,8 @@ package graph
 
 import "fmt"
 
-// Path represents a path through the graph, consisting of a sequence of node IDs and the total distance (weight) of the path.
+// Path represents a sequence of nodes in the graph along with the total distance (weight) of the path.
+// It contains a slice of distances, where each distance represents a hop from one node to the next, including the weight of that hop.
 type Path struct {
 	distances []distance
 }
@@ -13,10 +14,8 @@ type distance struct {
 	weight Weight
 }
 
-// Path returns a Path object representing the path through the graph defined by the given sequence of node IDs.
-// If the path is valid (i.e., there are edges between all consecutive nodes), it returns a Path with the total
-// distance and the sequence of nodes. If any edge in the path does not exist, it returns a Path marked as
-// infinite (unreachable) and an error indicating which edge is missing.
+// Path builds a Path for the given node sequence.
+// It returns an error if any consecutive edge does not exist.
 func (g *Graph) Path(nodes ...NodeID) (*Path, error) {
 	if len(nodes) == 0 {
 		return &Path{

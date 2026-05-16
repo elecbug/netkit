@@ -8,7 +8,7 @@ import (
 
 // RandomRegularGraph generates a random k-regular graph with n nodes.
 // Each node has exactly degree k. Returns nil if impossible.
-// For undirected graphs, n*k must be even. For directed graphs, no such constraint exists.
+// This implementation requires n*k to be even.
 func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k int) (*graph.Graph, error) {
 	if weightFunc == nil {
 		weightFunc = Unweighted()
@@ -22,7 +22,7 @@ func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 	}
 
 	if (n*k)%2 != 0 {
-		// if undirected, n*k must be even
+		// n*k must be even for this implementation
 		return nil, fmt.Errorf("invalid parameters: n*k must be even for undirected graphs")
 	}
 

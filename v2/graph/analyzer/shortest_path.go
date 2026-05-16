@@ -56,9 +56,7 @@ func (a *Analyzer) ShortestPaths(start, end graph.NodeID) ([]graph.Path, error) 
 	return result, nil
 }
 
-// Path computes the path and total distance for a given sequence of nodes. It returns a Path containing
-// the total distance and the sequence of nodes. If any edge in the path does not exist, it returns a
-// Path marked as infinite (unreachable) and an error indicating which edge is missing.
+// allShortestPaths computes all shortest paths between reachable node pairs in the graph.
 func allShortestPaths(g *graph.Graph) (map[graph.NodeID]map[graph.NodeID][]graph.Path, error) {
 	result := make(map[graph.NodeID]map[graph.NodeID][]graph.Path)
 

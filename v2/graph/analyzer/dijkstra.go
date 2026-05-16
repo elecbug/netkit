@@ -33,7 +33,7 @@ func (pq *dijkstraPQ) Push(x any) {
 }
 
 // Pop removes and returns the item with the smallest distance from the priority queue.
-// It removes the last item from the slice, which is the smallest due to the heap property.
+// container/heap moves the smallest item to the end before calling this method.
 func (pq *dijkstraPQ) Pop() any {
 	old := *pq
 	n := len(old)

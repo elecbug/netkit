@@ -72,7 +72,7 @@ func TestShortestPaths(t *testing.T) {
 	}
 }
 
-// equalPathSlices compares two graph.Path instances for equality, considering both the sequence of nodes and the total distance. It returns true if both paths are infinite or if they have the same nodes in the same order and the same total distance.
+// equalPathSlices compares two graph.Path values by node sequence and total distance.
 func equalPathSlices(a, b graph.Path) bool {
 	nodesA := a.Nodes()
 	nodesB := b.Nodes()
