@@ -1,6 +1,7 @@
 package standard_test
 
 import (
+	"fmt"
 	"math"
 	"sync"
 	"testing"
@@ -10,6 +11,8 @@ import (
 
 // TestBarabasiAlbertGraph tests the Barabási-Albert graph generation function.
 func TestBarabasiAlbertGraph(t *testing.T) {
+	fmt.Println("Test Barabási-Albert Graph")
+
 	trial := 100
 	n := 1000
 	m := 3
@@ -111,6 +114,8 @@ func TestBarabasiAlbertGraph(t *testing.T) {
 
 // TestErdosRenyiGraph tests the Erdős-Rényi graph generation function.
 func TestErdosRenyiGraph(t *testing.T) {
+	fmt.Println("Test Erdős-Rényi Graph")
+
 	trial := 100
 	n := 1000
 	p := 0.2
@@ -217,6 +222,8 @@ func TestErdosRenyiGraph(t *testing.T) {
 
 // TestRandomGeometricGraph tests the random geometric graph generation function.
 func TestRandomGeometricGraph(t *testing.T) {
+	fmt.Println("Test Random Geometric Graph")
+
 	trial := 100
 	n := 1000
 	targetDegree := 20.0
@@ -323,6 +330,8 @@ func TestRandomGeometricGraph(t *testing.T) {
 
 // TestRandomRegularGraph tests the random regular graph generation function.
 func TestRandomRegularGraph(t *testing.T) {
+	fmt.Println("Test Random Regular Graph")
+
 	trial := 100
 	n := 1000
 	k := 20.0
@@ -423,7 +432,10 @@ func TestRandomRegularGraph(t *testing.T) {
 	}
 }
 
+// TestWattsStrogatzGraph tests the Watts-Strogatz graph generation function.
 func TestWattsStrogatzGraph(t *testing.T) {
+	fmt.Println("Test Watts-Strogatz Graph")
+
 	trial := 100
 	n := 1000
 	k := 20.0
@@ -526,6 +538,79 @@ func TestWattsStrogatzGraph(t *testing.T) {
 			expectedMinDegree*(1+0.1),
 			minDegree,
 		)
+	}
+}
+
+// TestGenerateFromConfig tests the StandardGraph function with various configurations.
+func TestGenerateFromConfig(t *testing.T) {
+	fmt.Println("Test StandardGraph with Config")
+
+	configs := []standard.GraphConfig{
+		{
+			Type: standard.ErdosRenyi,
+			Params: map[string]interface{}{
+				"n": 1000,
+				"p": 0.2,
+			},
+		},
+		{
+			Type: standard.BarabasiAlbert,
+			Params: map[string]interface{}{
+				"n": 1000,
+				"m": 3,
+			},
+		},
+		{
+			Type: standard.WattsStrogatz,
+			Params: map[string]interface{}{
+				"n":    1000,
+				"k":    20,
+				"beta": 0.1,
+			},
+		},
+	}
+
+	for i, config := range configs {
+		g, err := standard.StandardGraph(i, false, standard.Unweighted(), config)
+		if err != nil {
+			t.Errorf("failed to generate graph for config %d: %v", i, err)
+			continue
+		}
+
+		if len(g.Nodes()) != 1000 {
+			t.Errorf("expected 1000 nodes for config %d, got %d", i, len(g.Nodes()))
+		}
+	}
+
+	invalidConfigs := []standard.GraphConfig{
+		{
+			Type: standard.ErdosRenyi,
+			Params: map[string]interface{}{
+				"n": -1,
+				"p": 0.2,
+			},
+		},
+		{
+			Type: standard.BarabasiAlbert,
+			Params: map[string]interface{}{
+				"n": 10,
+				"m": 20,
+			},
+		},
+		{
+			Type: standard.WattsStrogatz,
+			Params: map[string]interface{}{
+				"n":    1000,
+				"k":    20,
+				"beta": -0.1,
+			},
+		},
+	}
+
+	for i, config := range invalidConfigs {
+		if _, err := standard.StandardGraph(i, false, standard.Unweighted(), config); err == nil {
+			t.Errorf("expected error for invalid config %d, but got none", i)
+		}
 	}
 }
 
