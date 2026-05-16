@@ -8,18 +8,20 @@ import (
 
 // Analyzer represents a graph analyzer that can be computed based on a given graph.
 type Analyzer struct {
-	baseGraph        *graph.Graph                                   // baseGraph is the original graph provided to the analyzer, used for reference and hashing.
-	graphHash        string                                         // graphHash stores the hash of the base graph to detect changes and manage cache validity.
-	allShortestPaths map[graph.NodeID]map[graph.NodeID][]graph.Path // allShortestPaths caches the results of shortest path computations between node pairs.
-	mu               sync.RWMutex                                   // mu protects access to the allShortestPaths cache to ensure thread safety during concurrent reads/writes.
+	baseGraph         *graph.Graph                                   // baseGraph is the original graph provided to the analyzer, used for reference and hashing.
+	graphHash         string                                         // graphHash stores the hash of the base graph to detect changes and manage cache validity.
+	allShortestPaths  map[graph.NodeID]map[graph.NodeID][]graph.Path // allShortestPaths caches the results of shortest path computations between node pairs.
+	mu                sync.RWMutex                                   // mu protects access to the allShortestPaths cache to ensure thread safety during concurrent reads/writes.
+	parallelCoreCount int                                            // parallelCoreCount determines how many CPU cores to utilize for parallel computations, if applicable.
 }
 
 // NewAnalyzer creates a new Analyzer instance based on the provided graph.
-func NewAnalyzer(g *graph.Graph) *Analyzer {
+func NewAnalyzer(g *graph.Graph, parallelCoreCount int) *Analyzer {
 	return &Analyzer{
-		baseGraph:        g,
-		graphHash:        "",
-		allShortestPaths: make(map[graph.NodeID]map[graph.NodeID][]graph.Path),
+		baseGraph:         g,
+		graphHash:         "",
+		allShortestPaths:  make(map[graph.NodeID]map[graph.NodeID][]graph.Path),
+		parallelCoreCount: parallelCoreCount,
 	}
 }
 

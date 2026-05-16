@@ -2,8 +2,10 @@ package analyzer
 
 import (
 	"container/heap"
+	"context"
 	"fmt"
 	"math"
+	"sync"
 
 	"github.com/elecbug/netkit/v2/graph"
 )
@@ -19,7 +21,7 @@ func (a *Analyzer) ComputeAllShortestPaths() error {
 		return nil
 	}
 
-	paths, err := allShortestPaths(a.baseGraph)
+	paths, err := allShortestPaths(a.baseGraph, a.parallelCoreCount)
 	if err != nil {
 		return err
 	}
@@ -57,29 +59,86 @@ func (a *Analyzer) ShortestPaths(start, end graph.NodeID) ([]graph.Path, error) 
 }
 
 // allShortestPaths computes all shortest paths between reachable node pairs in the graph.
-func allShortestPaths(g *graph.Graph) (map[graph.NodeID]map[graph.NodeID][]graph.Path, error) {
-	result := make(map[graph.NodeID]map[graph.NodeID][]graph.Path)
-
-	if !g.Weighted {
-		for _, start := range g.Nodes() {
-			pathsFromStart, err := allShortestPathsFromStart(g, start)
-			if err != nil {
-				return nil, err
-			}
-
-			result[start] = pathsFromStart
-		}
-
-		return result, nil
+func allShortestPaths(
+	g *graph.Graph, parallelCoreCount int,
+) (map[graph.NodeID]map[graph.NodeID][]graph.Path, error) {
+	if parallelCoreCount <= 0 {
+		parallelCoreCount = 1
 	}
 
-	for _, start := range g.Nodes() {
-		pathsFromStart, err := allWeightedShortestPathsFromStart(g, start)
-		if err != nil {
-			return nil, err
+	result := make(map[graph.NodeID]map[graph.NodeID][]graph.Path)
+
+	nodes := g.Nodes()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	core := make(chan struct{}, parallelCoreCount)
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	var firstErr error
+	var errOnce sync.Once
+
+	setErr := func(err error) {
+		if err == nil {
+			return
 		}
 
-		result[start] = pathsFromStart
+		errOnce.Do(func() {
+			firstErr = err
+			cancel()
+		})
+	}
+
+Loop:
+	for _, start := range nodes {
+		select {
+		case <-ctx.Done():
+			break Loop
+		default:
+		}
+
+		core <- struct{}{}
+		wg.Add(1)
+
+		go func(start graph.NodeID) {
+			defer wg.Done()
+			defer func() {
+				<-core
+			}()
+
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			var pathsFromStart map[graph.NodeID][]graph.Path
+			var err error
+
+			if !g.Weighted {
+				pathsFromStart, err = allShortestPathsFromStart(g, start)
+			} else {
+				pathsFromStart, err = allWeightedShortestPathsFromStart(g, start)
+			}
+
+			if err != nil {
+				setErr(fmt.Errorf("failed to compute shortest paths from %s: %w", start, err))
+				return
+			}
+
+			mu.Lock()
+			result[start] = pathsFromStart
+			mu.Unlock()
+		}(start)
+	}
+
+	wg.Wait()
+
+	if firstErr != nil {
+		return nil, firstErr
 	}
 
 	return result, nil
