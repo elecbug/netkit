@@ -60,3 +60,17 @@ func RandomGeometricGraph(seed int, directed bool, weightFunc WeightedFunc, n in
 
 	return g, nil
 }
+
+// RForRandomGeometricGraph calculates the radius r for a random geometric graph to achieve a target average degree.
+func RForRandomGeometricGraph(targetDegree float64, n int) (float64, error) {
+	if targetDegree < 0 {
+		return 0, fmt.Errorf("invalid target degree: must be non-negative")
+	}
+	if n <= 0 {
+		return 0, fmt.Errorf("invalid number of nodes: n must be positive")
+	}
+
+	r := math.Sqrt(targetDegree / (math.Pi * float64(n-1)))
+
+	return r, nil
+}

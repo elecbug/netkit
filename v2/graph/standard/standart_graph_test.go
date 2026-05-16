@@ -113,7 +113,7 @@ func TestBarabasiAlbertGraph(t *testing.T) {
 func TestErdosRenyiGraph(t *testing.T) {
 	trial := 100
 	n := 1000
-	p := 0.03
+	p := 0.2
 
 	concurrency := 50
 	sem := make(chan struct{}, concurrency)
@@ -194,11 +194,11 @@ func TestErdosRenyiGraph(t *testing.T) {
 
 	maxDegree := float64(totalMaxDegree) / float64(trial)
 	expectedMaxDegree := muu + extreme
-	if !checkRange(maxDegree, expectedMaxDegree, 0.25, 0.25) {
+	if !checkRange(maxDegree, expectedMaxDegree, 0.1, 0.1) {
 		t.Errorf(
 			"expected max degree around %f-%f, got %f",
-			expectedMaxDegree*(1-0.25),
-			expectedMaxDegree*(1+0.25),
+			expectedMaxDegree*(1-0.1),
+			expectedMaxDegree*(1+0.1),
 			maxDegree,
 		)
 	}
@@ -217,34 +217,362 @@ func TestErdosRenyiGraph(t *testing.T) {
 
 // TestRandomGeometricGraph tests the random geometric graph generation function.
 func TestRandomGeometricGraph(t *testing.T) {
-	n := 100
-	r := 0.1
-	g, err := standard.RandomGeometricGraph(42, false, standard.Unweighted(), n, r)
+	trial := 100
+	n := 1000
+	targetDegree := 20.0
+	r, err := standard.RForRandomGeometricGraph(targetDegree, n)
 	if err != nil {
-		t.Fatalf("failed to generate random geometric graph: %v", err)
+		t.Fatalf("failed to calculate radius for random geometric graph: %v", err)
 	}
 
-	if len(g.Nodes()) != n {
-		t.Errorf("expected %d nodes, got %d", n, len(g.Nodes()))
-	}
+	concurrency := 50
+	sem := make(chan struct{}, concurrency)
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 
 	totalDegree := 0
-	for _, id := range g.Nodes() {
-		node, err := g.Node(id)
-		if err != nil {
-			t.Fatalf("failed to get node: %v", err)
-		}
-		d := node.Degree()
-		totalDegree += d
+	totalMaxDegree := 0
+	totalMinDegree := 0
+
+	for i := 0; i < trial; i++ {
+		wg.Add(1)
+		sem <- struct{}{}
+
+		go func(i int) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			g, err := standard.RandomGeometricGraph(i, false, standard.Unweighted(), n, r)
+			if err != nil {
+				t.Errorf("failed to generate random geometric graph: %v", err)
+				return
+			}
+
+			if len(g.Nodes()) != n {
+				t.Errorf("expected %d nodes, got %d", n, len(g.Nodes()))
+			}
+
+			localTotalDegree := 0
+			localMaxDegree := 0
+			localMinDegree := 1<<31 - 1
+
+			for _, id := range g.Nodes() {
+				node, err := g.Node(id)
+				if err != nil {
+					t.Errorf("failed to get node: %v", err)
+					return
+				}
+
+				d := node.Degree()
+
+				localTotalDegree += d
+
+				if d > localMaxDegree {
+					localMaxDegree = d
+				}
+
+				if d < localMinDegree {
+					localMinDegree = d
+				}
+			}
+
+			mu.Lock()
+			totalDegree += localTotalDegree
+			totalMaxDegree += localMaxDegree
+			totalMinDegree += localMinDegree
+			mu.Unlock()
+		}(i)
 	}
 
-	expectedEdges := int(float64(n*(n-1)/2) * (3.14159 * r * r))
-	if totalDegree/2 < expectedEdges/2 || totalDegree/2 > expectedEdges*2 {
-		t.Errorf("expected around %d edges, got %d", expectedEdges, totalDegree/2)
+	wg.Wait()
+
+	avgDegree := float64(totalDegree) / float64(n*trial)
+	expectedAvgDegree := targetDegree
+	if !checkRange(avgDegree, expectedAvgDegree, 0.1, 0.1) {
+		t.Errorf(
+			"expected average degree around %f-%f, got %f",
+			expectedAvgDegree*(1-0.1),
+			expectedAvgDegree*(1+0.1),
+			avgDegree,
+		)
+	}
+
+	maxDegree := float64(totalMaxDegree) / float64(trial)
+	expectedMaxDegree := float64(poissonUpperExtreme(n, targetDegree))
+	if !checkRange(maxDegree, expectedMaxDegree, 0.1, 0.1) {
+		t.Errorf(
+			"expected max degree around %f-%f, got %f",
+			expectedMaxDegree*(1-0.1),
+			expectedMaxDegree*(1+0.1),
+			maxDegree,
+		)
+	}
+
+	minDegree := float64(totalMinDegree) / float64(trial)
+	expectedMinDegree := float64(poissonLowerExtreme(n, targetDegree/2))
+	if !checkRange(minDegree, expectedMinDegree, 1.0, 1.0) {
+		t.Errorf(
+			"expected min degree around %f-%f, got %f",
+			expectedMinDegree*(1-1.0),
+			expectedMinDegree*(1+1.0),
+			minDegree,
+		)
+	}
+}
+
+// TestRandomRegularGraph tests the random regular graph generation function.
+func TestRandomRegularGraph(t *testing.T) {
+	trial := 100
+	n := 1000
+	k := 20.0
+
+	concurrency := 50
+	sem := make(chan struct{}, concurrency)
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	totalDegree := 0
+	totalMaxDegree := 0
+	totalMinDegree := 0
+
+	for i := 0; i < trial; i++ {
+		wg.Add(1)
+		sem <- struct{}{}
+
+		go func(i int) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			g, err := standard.RandomRegularGraph(i, false, standard.Unweighted(), n, int(k))
+			if err != nil {
+				t.Errorf("failed to generate random regular graph: %v", err)
+				return
+			}
+
+			if len(g.Nodes()) != n {
+				t.Errorf("expected %d nodes, got %d", n, len(g.Nodes()))
+			}
+
+			localTotalDegree := 0
+			localMaxDegree := 0
+			localMinDegree := 1<<31 - 1
+
+			for _, id := range g.Nodes() {
+				node, err := g.Node(id)
+				if err != nil {
+					t.Errorf("failed to get node: %v", err)
+					return
+				}
+
+				d := node.Degree()
+
+				localTotalDegree += d
+
+				if d > localMaxDegree {
+					localMaxDegree = d
+				}
+
+				if d < localMinDegree {
+					localMinDegree = d
+				}
+			}
+
+			mu.Lock()
+			totalDegree += localTotalDegree
+			totalMaxDegree += localMaxDegree
+			totalMinDegree += localMinDegree
+			mu.Unlock()
+		}(i)
+	}
+
+	wg.Wait()
+
+	avgDegree := float64(totalDegree) / float64(n*trial)
+	expectedAvgDegree := k
+	if !checkRange(avgDegree, expectedAvgDegree, 0.0, 0.0) {
+		t.Errorf(
+			"expected average degree around %f-%f, got %f",
+			expectedAvgDegree*(1-0.0),
+			expectedAvgDegree*(1+0.0),
+			avgDegree,
+		)
+	}
+
+	maxDegree := float64(totalMaxDegree) / float64(trial)
+	expectedMaxDegree := k
+	if !checkRange(maxDegree, expectedMaxDegree, 0.0, 0.0) {
+		t.Errorf(
+			"expected max degree around %f-%f, got %f",
+			expectedMaxDegree*(1-0.0),
+			expectedMaxDegree*(1+0.0),
+			maxDegree,
+		)
+	}
+
+	minDegree := float64(totalMinDegree) / float64(trial)
+	expectedMinDegree := k
+	if !checkRange(minDegree, expectedMinDegree, 0.0, 0.0) {
+		t.Errorf(
+			"expected min degree around %f-%f, got %f",
+			expectedMinDegree*(1-0.0),
+			expectedMinDegree*(1+0.0),
+			minDegree,
+		)
+	}
+}
+
+func TestWattsStrogatzGraph(t *testing.T) {
+	trial := 100
+	n := 1000
+	k := 20.0
+	beta := 0.1
+
+	concurrency := 50
+	sem := make(chan struct{}, concurrency)
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	totalDegree := 0
+	totalMaxDegree := 0
+	totalMinDegree := 0
+
+	for i := 0; i < trial; i++ {
+		wg.Add(1)
+		sem <- struct{}{}
+
+		go func(i int) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			g, err := standard.WattsStrogatzGraph(i, false, standard.Unweighted(), n, int(k), beta)
+			if err != nil {
+				t.Errorf("failed to generate Watts-Strogatz graph: %v", err)
+				return
+			}
+
+			if len(g.Nodes()) != n {
+				t.Errorf("expected %d nodes, got %d", n, len(g.Nodes()))
+			}
+
+			localTotalDegree := 0
+			localMaxDegree := 0
+			localMinDegree := 1<<31 - 1
+
+			for _, id := range g.Nodes() {
+				node, err := g.Node(id)
+				if err != nil {
+					t.Errorf("failed to get node: %v", err)
+					return
+				}
+
+				d := node.Degree()
+
+				localTotalDegree += d
+
+				if d > localMaxDegree {
+					localMaxDegree = d
+				}
+
+				if d < localMinDegree {
+					localMinDegree = d
+				}
+			}
+
+			mu.Lock()
+			totalDegree += localTotalDegree
+			totalMaxDegree += localMaxDegree
+			totalMinDegree += localMinDegree
+			mu.Unlock()
+		}(i)
+	}
+
+	wg.Wait()
+
+	avgDegree := float64(totalDegree) / float64(n*trial)
+	expectedAvgDegree := k*(1-beta) + k*beta
+	if !checkRange(avgDegree, expectedAvgDegree, 0.1, 0.1) {
+		t.Errorf(
+			"expected average degree around %f-%f, got %f",
+			expectedAvgDegree*(1-0.1),
+			expectedAvgDegree*(1+0.1),
+			avgDegree,
+		)
+	}
+
+	q := k / 2
+	sigma := math.Sqrt(q*beta*(1-beta) + beta*q)
+	extreme := sigma * math.Sqrt(2*math.Log(float64(n)))
+
+	maxDegree := float64(totalMaxDegree) / float64(trial)
+	expectedMaxDegree := k + extreme
+	if !checkRange(maxDegree, expectedMaxDegree, 0.1, 0.1) {
+		t.Errorf(
+			"expected max degree around %f-%f, got %f",
+			expectedMaxDegree*(1-0.1),
+			expectedMaxDegree*(1+0.1),
+			maxDegree,
+		)
+	}
+
+	minDegree := float64(totalMinDegree) / float64(trial)
+	expectedMinDegree := k - extreme
+	if !checkRange(minDegree, expectedMinDegree, 0.1, 0.1) {
+		t.Errorf(
+			"expected min degree around %f-%f, got %f",
+			expectedMinDegree*(1-0.1),
+			expectedMinDegree*(1+0.1),
+			minDegree,
+		)
 	}
 }
 
 // checkRange checks if value is within the range of target*(1-lower) and target*(1+upper).
 func checkRange(value, target float64, lower, upper float64) bool {
 	return value >= target*(1-lower) && value <= target*(1+upper)
+}
+
+// poissonCDF calculates the cumulative distribution function of the Poisson distribution for k and lambda.
+func poissonCDF(k int, lambda float64) float64 {
+	if k < 0 {
+		return 0
+	}
+
+	term := math.Exp(-lambda)
+	sum := term
+
+	for i := 1; i <= k; i++ {
+		term *= lambda / float64(i)
+		sum += term
+	}
+
+	return sum
+}
+
+// poissonUpperExtreme calculates the upper extreme value for a Poisson distribution with mean lambda and n samples.
+func poissonUpperExtreme(n int, lambda float64) int {
+	target := 1.0 - 1.0/float64(n)
+
+	for k := 0; k < 100000; k++ {
+		if poissonCDF(k, lambda) >= target {
+			return k
+		}
+	}
+
+	return -1
+}
+
+// poissonLowerExtreme calculates the lower extreme value for a Poisson distribution with mean lambda and n samples.
+func poissonLowerExtreme(n int, lambda float64) int {
+	target := 1.0 / float64(n)
+
+	for k := 0; k < 100000; k++ {
+		if poissonCDF(k, lambda) >= target {
+			return k
+		}
+	}
+
+	return -1
 }
