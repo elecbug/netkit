@@ -9,9 +9,21 @@ import (
 	"github.com/elecbug/netkit/v2/graph/standard"
 )
 
-// TestBarabasiAlbertGraph tests the Barabási-Albert graph generation function.
-func TestBarabasiAlbertGraph(t *testing.T) {
-	fmt.Println("Test Barabási-Albert Graph")
+func TestStandardGraph(t *testing.T) {
+	fmt.Println("Test Standard Graph Generation")
+	testBarabasiAlbertGraph(t)
+	testErdosRenyiGraph(t)
+	testRandomGeometricGraph(t)
+	testRandomRegularGraph(t)
+	testWattsStrogatzGraph(t)
+
+	fmt.Println("Test Standard Graph Generation from Config")
+	testGenerateFromConfig(t)
+}
+
+// testBarabasiAlbertGraph tests the Barabási-Albert graph generation function.
+func testBarabasiAlbertGraph(t *testing.T) {
+	fmt.Println("- Test Barabási-Albert Graph")
 
 	trial := 100
 	n := 1000
@@ -112,9 +124,9 @@ func TestBarabasiAlbertGraph(t *testing.T) {
 	}
 }
 
-// TestErdosRenyiGraph tests the Erdős-Rényi graph generation function.
-func TestErdosRenyiGraph(t *testing.T) {
-	fmt.Println("Test Erdős-Rényi Graph")
+// testErdosRenyiGraph tests the Erdős-Rényi graph generation function.
+func testErdosRenyiGraph(t *testing.T) {
+	fmt.Println("- Test Erdős-Rényi Graph")
 
 	trial := 100
 	n := 1000
@@ -220,9 +232,9 @@ func TestErdosRenyiGraph(t *testing.T) {
 	}
 }
 
-// TestRandomGeometricGraph tests the random geometric graph generation function.
-func TestRandomGeometricGraph(t *testing.T) {
-	fmt.Println("Test Random Geometric Graph")
+// testRandomGeometricGraph tests the random geometric graph generation function.
+func testRandomGeometricGraph(t *testing.T) {
+	fmt.Println("- Test Random Geometric Graph")
 
 	trial := 100
 	n := 1000
@@ -328,9 +340,9 @@ func TestRandomGeometricGraph(t *testing.T) {
 	}
 }
 
-// TestRandomRegularGraph tests the random regular graph generation function.
-func TestRandomRegularGraph(t *testing.T) {
-	fmt.Println("Test Random Regular Graph")
+// testRandomRegularGraph tests the random regular graph generation function.
+func testRandomRegularGraph(t *testing.T) {
+	fmt.Println("- Test Random Regular Graph")
 
 	trial := 100
 	n := 1000
@@ -432,9 +444,9 @@ func TestRandomRegularGraph(t *testing.T) {
 	}
 }
 
-// TestWattsStrogatzGraph tests the Watts-Strogatz graph generation function.
-func TestWattsStrogatzGraph(t *testing.T) {
-	fmt.Println("Test Watts-Strogatz Graph")
+// testWattsStrogatzGraph tests the Watts-Strogatz graph generation function.
+func testWattsStrogatzGraph(t *testing.T) {
+	fmt.Println("- Test Watts-Strogatz Graph")
 
 	trial := 100
 	n := 1000
@@ -541,9 +553,9 @@ func TestWattsStrogatzGraph(t *testing.T) {
 	}
 }
 
-// TestGenerateFromConfig tests the StandardGraph function with various configurations.
-func TestGenerateFromConfig(t *testing.T) {
-	fmt.Println("Test StandardGraph with Config")
+// testGenerateFromConfig tests the StandardGraph function with various configurations.
+func testGenerateFromConfig(t *testing.T) {
+	fmt.Println("- Test StandardGraph with Config")
 
 	configs := []standard.GraphConfig{
 		{

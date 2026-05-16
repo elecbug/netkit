@@ -7,6 +7,8 @@ import (
 	"github.com/elecbug/netkit/v2/graph"
 )
 
+// TestGraph tests the basic operations of the Graph, including node and edge manipulation,
+// string representation, adjacency matrix, serialization/deserialization, and pathfinding.
 func TestGraph(t *testing.T) {
 	fmt.Println("Test directed, weighted graph")
 	dwg := graph.New(true, true)
@@ -217,6 +219,7 @@ func testEdgeOperations(t *testing.T, g *graph.Graph, directed, weighted bool) {
 	}
 }
 
+// testOtherOperations tests other graph operations such as String, Matrix, and Serialize/Deserialize.
 func testOtherOperations(t *testing.T, g *graph.Graph, directed, weighted bool) {
 	fmt.Println("- Test other graph operations")
 
@@ -292,8 +295,13 @@ func testOtherOperations(t *testing.T, g *graph.Graph, directed, weighted bool) 
 	if deserialized.String() != g.String() {
 		t.Fatalf("expected deserialized graph string:\n%s\nGot:\n%s", g.String(), deserialized.String())
 	}
+
+	if deserialized.Hash() != g.Hash() {
+		t.Fatalf("expected deserialized graph hash %s, got %s", g.Hash(), deserialized.Hash())
+	}
 }
 
+// testPath tests the Path method of the graph, which calculates the path and total distance between a sequence of nodes.
 func testPath(t *testing.T) {
 	fmt.Println("Test path operations")
 	g := graph.New(true, true)

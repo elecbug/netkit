@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -321,6 +322,16 @@ func Deserialize(jsonStr string) (*Graph, error) {
 
 	return g, nil
 }
+
+// Hash returns the SHA-256 hash of the graph.
+func (g *Graph) Hash() string {
+	h := sha256.New()
+	h.Write(fmt.Appendf(nil, "%s", g.String()))
+
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+/* Utility Functions */
 
 // checkProperties checks that the graph's properties (directed/undirected, weighted/unweighted) are consistent with its edges.
 func (g *Graph) checkProperties() error {
