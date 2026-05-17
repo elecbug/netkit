@@ -6,11 +6,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/elecbug/netkit/v2/graph"
 	"github.com/elecbug/netkit/v2/graph/standard"
 )
 
 func TestStandardGraph(t *testing.T) {
 	fmt.Println("Test Standard Graph Generation")
+	testGridGraph(t)
+	testTriangleHexGraph(t)
 	testBarabasiAlbertGraph(t)
 	testErdosRenyiGraph(t)
 	testRandomGeometricGraph(t)
@@ -553,6 +556,104 @@ func testWattsStrogatzGraph(t *testing.T) {
 	}
 }
 
+// testGridGraph tests the grid graph generation function.
+func testGridGraph(t *testing.T) {
+	fmt.Println("- Test Grid Graph")
+
+	rows := 10
+	cols := 10
+	torus := false
+
+	g, err := standard.GridGraph(0, false, standard.Unweighted(), rows, cols, torus)
+	if err != nil {
+		t.Fatalf("failed to generate grid graph: %v", err)
+	}
+
+	expectedNodes := rows * cols
+	if len(g.Nodes()) != expectedNodes {
+		t.Errorf("expected %d nodes, got %d", expectedNodes, len(g.Nodes()))
+	}
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			id := graph.NodeID(fmt.Sprintf("%d", i*cols+j))
+			node, err := g.Node(id)
+			if err != nil {
+				t.Errorf("failed to get node: %v", err)
+				continue
+			}
+
+			x, okX := node.Tag("x")
+			y, okY := node.Tag("y")
+			if !okX || !okY {
+				t.Errorf("node %s is missing tags", id)
+				continue
+			}
+
+			if x != fmt.Sprintf("%d", i) || y != fmt.Sprintf("%d", j) {
+				t.Errorf("node %s has incorrect tags: x=%s, y=%s", id, x, y)
+			}
+
+			expectedDegree := 4
+			if i == 0 || i == rows-1 {
+				expectedDegree--
+			}
+			if j == 0 || j == cols-1 {
+				expectedDegree--
+			}
+
+			if node.Degree() != expectedDegree {
+				t.Errorf("node %s has degree %d, expected %d", id, node.Degree(), expectedDegree)
+			}
+		}
+	}
+}
+
+// testTriangleHexGraph tests the triangle hex graph generation function.
+func testTriangleHexGraph(t *testing.T) {
+	fmt.Println("- Test Triangle Hex Graph")
+
+	edge := 3
+
+	g, err := standard.TriangleHexGraph(0, false, standard.Unweighted(), edge)
+	if err != nil {
+		t.Fatalf("failed to generate triangle hex graph: %v", err)
+	}
+
+	expectedNodes := 3*edge*(edge+1)/2 + 1
+	if len(g.Nodes()) != expectedNodes {
+		t.Errorf("expected %d nodes, got %d", expectedNodes, len(g.Nodes()))
+	}
+
+	for i := 0; i < expectedNodes; i++ {
+		nodeID := graph.NodeID(fmt.Sprintf("%d", i))
+
+		node, err := g.Node(nodeID)
+		if err != nil {
+			t.Errorf("failed to get node: %v", err)
+			continue
+		}
+
+		q, okQ := node.Tag("q")
+		r, okR := node.Tag("r")
+		if !okQ || !okR {
+			t.Errorf("node %s is missing tags", nodeID)
+			continue
+		}
+
+		qInt := 0
+		rInt := 0
+		fmt.Sscanf(q, "%d", &qInt)
+		fmt.Sscanf(r, "%d", &rInt)
+
+		expectedDegree := degreeOfTriangleHex(qInt, rInt, edge)
+
+		if node.Degree() != expectedDegree {
+			t.Errorf("node %s (q=%d, r=%d) has degree %d, expected %d", nodeID, qInt, rInt, node.Degree(), expectedDegree)
+		}
+	}
+}
+
 // testGenerateFromConfig tests the StandardGraph function with various configurations.
 func testGenerateFromConfig(t *testing.T) {
 	fmt.Println("- Test StandardGraph with Config")
@@ -672,4 +773,38 @@ func poissonLowerExtreme(n int, lambda float64) int {
 	}
 
 	return -1
+}
+
+// degreeOfTriangleHex calculates the degree of a node in the triangle hex graph based on its q and r coordinates and the edge length.
+func degreeOfTriangleHex(q, r, n int) int {
+	dirs := [][2]int{
+		{1, 0},
+		{-1, 0},
+		{0, 1},
+		{0, -1},
+		{1, -1},
+		{-1, 1},
+	}
+
+	degree := 0
+
+	for _, d := range dirs {
+		nq := q + d[0]
+		nr := r + d[1]
+
+		if exists(nq, nr, n) {
+			degree++
+		}
+	}
+
+	return degree
+}
+
+// exists checks if the coordinates (q, r) are valid for a node in the triangle hex graph with edge length n.
+func exists(q, r, n int) bool {
+	limit := n - 1
+
+	return q >= -limit && q <= limit &&
+		r >= -limit && r <= limit &&
+		q+r >= -limit && q+r <= limit
 }

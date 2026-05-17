@@ -14,6 +14,8 @@ type WeightedFunc func(from, to graph.NodeID) *graph.Weight
 type GraphType string
 
 const (
+	Grid            GraphType = "grid"
+	TriangleHex     GraphType = "triangle_hex"
 	ErdosRenyi      GraphType = "erdos_renyi"
 	BarabasiAlbert  GraphType = "barabasi_albert"
 	WattsStrogatz   GraphType = "watts_strogatz"
@@ -52,6 +54,26 @@ func Unweighted() WeightedFunc {
 // StandardGraph generates a graph based on the provided configuration. It supports various graph types and parameters.
 func StandardGraph(seed int, directed bool, weightFunc WeightedFunc, config GraphConfig) (*graph.Graph, error) {
 	switch config.Type {
+	case Grid:
+		rows, ok := config.Params["rows"].(int)
+		if !ok {
+			return nil, fmt.Errorf("invalid parameter 'rows' for grid graph")
+		}
+		cols, ok := config.Params["cols"].(int)
+		if !ok {
+			return nil, fmt.Errorf("invalid parameter 'cols' for grid graph")
+		}
+		torus, ok := config.Params["torus"].(bool)
+		if !ok {
+			return nil, fmt.Errorf("invalid parameter 'torus' for grid graph")
+		}
+		return GridGraph(seed, directed, weightFunc, rows, cols, torus)
+	case TriangleHex:
+		edge, ok := config.Params["edge"].(int)
+		if !ok {
+			return nil, fmt.Errorf("invalid parameter 'edge' for triangle hex graph")
+		}
+		return TriangleHexGraph(seed, directed, weightFunc, edge)
 	case ErdosRenyi:
 		n, ok := config.Params["n"].(int)
 		if !ok {
