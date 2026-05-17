@@ -45,10 +45,8 @@ func generateRand(seed int) *rand.Rand {
 }
 
 // Unweighted returns a WeightedFunc that generates unweighted edges (i.e., all weights are 1.0).
-func Unweighted() WeightedFunc {
-	return func(from, to graph.NodeID) *graph.Weight {
-		return graph.NewWeight(1.0)
-	}
+var Unweighted WeightedFunc = func(from, to graph.NodeID) *graph.Weight {
+	return graph.NewWeight(1.0)
 }
 
 // StandardGraph generates a graph based on the provided configuration. It supports various graph types and parameters.

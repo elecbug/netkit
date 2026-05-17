@@ -9,7 +9,7 @@ import (
 // WattsStrogatzGraph generates a small-world graph based on the Watts-Strogatz model.
 func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k int, beta float64) (*graph.Graph, error) {
 	if weightFunc == nil {
-		weightFunc = Unweighted()
+		weightFunc = Unweighted
 	}
 	if k < 0 || k >= n {
 		// degree must be between 0 and n-1

@@ -50,7 +50,7 @@ func testBarabasiAlbertGraph(t *testing.T) {
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			g, err := standard.BarabasiAlbertGraph(i, false, standard.Unweighted(), n, m)
+			g, err := standard.BarabasiAlbertGraph(i, false, standard.Unweighted, n, m)
 			if err != nil {
 				t.Errorf("failed to generate Barabási-Albert graph: %v", err)
 				return
@@ -153,7 +153,7 @@ func testErdosRenyiGraph(t *testing.T) {
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			g, err := standard.ErdosRenyiGraph(i, false, standard.Unweighted(), n, p)
+			g, err := standard.ErdosRenyiGraph(i, false, standard.Unweighted, n, p)
 			if err != nil {
 				t.Errorf("failed to generate Erdős-Rényi graph: %v", err)
 				return
@@ -265,7 +265,7 @@ func testRandomGeometricGraph(t *testing.T) {
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			g, err := standard.RandomGeometricGraph(i, false, standard.Unweighted(), n, r)
+			g, err := standard.RandomGeometricGraph(i, false, standard.Unweighted, n, r)
 			if err != nil {
 				t.Errorf("failed to generate random geometric graph: %v", err)
 				return
@@ -369,7 +369,7 @@ func testRandomRegularGraph(t *testing.T) {
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			g, err := standard.RandomRegularGraph(i, false, standard.Unweighted(), n, int(k))
+			g, err := standard.RandomRegularGraph(i, false, standard.Unweighted, n, int(k))
 			if err != nil {
 				t.Errorf("failed to generate random regular graph: %v", err)
 				return
@@ -474,7 +474,7 @@ func testWattsStrogatzGraph(t *testing.T) {
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			g, err := standard.WattsStrogatzGraph(i, false, standard.Unweighted(), n, int(k), beta)
+			g, err := standard.WattsStrogatzGraph(i, false, standard.Unweighted, n, int(k), beta)
 			if err != nil {
 				t.Errorf("failed to generate Watts-Strogatz graph: %v", err)
 				return
@@ -564,7 +564,7 @@ func testGridGraph(t *testing.T) {
 	cols := 10
 	torus := false
 
-	g, err := standard.GridGraph(0, false, standard.Unweighted(), rows, cols, torus)
+	g, err := standard.GridGraph(0, false, standard.Unweighted, rows, cols, torus)
 	if err != nil {
 		t.Fatalf("failed to generate grid graph: %v", err)
 	}
@@ -615,7 +615,7 @@ func testTriangleHexGraph(t *testing.T) {
 
 	edge := 3
 
-	g, err := standard.TriangleHexGraph(0, false, standard.Unweighted(), edge)
+	g, err := standard.TriangleHexGraph(0, false, standard.Unweighted, edge)
 	if err != nil {
 		t.Fatalf("failed to generate triangle hex graph: %v", err)
 	}
@@ -684,7 +684,7 @@ func testGenerateFromConfig(t *testing.T) {
 	}
 
 	for i, config := range configs {
-		g, err := standard.StandardGraph(i, false, standard.Unweighted(), config)
+		g, err := standard.StandardGraph(i, false, standard.Unweighted, config)
 		if err != nil {
 			t.Errorf("failed to generate graph for config %d: %v", i, err)
 			continue
@@ -721,7 +721,7 @@ func testGenerateFromConfig(t *testing.T) {
 	}
 
 	for i, config := range invalidConfigs {
-		if _, err := standard.StandardGraph(i, false, standard.Unweighted(), config); err == nil {
+		if _, err := standard.StandardGraph(i, false, standard.Unweighted, config); err == nil {
 			t.Errorf("expected error for invalid config %d, but got none", i)
 		}
 	}

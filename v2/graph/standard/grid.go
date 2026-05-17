@@ -10,7 +10,7 @@ import (
 // If torus is true, the graph will wrap around at the edges, creating a toroidal structure.
 func GridGraph(seed int, directed bool, weightFunc WeightedFunc, rows, cols int, torus bool) (*graph.Graph, error) {
 	if weightFunc == nil {
-		weightFunc = Unweighted()
+		weightFunc = Unweighted
 	}
 	if rows < 0 || cols < 0 {
 		return nil, fmt.Errorf("rows and cols must be non-negative")

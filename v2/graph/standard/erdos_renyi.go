@@ -16,7 +16,7 @@ func ErdosRenyiGraph(seed int, directed bool, weightFunc WeightedFunc, n int, p 
 		return nil, fmt.Errorf("invalid number of nodes: n must be non-negative")
 	}
 	if weightFunc == nil {
-		weightFunc = Unweighted()
+		weightFunc = Unweighted
 	}
 
 	r := generateRand(seed)

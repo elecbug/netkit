@@ -18,7 +18,7 @@ func RandomGeometricGraph(seed int, directed bool, weightFunc WeightedFunc, n in
 		return nil, fmt.Errorf("invalid number of nodes: n must be non-negative")
 	}
 	if weightFunc == nil {
-		weightFunc = Unweighted()
+		weightFunc = Unweighted
 	}
 
 	rr := generateRand(seed)

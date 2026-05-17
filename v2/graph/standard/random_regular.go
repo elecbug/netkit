@@ -11,7 +11,7 @@ import (
 // This implementation requires n*k to be even.
 func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k int) (*graph.Graph, error) {
 	if weightFunc == nil {
-		weightFunc = Unweighted()
+		weightFunc = Unweighted
 	}
 	if k < 0 || k >= n {
 		// degree must be between 0 and n-1

@@ -17,7 +17,7 @@ func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int
 		return nil, fmt.Errorf("invalid parameters: n must be greater than m and m must be at least 1")
 	}
 	if weightFunc == nil {
-		weightFunc = Unweighted()
+		weightFunc = Unweighted
 	}
 
 	r := generateRand(seed)

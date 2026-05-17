@@ -9,7 +9,7 @@ import (
 // TriangleHexGraph generates a hexagonal lattice graph with a specified edge length.
 func TriangleHexGraph(seed int, directed bool, weightFunc WeightedFunc, edge int) (*graph.Graph, error) {
 	if weightFunc == nil {
-		weightFunc = Unweighted()
+		weightFunc = Unweighted
 	}
 	if edge < 0 {
 		return nil, fmt.Errorf("edge must be non-negative")
