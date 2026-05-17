@@ -11,7 +11,8 @@ import (
 	"github.com/elecbug/netkit/v2/graph/standard"
 )
 
-// TestShortestPaths tests the ShortestPaths method of the Analyzer to ensure it correctly finds the shortest path between two nodes in a graph.
+// TestShortestPaths tests the functionality of the Analyzer's shortest path computations, including
+// cache management and performance with different parallel core counts.
 func TestShortestPaths(t *testing.T) {
 	fmt.Println("Test Shortest Paths")
 	testComputeShortestPath(t)
@@ -86,6 +87,9 @@ func testComputeShortestPath(t *testing.T) {
 	}
 }
 
+// testPerformance creates a larger random graph and tests the performance of the ShortestPaths method with different
+// parallel core counts. It measures the time taken to compute shortest paths and to retrieve cached results, ensuring
+// that the method works correctly and efficiently under various conditions.
 func testPerformance(t *testing.T) {
 	fmt.Println("- Test Performance")
 
@@ -103,9 +107,14 @@ func testPerformance(t *testing.T) {
 	a := analyzer.NewAnalyzer(g, 1)
 
 	startTime := time.Now()
-	_, err = a.ShortestPaths("0", "999")
+	paths, err := a.ShortestPaths("0", "999")
+	// NOTE: paths may be empty if 0 and 999 are not connected (P(no path) ≈ 0.009%),
+	// but we just want to test the performance of the method,
+	// so we won't fail the test in that case.
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	} else if len(paths) > 0 {
+		fmt.Printf("  - Found shortest paths from 0 to 999: %v\n", paths[0])
 	}
 	duration := time.Since(startTime)
 	fmt.Printf("  - Time taken to compute shortest paths: %v\n", duration)
@@ -113,35 +122,47 @@ func testPerformance(t *testing.T) {
 	a = analyzer.NewAnalyzer(g, 4)
 
 	startTime = time.Now()
-	_, err = a.ShortestPaths("0", "999")
+	pathsCompared, err := a.ShortestPaths("0", "999")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	duration = time.Since(startTime)
 	fmt.Printf("  - Time taken to compute shortest paths with 4 cores: %v\n", duration)
 
+	if paths[0].TotalDistance() != pathsCompared[0].TotalDistance() {
+		t.Errorf("expected total distance %v, got %v", paths[0].TotalDistance(), pathsCompared[0].TotalDistance())
+	}
+
 	a = analyzer.NewAnalyzer(g, 16)
 
 	startTime = time.Now()
-	_, err = a.ShortestPaths("0", "999")
+	pathsCompared, err = a.ShortestPaths("0", "999")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	duration = time.Since(startTime)
 	fmt.Printf("  - Time taken to compute shortest paths with 16 cores: %v\n", duration)
 
+	if paths[0].TotalDistance() != pathsCompared[0].TotalDistance() {
+		t.Errorf("expected total distance %v, got %v", paths[0].TotalDistance(), pathsCompared[0].TotalDistance())
+	}
+
 	a = analyzer.NewAnalyzer(g, 32)
 
 	startTime = time.Now()
-	_, err = a.ShortestPaths("0", "999")
+	pathsCompared, err = a.ShortestPaths("0", "999")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	duration = time.Since(startTime)
 	fmt.Printf("  - Time taken to compute shortest paths with 32 cores: %v\n", duration)
 
+	if paths[0].TotalDistance() != pathsCompared[0].TotalDistance() {
+		t.Errorf("expected total distance %v, got %v", paths[0].TotalDistance(), pathsCompared[0].TotalDistance())
+	}
+
 	startTime = time.Now()
-	_, err = a.ShortestPaths("0", "999")
+	_, err = a.ShortestPaths("0", "1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

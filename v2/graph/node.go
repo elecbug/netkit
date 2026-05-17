@@ -12,6 +12,7 @@ type Weight float64
 type Node struct {
 	ID    NodeID            // ID is the unique identifier for the node.
 	edges map[NodeID]Weight // Edges maps the destination NodeID to the weight of the edge.
+	tags  map[string]string // Tags can hold additional metadata about the node.
 }
 
 // NewNode creates a new node with the given ID.
@@ -19,6 +20,7 @@ func NewNode(id NodeID) *Node {
 	return &Node{
 		ID:    id,
 		edges: make(map[NodeID]Weight),
+		tags:  make(map[string]string),
 	}
 }
 
@@ -58,6 +60,50 @@ func (n *Node) edgeWeight(to NodeID) (Weight, error) {
 	}
 
 	return weight, nil
+}
+
+/* Tagging */
+
+// AddTag adds a key-value pair as a tag to the node.
+// It returns an error if a tag with the same key already exists.
+func (n *Node) AddTag(key, value string) error {
+	if n.HasTag(key) {
+		return fmt.Errorf("tag with key %s already exists", key)
+	}
+
+	n.tags[key] = value
+	return nil
+}
+
+// UpdateTag updates the value of an existing tag on the node.
+// If the tag does not exist, it will be added.
+func (n *Node) UpdateTag(key, value string) {
+	n.tags[key] = value
+}
+
+// RemoveTag removes a tag from the node by its key. It returns an error if the tag does not exist.
+func (n *Node) RemoveTag(key string) error {
+	if _, exists := n.tags[key]; !exists {
+		return fmt.Errorf("tag with key %s does not exist", key)
+	}
+
+	delete(n.tags, key)
+	return nil
+}
+
+// HasTag checks if a tag with the specified key exists on the node.
+func (n *Node) HasTag(key string) bool {
+	_, exists := n.tags[key]
+	return exists
+}
+
+// Tag retrieves the value of a tag by its key. It returns an error if the tag does not exist.
+func (n *Node) Tag(key string) (string, bool) {
+	value, exists := n.tags[key]
+	if !exists {
+		return "", false
+	}
+	return value, true
 }
 
 /* Connectivity */

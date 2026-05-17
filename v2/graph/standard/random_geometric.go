@@ -33,6 +33,12 @@ func RandomGeometricGraph(seed int, directed bool, weightFunc WeightedFunc, n in
 		if err := g.AddNode(id); err != nil {
 			return nil, fmt.Errorf("failed to add node: %w", err)
 		}
+		if node, err := g.Node(id); err != nil {
+			return nil, fmt.Errorf("failed to retrieve node: %w", err)
+		} else {
+			node.AddTag("x", fmt.Sprintf("%f", rr.Float64()))
+			node.AddTag("y", fmt.Sprintf("%f", rr.Float64()))
+		}
 		positions[id] = point{
 			x: rr.Float64(),
 			y: rr.Float64(),
