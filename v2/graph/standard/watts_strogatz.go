@@ -7,10 +7,9 @@ import (
 )
 
 // WattsStrogatzGraph generates a small-world graph based on the Watts-Strogatz model.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k int, beta float64) (*graph.Graph, error) {
-	if weightFunc == nil {
-		weightFunc = Unweighted()
-	}
 	if k < 0 || k >= n {
 		// degree must be between 0 and n-1
 		return nil, fmt.Errorf("invalid degree: k must be between 0 and n-1")
@@ -23,7 +22,13 @@ func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 	}
 
 	r := generateRand(seed)
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	// --- 1. Generate Nodes ---
 	for i := 0; i < n; i++ {
@@ -38,7 +43,15 @@ func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 			neighbor := (i + j) % n
 			from := graph.NodeID(fmt.Sprintf("%d", i))
 			to := graph.NodeID(fmt.Sprintf("%d", neighbor))
-			if err := g.AddEdge(from, to, weightFunc(from, to)); err != nil {
+			fromNode, err := g.Node(from)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get node: %w", err)
+			}
+			toNode, err := g.Node(to)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get node: %w", err)
+			}
+			if err := g.AddEdge(from, to, weightFunc(fromNode, toNode)); err != nil {
 				return nil, fmt.Errorf("failed to add edge: %w", err)
 			}
 		}
@@ -60,7 +73,15 @@ func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 				for {
 					newNeighbor := graph.NodeID(fmt.Sprintf("%d", r.Intn(n)))
 					if newNeighbor != from && !g.HasEdge(from, newNeighbor) {
-						if err := g.AddEdge(from, newNeighbor, weightFunc(from, newNeighbor)); err != nil {
+						fromNode, err := g.Node(from)
+						if err != nil {
+							return nil, fmt.Errorf("failed to get node: %w", err)
+						}
+						newNeighborNode, err := g.Node(newNeighbor)
+						if err != nil {
+							return nil, fmt.Errorf("failed to get node: %w", err)
+						}
+						if err := g.AddEdge(from, newNeighbor, weightFunc(fromNode, newNeighborNode)); err != nil {
 							return nil, fmt.Errorf("failed to add edge: %w", err)
 						}
 						break

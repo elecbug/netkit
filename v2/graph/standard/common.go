@@ -8,7 +8,7 @@ import (
 )
 
 // WeightedFunc defines a function type for generating edge weights based on node IDs.
-type WeightedFunc func(from, to graph.NodeID) *graph.Weight
+type WeightedFunc func(from, to *graph.Node) *graph.Weight
 
 // GraphType represents the type of graph to be generated.
 type GraphType string
@@ -44,14 +44,9 @@ func generateRand(seed int) *rand.Rand {
 	return r
 }
 
-// Unweighted returns a WeightedFunc that generates unweighted edges (i.e., all weights are 1.0).
-func Unweighted() WeightedFunc {
-	return func(from, to graph.NodeID) *graph.Weight {
-		return graph.NewWeight(1.0)
-	}
-}
-
 // StandardGraph generates a graph based on the provided configuration. It supports various graph types and parameters.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func StandardGraph(seed int, directed bool, weightFunc WeightedFunc, config GraphConfig) (*graph.Graph, error) {
 	switch config.Type {
 	case Grid:

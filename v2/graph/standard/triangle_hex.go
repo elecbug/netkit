@@ -7,15 +7,21 @@ import (
 )
 
 // TriangleHexGraph generates a hexagonal lattice graph with a specified edge length.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func TriangleHexGraph(seed int, directed bool, weightFunc WeightedFunc, edge int) (*graph.Graph, error) {
-	if weightFunc == nil {
-		weightFunc = Unweighted()
-	}
+
 	if edge < 0 {
 		return nil, fmt.Errorf("edge must be non-negative")
 	}
 
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	radius := edge - 1
 
@@ -85,7 +91,15 @@ func TriangleHexGraph(seed int, directed bool, weightFunc WeightedFunc, edge int
 
 				nid, ok := coordToID[neighbor]
 				if ok {
-					if err := g.AddEdge(id, nid, weightFunc(id, nid)); err != nil {
+					node, err := g.Node(id)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					neighborNode, err := g.Node(nid)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					if err := g.AddEdge(id, nid, weightFunc(node, neighborNode)); err != nil {
 						return nil, fmt.Errorf("failed to add edge: %w", err)
 					}
 				}

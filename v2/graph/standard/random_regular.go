@@ -9,10 +9,9 @@ import (
 // RandomRegularGraph generates a random k-regular graph with n nodes.
 // Each node has exactly degree k. Returns nil if impossible.
 // This implementation requires n*k to be even.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k int) (*graph.Graph, error) {
-	if weightFunc == nil {
-		weightFunc = Unweighted()
-	}
 	if k < 0 || k >= n {
 		// degree must be between 0 and n-1
 		return nil, fmt.Errorf("invalid degree: k must be between 0 and n-1")
@@ -27,7 +26,13 @@ func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 	}
 
 	r := generateRand(seed)
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	// add nodes
 	for i := 0; i < n; i++ {
@@ -81,7 +86,15 @@ func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 		}
 
 		// add edge
-		if err := g.AddEdge(a, b, weightFunc(a, b)); err != nil {
+		fromNode, err := g.Node(a)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get node: %w", err)
+		}
+		toNode, err := g.Node(b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get node: %w", err)
+		}
+		if err := g.AddEdge(a, b, weightFunc(fromNode, toNode)); err != nil {
 			return nil, fmt.Errorf("failed to add edge: %w", err)
 		}
 		edges[key] = true

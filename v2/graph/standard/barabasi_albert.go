@@ -9,6 +9,8 @@ import (
 // BarabasiAlbertGraph generates a graph based on the Barabási-Albert preferential attachment model.
 // The graph starts with m fully connected nodes, and new nodes are added one by one, each connecting
 // to m existing nodes with a probability proportional to their degree.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int, m int) (*graph.Graph, error) {
 	if n < 0 {
 		return nil, fmt.Errorf("invalid number of nodes: n must be non-negative")
@@ -16,12 +18,14 @@ func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int
 	if m < 1 || n <= m {
 		return nil, fmt.Errorf("invalid parameters: n must be greater than m and m must be at least 1")
 	}
-	if weightFunc == nil {
-		weightFunc = Unweighted()
-	}
-
 	r := generateRand(seed)
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	// --- 1. initialize ---
 	for i := 0; i < m; i++ {
@@ -33,7 +37,15 @@ func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int
 		for j := i + 1; j < m; j++ {
 			from := graph.NodeID(fmt.Sprintf("%d", i))
 			to := graph.NodeID(fmt.Sprintf("%d", j))
-			if err := g.AddEdge(from, to, weightFunc(from, to)); err != nil {
+			fromNode, err := g.Node(from)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get node: %w", err)
+			}
+			toNode, err := g.Node(to)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get node: %w", err)
+			}
+			if err := g.AddEdge(from, to, weightFunc(fromNode, toNode)); err != nil {
 				return nil, fmt.Errorf("failed to add edge: %w", err)
 			}
 		}
@@ -41,8 +53,8 @@ func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int
 
 	// --- 2. preferential attachment ---
 	for i := m; i < n; i++ {
-		newNode := graph.NodeID(fmt.Sprintf("%d", i))
-		if err := g.AddNode(newNode); err != nil {
+		new := graph.NodeID(fmt.Sprintf("%d", i))
+		if err := g.AddNode(new); err != nil {
 			return nil, fmt.Errorf("failed to add node: %w", err)
 		}
 
@@ -73,8 +85,17 @@ func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int
 				}
 			}
 			// self-loop and duplicate edges are not allowed
-			if target != newNode && !chosen[target] {
-				if err := g.AddEdge(newNode, target, weightFunc(newNode, target)); err != nil {
+			if target != new && !chosen[target] {
+				targetNode, err := g.Node(target)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get node: %w", err)
+				}
+				newNode, err := g.Node(new)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get node: %w", err)
+				}
+
+				if err := g.AddEdge(new, target, weightFunc(newNode, targetNode)); err != nil {
 					return nil, fmt.Errorf("failed to add edge: %w", err)
 				}
 				chosen[target] = true

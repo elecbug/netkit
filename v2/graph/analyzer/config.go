@@ -1,0 +1,114 @@
+package analyzer
+
+import (
+	"github.com/elecbug/netkit/v2/graph"
+)
+
+// Config holds the configuration settings for the graph algorithms.
+type Config struct {
+	Betweenness     *BetweennessCentralityConfig
+	Closeness       *ClosenessCentralityConfig
+	Degree          *DegreeCentralityConfig
+	EdgeBetweenness *EdgeBetweennessCentralityConfig
+	Eigenvector     *EigenvectorCentralityConfig
+	PageRank        *PageRankConfig
+	Assortativity   *AssortativityCoefficientConfig
+	Modularity      *ModularityConfig
+}
+
+// DefaultConfig returns the default configuration for the graph algorithms.
+func DefaultConfig() *Config {
+	return &Config{
+		Closeness:       &ClosenessCentralityConfig{WfImproved: true, Reverse: false},
+		PageRank:        &PageRankConfig{Alpha: 0.85, MaxIter: 100, Tol: 1e-6, Personalization: nil, Dangling: nil, Reverse: false},
+		Betweenness:     &BetweennessCentralityConfig{Normalized: true},
+		EdgeBetweenness: &EdgeBetweennessCentralityConfig{Normalized: true},
+		Eigenvector:     &EigenvectorCentralityConfig{MaxIter: 100, Tol: 1e-6, Reverse: false, NStart: nil},
+		Degree:          &DegreeCentralityConfig{Mode: DegreeCentralityTotal},
+		Assortativity:   &AssortativityCoefficientConfig{Mode: AssortativityProjected, IgnoreSelfLoops: true},
+		Modularity:      &ModularityConfig{Partition: nil},
+	}
+}
+
+// ClosenessCentralityConfig holds the configuration settings for the closeness centrality algorithm.
+type ClosenessCentralityConfig struct {
+	Reverse    bool
+	WfImproved bool
+}
+
+// PageRankConfig holds the configuration settings for the PageRank algorithm.
+type PageRankConfig struct {
+	Alpha           float64                   // damping, default 0.85
+	MaxIter         int                       // default 100
+	Tol             float64                   // L1 error, default 1e-6
+	Personalization *map[graph.NodeID]float64 // p(u); if nil is uniform
+	Dangling        *map[graph.NodeID]float64 // d(u); if nil p(u)
+	Reverse         bool
+}
+
+// BetweennessCentralityConfig holds the configuration settings for the edge betweenness centrality algorithm.
+type BetweennessCentralityConfig struct {
+	Normalized bool
+}
+
+// EdgeBetweennessCentralityConfig holds the configuration settings for the edge betweenness centrality algorithm.
+type EdgeBetweennessCentralityConfig struct {
+	Normalized bool
+}
+
+// EigenvectorCentralityConfig holds the configuration settings for the eigenvector centrality algorithm.
+type EigenvectorCentralityConfig struct {
+	MaxIter int
+	Tol     float64
+	Reverse bool
+	NStart  *map[graph.NodeID]float64 // initial vector; if nil, uniform distribution
+}
+
+type DegreeCentralityMode string
+
+const (
+	DegreeCentralityTotal DegreeCentralityMode = "total"
+	DegreeCentralityIn    DegreeCentralityMode = "in"
+	DegreeCentralityOut   DegreeCentralityMode = "out"
+)
+
+// DegreeCentralityConfig holds the configuration settings for the degree centrality algorithm.
+type DegreeCentralityConfig struct {
+	Mode DegreeCentralityMode
+}
+
+// AssortativityMode defines how degree pairs (j,k) are taken on each edge/arc.
+// - Projected: ignore direction; use undirected degrees on both ends.
+// - OutIn:     use out-degree(u) and in-degree(v) for each arc u->v
+// - OutOut:    out-degree(u) and out-degree(v)
+// - InIn:      in-degree(u) and in-degree(v)
+// - InOut:     in-degree(u) and out-degree(v)
+type AssortativityMode string
+
+const (
+	AssortativityProjected AssortativityMode = "projected"
+	AssortativityOutIn     AssortativityMode = "out-in"
+	AssortativityOutOut    AssortativityMode = "out-out"
+	AssortativityInIn      AssortativityMode = "in-in"
+	AssortativityInOut     AssortativityMode = "in-out"
+)
+
+// AssortativityCoefficientConfig holds the configuration settings for the assortativity coefficient algorithm.
+type AssortativityCoefficientConfig struct {
+	// Mode selects which degree pairing to use.
+	// Defaults:
+	//   - If graph is undirected: "projected"
+	//   - If graph is directed:   "out-in"
+	Mode AssortativityMode
+
+	// IgnoreSelfLoops controls whether to ignore self loops (u==v).
+	// Default: true
+	IgnoreSelfLoops bool
+}
+
+// ModularityConfig holds the configuration settings for the modularity calculation.
+type ModularityConfig struct {
+	// Partition maps each node to its community ID.
+	// If nil, algorithm will compute greedy modularity communities automatically.
+	Partition map[graph.NodeID]int
+}

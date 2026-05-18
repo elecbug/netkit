@@ -8,15 +8,20 @@ import (
 
 // GridGraph generates a grid graph with the specified number of rows and columns.
 // If torus is true, the graph will wrap around at the edges, creating a toroidal structure.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func GridGraph(seed int, directed bool, weightFunc WeightedFunc, rows, cols int, torus bool) (*graph.Graph, error) {
-	if weightFunc == nil {
-		weightFunc = Unweighted()
-	}
 	if rows < 0 || cols < 0 {
 		return nil, fmt.Errorf("rows and cols must be non-negative")
 	}
 
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	nodeID := func(row, col int) graph.NodeID {
 		return graph.NodeID(fmt.Sprintf("%d", row*cols+col))
@@ -37,17 +42,29 @@ func GridGraph(seed int, directed bool, weightFunc WeightedFunc, rows, cols int,
 	for i := 0; i < rows; i++ {
 		for j := 0; j < cols; j++ {
 			id := nodeID(i, j)
+			node, err := g.Node(id)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get node: %w", err)
+			}
 
 			if torus {
 				if rows > 2 {
 					ni := (i + 1) % rows
-					if err := g.AddEdge(id, nodeID(ni, j), weightFunc(id, nodeID(ni, j))); err != nil {
+					neighborNode, err := g.Node(nodeID(ni, j))
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					if err := g.AddEdge(id, nodeID(ni, j), weightFunc(node, neighborNode)); err != nil {
 						return nil, fmt.Errorf("failed to add edge: %w", err)
 					}
 				}
 			} else {
 				if i < rows-1 {
-					if err := g.AddEdge(id, nodeID(i+1, j), weightFunc(id, nodeID(i+1, j))); err != nil {
+					neighborNode, err := g.Node(nodeID(i+1, j))
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					if err := g.AddEdge(id, nodeID(i+1, j), weightFunc(node, neighborNode)); err != nil {
 						return nil, fmt.Errorf("failed to add edge: %w", err)
 					}
 				}
@@ -56,13 +73,21 @@ func GridGraph(seed int, directed bool, weightFunc WeightedFunc, rows, cols int,
 			if torus {
 				if cols > 2 {
 					nj := (j + 1) % cols
-					if err := g.AddEdge(id, nodeID(i, nj), weightFunc(id, nodeID(i, nj))); err != nil {
+					neighborNode, err := g.Node(nodeID(i, nj))
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					if err := g.AddEdge(id, nodeID(i, nj), weightFunc(node, neighborNode)); err != nil {
 						return nil, fmt.Errorf("failed to add edge: %w", err)
 					}
 				}
 			} else {
 				if j < cols-1 {
-					if err := g.AddEdge(id, nodeID(i, j+1), weightFunc(id, nodeID(i, j+1))); err != nil {
+					neighborNode, err := g.Node(nodeID(i, j+1))
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					if err := g.AddEdge(id, nodeID(i, j+1), weightFunc(node, neighborNode)); err != nil {
 						return nil, fmt.Errorf("failed to add edge: %w", err)
 					}
 				}

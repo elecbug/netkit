@@ -13,15 +13,17 @@ type Analyzer struct {
 	allShortestPaths  map[graph.NodeID]map[graph.NodeID][]graph.Path // allShortestPaths caches the results of shortest path computations between node pairs.
 	mu                sync.RWMutex                                   // mu protects access to the allShortestPaths cache to ensure thread safety during concurrent reads/writes.
 	parallelCoreCount int                                            // parallelCoreCount determines how many CPU cores to utilize for parallel computations, if applicable.
+	cfg               *Config                                        // cfg holds configuration options for the analyzer, such as worker counts and normalization settings.
 }
 
 // NewAnalyzer creates a new Analyzer instance based on the provided graph.
-func NewAnalyzer(g *graph.Graph, parallelCoreCount int) *Analyzer {
+func NewAnalyzer(g *graph.Graph, parallelCoreCount int, cfg *Config) *Analyzer {
 	return &Analyzer{
 		baseGraph:         g,
 		graphHash:         "",
 		allShortestPaths:  make(map[graph.NodeID]map[graph.NodeID][]graph.Path),
 		parallelCoreCount: parallelCoreCount,
+		cfg:               cfg,
 	}
 }
 

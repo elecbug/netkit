@@ -10,6 +10,8 @@ import (
 // RandomGeometricGraph generates a random geometric graph (RGG).
 // Nodes are placed uniformly at random in the unit square, and edges
 // are added between nodes that are within a specified radius r.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func RandomGeometricGraph(seed int, directed bool, weightFunc WeightedFunc, n int, r float64) (*graph.Graph, error) {
 	if r < 0 || r > 1 {
 		return nil, fmt.Errorf("invalid radius: r must be between 0 and 1")
@@ -17,12 +19,15 @@ func RandomGeometricGraph(seed int, directed bool, weightFunc WeightedFunc, n in
 	if n < 0 {
 		return nil, fmt.Errorf("invalid number of nodes: n must be non-negative")
 	}
-	if weightFunc == nil {
-		weightFunc = Unweighted()
-	}
 
 	rr := generateRand(seed)
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	// --- 1. Generate Nodes ---
 	type point struct{ x, y float64 }
@@ -57,7 +62,15 @@ func RandomGeometricGraph(seed int, directed bool, weightFunc WeightedFunc, n in
 			dist := math.Sqrt(dx*dx + dy*dy)
 
 			if dist <= r {
-				if err := g.AddEdge(from, to, weightFunc(from, to)); err != nil {
+				fromNode, err := g.Node(from)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get node: %w", err)
+				}
+				toNode, err := g.Node(to)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get node: %w", err)
+				}
+				if err := g.AddEdge(from, to, weightFunc(fromNode, toNode)); err != nil {
 					return nil, fmt.Errorf("failed to add edge: %w", err)
 				}
 			}

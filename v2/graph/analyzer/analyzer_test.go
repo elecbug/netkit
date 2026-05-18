@@ -1,8 +1,11 @@
 package analyzer_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/fs"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -16,7 +19,6 @@ import (
 func TestShortestPaths(t *testing.T) {
 	fmt.Println("Test Shortest Paths")
 	testComputeShortestPath(t)
-	testPerformance(t)
 }
 
 // testComputeShortestPath sets up a simple graph and tests the ComputeAllShortestPaths and ShortestPaths
@@ -34,7 +36,7 @@ func testComputeShortestPath(t *testing.T) {
 	g.AddEdge("A", "C", graph.NewWeight(2))
 	g.AddEdge("C", "D", graph.NewWeight(1))
 
-	a := analyzer.NewAnalyzer(g, 1)
+	a := analyzer.NewAnalyzer(g, 1, analyzer.DefaultConfig())
 
 	paths, err := a.ShortestPaths("A", "D")
 	if err != nil {
@@ -87,16 +89,16 @@ func testComputeShortestPath(t *testing.T) {
 	}
 }
 
-// testPerformance creates a larger random graph and tests the performance of the ShortestPaths method with different
+// TestPerformance creates a larger random graph and tests the performance of the ShortestPaths method with different
 // parallel core counts. It measures the time taken to compute shortest paths and to retrieve cached results, ensuring
 // that the method works correctly and efficiently under various conditions.
-func testPerformance(t *testing.T) {
-	fmt.Println("- Test Performance")
+func TestPerformance(t *testing.T) {
+	fmt.Println("Test Performance")
 
 	g, err := standard.ErdosRenyiGraph(
 		42,
 		false,
-		func(from, to graph.NodeID) *graph.Weight { return graph.NewWeight(rand.Float64() * 100) },
+		func(from, to *graph.Node) *graph.Weight { return graph.NewWeight(rand.Float64() * 100) },
 		1000,
 		0.01,
 	)
@@ -104,7 +106,7 @@ func testPerformance(t *testing.T) {
 		t.Fatalf("failed to create graph: %v", err)
 	}
 
-	a := analyzer.NewAnalyzer(g, 1)
+	a := analyzer.NewAnalyzer(g, 1, analyzer.DefaultConfig())
 
 	startTime := time.Now()
 	paths, err := a.ShortestPaths("0", "999")
@@ -119,7 +121,7 @@ func testPerformance(t *testing.T) {
 	duration := time.Since(startTime)
 	fmt.Printf("  - Time taken to compute shortest paths: %v\n", duration)
 
-	a = analyzer.NewAnalyzer(g, 4)
+	a = analyzer.NewAnalyzer(g, 4, analyzer.DefaultConfig())
 
 	startTime = time.Now()
 	pathsCompared, err := a.ShortestPaths("0", "999")
@@ -133,7 +135,7 @@ func testPerformance(t *testing.T) {
 		t.Errorf("expected total distance %v, got %v", paths[0].TotalDistance(), pathsCompared[0].TotalDistance())
 	}
 
-	a = analyzer.NewAnalyzer(g, 16)
+	a = analyzer.NewAnalyzer(g, 16, analyzer.DefaultConfig())
 
 	startTime = time.Now()
 	pathsCompared, err = a.ShortestPaths("0", "999")
@@ -147,7 +149,7 @@ func testPerformance(t *testing.T) {
 		t.Errorf("expected total distance %v, got %v", paths[0].TotalDistance(), pathsCompared[0].TotalDistance())
 	}
 
-	a = analyzer.NewAnalyzer(g, 32)
+	a = analyzer.NewAnalyzer(g, 32, analyzer.DefaultConfig())
 
 	startTime = time.Now()
 	pathsCompared, err = a.ShortestPaths("0", "999")
@@ -190,4 +192,138 @@ func equalPathSlices(a, b graph.Path) bool {
 	}
 
 	return true
+}
+
+func TestAnaylzer(t *testing.T) {
+	fmt.Println("Test Analyzer")
+
+	results := make(map[string]interface{})
+	g, err := standard.ErdosRenyiGraph(time.Now().Nanosecond(), false, nil, 1000, 0.01)
+	if err != nil {
+		t.Fatalf("Failed to create graph: %v", err)
+	}
+
+	cfg := analyzer.DefaultConfig()
+	a := analyzer.NewAnalyzer(g, 16, cfg)
+
+	t.Run("ShortestPaths", func(t *testing.T) {
+		results["shortest_paths"] = make(map[string]any)
+
+		for i := 0; i < 10; i++ {
+			for j := 0; j < 10; j++ {
+				if i == j {
+					continue
+				}
+
+				paths, err := a.ShortestPaths(graph.NodeID(fmt.Sprintf("%d", i*100)), graph.NodeID(fmt.Sprintf("%d", j*100)))
+				if err != nil {
+					t.Fatalf("Failed to compute shortest paths: %v", err)
+				}
+
+				results["shortest_paths"].(map[string]any)[fmt.Sprintf("%d->%d", i*100, j*100)] = paths
+			}
+		}
+	})
+	t.Run("BetweennessCentrality", func(t *testing.T) {
+		res, err := a.BetweennessCentrality()
+		if err != nil {
+			t.Fatalf("Failed to compute betweenness centrality: %v", err)
+		}
+
+		results["betweenness_centrality"] = res
+	})
+	t.Run("ClosenessCentrality", func(t *testing.T) {
+		res, err := a.ClosenessCentrality()
+		if err != nil {
+			t.Fatalf("Failed to compute closeness centrality: %v", err)
+		}
+
+		results["closeness_centrality"] = res
+	})
+	t.Run("ClusteringCoefficient", func(t *testing.T) {
+		gcc, ccs, err := a.ClusteringCoefficient()
+		if err != nil {
+			t.Fatalf("Failed to compute clustering coefficient: %v", err)
+		}
+
+		results["clustering_coefficient"] = map[string]any{
+			"global": gcc,
+			"local":  ccs,
+			"average": func() float64 {
+				sum := 0.0
+				for _, v := range ccs {
+					sum += v
+				}
+				return sum / float64(len(ccs))
+			}(),
+		}
+	})
+	t.Run("DegreeAssortativityCoefficient", func(t *testing.T) {
+		res, err := a.DegreeAssortativityCoefficient()
+		if err != nil {
+			t.Fatalf("Failed to compute degree assortativity coefficient: %v", err)
+		}
+
+		results["degree_assortativity_coefficient"] = res
+	})
+	t.Run("DegreeCentrality", func(t *testing.T) {
+		res, err := a.DegreeCentrality()
+		if err != nil {
+			t.Fatalf("Failed to compute degree centrality: %v", err)
+		}
+
+		results["degree_centrality"] = res
+	})
+	t.Run("Diameter", func(t *testing.T) {
+		res, weight, err := a.Diameter()
+		if err != nil {
+			t.Fatalf("Failed to compute diameter: %v", err)
+		}
+
+		results["diameter"] = res
+		results["diameter_weight"] = weight
+	})
+	t.Run("EdgeBetweennessCentrality", func(t *testing.T) {
+		res, err := a.EdgeBetweennessCentrality()
+		if err != nil {
+			t.Fatalf("Failed to compute edge betweenness centrality: %v", err)
+		}
+		results["edge_betweenness_centrality"] = res
+	})
+	t.Run("EigenvectorCentrality", func(t *testing.T) {
+		res, err := a.EigenvectorCentrality()
+		if err != nil {
+			t.Fatalf("Failed to compute eigenvector centrality: %v", err)
+		}
+		results["eigenvector_centrality"] = res
+	})
+	t.Run("Modularity", func(t *testing.T) {
+		res, err := a.Modularity()
+		if err != nil {
+			t.Fatalf("Failed to compute modularity: %v", err)
+		}
+		results["modularity"] = res
+	})
+	t.Run("PageRank", func(t *testing.T) {
+		res, err := a.PageRank()
+		if err != nil {
+			t.Fatalf("Failed to compute page rank: %v", err)
+		}
+		results["page_rank"] = res
+	})
+
+	jsonResults, err := json.MarshalIndent(results, "", "  ")
+
+	if err != nil {
+		t.Fatalf("Failed to marshal results: %v", err)
+	}
+
+	os.WriteFile("metrics.log", jsonResults, fs.ModePerm)
+
+	gJson, err := g.Serialize()
+	if err != nil {
+		t.Fatalf("Failed to serialize graph: %v", err)
+	}
+
+	os.WriteFile("graph.log", []byte(gJson), fs.ModePerm)
 }

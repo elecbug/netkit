@@ -10,32 +10,10 @@ import (
 	"github.com/elecbug/netkit/v2/graph"
 )
 
-// ComputeAllShortestPaths computes and caches all shortest paths for the current graph.
-func (a *Analyzer) ComputeAllShortestPaths() error {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
-	currentHash := a.baseGraph.Hash()
-
-	if a.graphHash == currentHash && len(a.allShortestPaths) > 0 {
-		return nil
-	}
-
-	paths, err := allShortestPaths(a.baseGraph, a.parallelCoreCount)
-	if err != nil {
-		return err
-	}
-
-	a.allShortestPaths = paths
-	a.graphHash = currentHash
-
-	return nil
-}
-
 // ShortestPaths returns cached shortest paths between start and end.
 // If the cache is stale, it recomputes all shortest paths first.
 func (a *Analyzer) ShortestPaths(start, end graph.NodeID) ([]graph.Path, error) {
-	if err := a.ComputeAllShortestPaths(); err != nil {
+	if err := a.computeAllShortestPaths(); err != nil {
 		return nil, err
 	}
 
@@ -56,6 +34,60 @@ func (a *Analyzer) ShortestPaths(start, end graph.NodeID) ([]graph.Path, error) 
 	copy(result, paths)
 
 	return result, nil
+}
+
+// Diameter computes the diameter of the graph using all-pairs shortest paths.
+// It returns the diameter in terms of both hop count and total weight.
+func (a *Analyzer) Diameter() (int, float64, error) {
+	if err := a.computeAllShortestPaths(); err != nil {
+		return 0, 0, err
+	}
+
+	var maxWeight float64
+	var maxDist int
+
+	paths, err := allShortestPaths(a.baseGraph, a.parallelCoreCount)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	for _, v := range paths {
+		for _, ps := range v {
+			if len(ps) == 0 {
+				continue
+			}
+
+			weight := float64(ps[0].TotalDistance())
+			if weight > maxWeight {
+				maxWeight = weight
+				maxDist = len(ps[0].Nodes()) - 1
+			}
+		}
+	}
+
+	return maxDist, maxWeight, nil
+}
+
+// computeAllShortestPaths computes and caches all shortest paths for the current graph.
+func (a *Analyzer) computeAllShortestPaths() error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	currentHash := a.baseGraph.Hash()
+
+	if a.graphHash == currentHash && len(a.allShortestPaths) > 0 {
+		return nil
+	}
+
+	paths, err := allShortestPaths(a.baseGraph, a.parallelCoreCount)
+	if err != nil {
+		return err
+	}
+
+	a.allShortestPaths = paths
+	a.graphHash = currentHash
+
+	return nil
 }
 
 // allShortestPaths computes all shortest paths between reachable node pairs in the graph.
@@ -118,7 +150,7 @@ Loop:
 			var pathsFromStart map[graph.NodeID][]graph.Path
 			var err error
 
-			if !g.Weighted {
+			if !g.IsWeighted() {
 				pathsFromStart, err = allShortestPathsFromStart(g, start)
 			} else {
 				pathsFromStart, err = allWeightedShortestPathsFromStart(g, start)
