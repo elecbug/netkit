@@ -33,7 +33,15 @@ func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int
 		for j := i + 1; j < m; j++ {
 			from := graph.NodeID(fmt.Sprintf("%d", i))
 			to := graph.NodeID(fmt.Sprintf("%d", j))
-			if err := g.AddEdge(from, to, weightFunc(from, to)); err != nil {
+			fromNode, err := g.Node(from)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get node: %w", err)
+			}
+			toNode, err := g.Node(to)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get node: %w", err)
+			}
+			if err := g.AddEdge(from, to, weightFunc(fromNode, toNode)); err != nil {
 				return nil, fmt.Errorf("failed to add edge: %w", err)
 			}
 		}
@@ -41,8 +49,8 @@ func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int
 
 	// --- 2. preferential attachment ---
 	for i := m; i < n; i++ {
-		newNode := graph.NodeID(fmt.Sprintf("%d", i))
-		if err := g.AddNode(newNode); err != nil {
+		new := graph.NodeID(fmt.Sprintf("%d", i))
+		if err := g.AddNode(new); err != nil {
 			return nil, fmt.Errorf("failed to add node: %w", err)
 		}
 
@@ -73,8 +81,17 @@ func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int
 				}
 			}
 			// self-loop and duplicate edges are not allowed
-			if target != newNode && !chosen[target] {
-				if err := g.AddEdge(newNode, target, weightFunc(newNode, target)); err != nil {
+			if target != new && !chosen[target] {
+				targetNode, err := g.Node(target)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get node: %w", err)
+				}
+				newNode, err := g.Node(new)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get node: %w", err)
+				}
+
+				if err := g.AddEdge(new, target, weightFunc(newNode, targetNode)); err != nil {
 					return nil, fmt.Errorf("failed to add edge: %w", err)
 				}
 				chosen[target] = true

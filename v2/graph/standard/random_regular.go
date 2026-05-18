@@ -81,7 +81,15 @@ func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 		}
 
 		// add edge
-		if err := g.AddEdge(a, b, weightFunc(a, b)); err != nil {
+		fromNode, err := g.Node(a)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get node: %w", err)
+		}
+		toNode, err := g.Node(b)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get node: %w", err)
+		}
+		if err := g.AddEdge(a, b, weightFunc(fromNode, toNode)); err != nil {
 			return nil, fmt.Errorf("failed to add edge: %w", err)
 		}
 		edges[key] = true

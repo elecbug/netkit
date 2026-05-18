@@ -141,6 +141,7 @@ func (p *peer) eachPublish(network *P2P, msg Message) {
 				Content:   content,
 				Protocol:  protocol,
 				HopCount:  hopCount + 1,
+				Params:    msg.Params,
 			}
 		}(edgeCopy)
 	}

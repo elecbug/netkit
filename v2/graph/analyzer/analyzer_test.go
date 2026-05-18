@@ -96,7 +96,7 @@ func testPerformance(t *testing.T) {
 	g, err := standard.ErdosRenyiGraph(
 		42,
 		false,
-		func(from, to graph.NodeID) *graph.Weight { return graph.NewWeight(rand.Float64() * 100) },
+		func(from, to *graph.Node) *graph.Weight { return graph.NewWeight(rand.Float64() * 100) },
 		1000,
 		0.01,
 	)

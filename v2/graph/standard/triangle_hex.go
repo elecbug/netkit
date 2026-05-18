@@ -85,7 +85,15 @@ func TriangleHexGraph(seed int, directed bool, weightFunc WeightedFunc, edge int
 
 				nid, ok := coordToID[neighbor]
 				if ok {
-					if err := g.AddEdge(id, nid, weightFunc(id, nid)); err != nil {
+					node, err := g.Node(id)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					neighborNode, err := g.Node(nid)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					if err := g.AddEdge(id, nid, weightFunc(node, neighborNode)); err != nil {
 						return nil, fmt.Errorf("failed to add edge: %w", err)
 					}
 				}

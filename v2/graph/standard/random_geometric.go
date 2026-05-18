@@ -57,7 +57,15 @@ func RandomGeometricGraph(seed int, directed bool, weightFunc WeightedFunc, n in
 			dist := math.Sqrt(dx*dx + dy*dy)
 
 			if dist <= r {
-				if err := g.AddEdge(from, to, weightFunc(from, to)); err != nil {
+				fromNode, err := g.Node(from)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get node: %w", err)
+				}
+				toNode, err := g.Node(to)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get node: %w", err)
+				}
+				if err := g.AddEdge(from, to, weightFunc(fromNode, toNode)); err != nil {
 					return nil, fmt.Errorf("failed to add edge: %w", err)
 				}
 			}

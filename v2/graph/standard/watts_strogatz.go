@@ -38,7 +38,15 @@ func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 			neighbor := (i + j) % n
 			from := graph.NodeID(fmt.Sprintf("%d", i))
 			to := graph.NodeID(fmt.Sprintf("%d", neighbor))
-			if err := g.AddEdge(from, to, weightFunc(from, to)); err != nil {
+			fromNode, err := g.Node(from)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get node: %w", err)
+			}
+			toNode, err := g.Node(to)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get node: %w", err)
+			}
+			if err := g.AddEdge(from, to, weightFunc(fromNode, toNode)); err != nil {
 				return nil, fmt.Errorf("failed to add edge: %w", err)
 			}
 		}
@@ -60,7 +68,15 @@ func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 				for {
 					newNeighbor := graph.NodeID(fmt.Sprintf("%d", r.Intn(n)))
 					if newNeighbor != from && !g.HasEdge(from, newNeighbor) {
-						if err := g.AddEdge(from, newNeighbor, weightFunc(from, newNeighbor)); err != nil {
+						fromNode, err := g.Node(from)
+						if err != nil {
+							return nil, fmt.Errorf("failed to get node: %w", err)
+						}
+						newNeighborNode, err := g.Node(newNeighbor)
+						if err != nil {
+							return nil, fmt.Errorf("failed to get node: %w", err)
+						}
+						if err := g.AddEdge(from, newNeighbor, weightFunc(fromNode, newNeighborNode)); err != nil {
 							return nil, fmt.Errorf("failed to add edge: %w", err)
 						}
 						break

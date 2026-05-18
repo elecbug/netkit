@@ -29,10 +29,6 @@ type Config struct {
 // New creates a new P2P network from the given graph. It returns an error if the graph is weighted,
 // as weighted graphs are not supported for P2P generation.
 func New(source *graph.Graph, cfg *Config) (*P2P, error) {
-	if source.Weighted {
-		return nil, fmt.Errorf("weighted graphs are not supported for P2P generation")
-	}
-
 	nodes := make(map[PeerID]*peer)
 	maps := make(map[graph.NodeID]PeerID)
 

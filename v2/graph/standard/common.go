@@ -8,7 +8,7 @@ import (
 )
 
 // WeightedFunc defines a function type for generating edge weights based on node IDs.
-type WeightedFunc func(from, to graph.NodeID) *graph.Weight
+type WeightedFunc func(from, to *graph.Node) *graph.Weight
 
 // GraphType represents the type of graph to be generated.
 type GraphType string
@@ -45,7 +45,7 @@ func generateRand(seed int) *rand.Rand {
 }
 
 // Unweighted returns a WeightedFunc that generates unweighted edges (i.e., all weights are 1.0).
-var Unweighted WeightedFunc = func(from, to graph.NodeID) *graph.Weight {
+var Unweighted WeightedFunc = func(from, to *graph.Node) *graph.Weight {
 	return graph.NewWeight(1.0)
 }
 

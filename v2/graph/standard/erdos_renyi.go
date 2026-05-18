@@ -34,7 +34,15 @@ func ErdosRenyiGraph(seed int, directed bool, weightFunc WeightedFunc, n int, p 
 				if r.Float64() < p {
 					from := graph.NodeID(fmt.Sprintf("%d", i))
 					to := graph.NodeID(fmt.Sprintf("%d", j))
-					if err := g.AddEdge(from, to, weightFunc(from, to)); err != nil {
+					fromNode, err := g.Node(from)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					toNode, err := g.Node(to)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					if err := g.AddEdge(from, to, weightFunc(fromNode, toNode)); err != nil {
 						return nil, fmt.Errorf("failed to add edge: %w", err)
 					}
 				}
@@ -46,7 +54,15 @@ func ErdosRenyiGraph(seed int, directed bool, weightFunc WeightedFunc, n int, p 
 				if i != j && r.Float64() < p {
 					from := graph.NodeID(fmt.Sprintf("%d", i))
 					to := graph.NodeID(fmt.Sprintf("%d", j))
-					if err := g.AddEdge(from, to, weightFunc(from, to)); err != nil {
+					fromNode, err := g.Node(from)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					toNode, err := g.Node(to)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get node: %w", err)
+					}
+					if err := g.AddEdge(from, to, weightFunc(fromNode, toNode)); err != nil {
 						return nil, fmt.Errorf("failed to add edge: %w", err)
 					}
 				}
