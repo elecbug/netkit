@@ -1,6 +1,7 @@
 package analyzer
 
 import (
+	"runtime"
 	"sync"
 
 	"github.com/elecbug/netkit/v2/graph"
@@ -16,8 +17,8 @@ type Analyzer struct {
 	cfg               *Config                                        // cfg holds configuration options for the analyzer, such as worker counts and normalization settings.
 }
 
-// NewAnalyzer creates a new Analyzer instance based on the provided graph.
-func NewAnalyzer(g *graph.Graph, parallelCoreCount int, cfg *Config) *Analyzer {
+// New creates a new Analyzer instance based on the provided graph.
+func New(g *graph.Graph, parallelCoreCount int, cfg *Config) *Analyzer {
 	return &Analyzer{
 		baseGraph:         g,
 		graphHash:         "",
@@ -25,6 +26,20 @@ func NewAnalyzer(g *graph.Graph, parallelCoreCount int, cfg *Config) *Analyzer {
 		parallelCoreCount: parallelCoreCount,
 		cfg:               cfg,
 	}
+}
+
+// ClearCache clears the cached shortest paths and resets the graph hash. This should be called when the underlying graph
+// changes to ensure that subsequent shortest path computations are accurate and not based on stale data.
+func (a *Analyzer) ClearCache() string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.allShortestPaths = make(map[graph.NodeID]map[graph.NodeID][]graph.Path)
+	a.graphHash = ""
+
+	runtime.GC() // Trigger garbage collection to free memory used by the old cache
+
+	return a.graphHash
 }
 
 // Graph returns the base graph associated with the analyzer.
