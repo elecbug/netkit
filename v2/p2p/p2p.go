@@ -250,6 +250,7 @@ func (p *P2P) MessageInfo(peerID PeerID, content string) (map[string]any, error)
 	}
 
 	info["seen"] = peer.seenAt[content].String()
+	info["first_from"] = peer.firstFrom[content]
 
 	return info, nil
 }
