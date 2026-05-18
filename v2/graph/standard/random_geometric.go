@@ -17,12 +17,15 @@ func RandomGeometricGraph(seed int, directed bool, weightFunc WeightedFunc, n in
 	if n < 0 {
 		return nil, fmt.Errorf("invalid number of nodes: n must be non-negative")
 	}
-	if weightFunc == nil {
-		weightFunc = Unweighted
-	}
 
 	rr := generateRand(seed)
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	// --- 1. Generate Nodes ---
 	type point struct{ x, y float64 }

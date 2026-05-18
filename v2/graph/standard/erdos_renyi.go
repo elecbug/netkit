@@ -15,12 +15,15 @@ func ErdosRenyiGraph(seed int, directed bool, weightFunc WeightedFunc, n int, p 
 	if n < 0 {
 		return nil, fmt.Errorf("invalid number of nodes: n must be non-negative")
 	}
-	if weightFunc == nil {
-		weightFunc = Unweighted
-	}
 
 	r := generateRand(seed)
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	for i := 0; i < n; i++ {
 		if err := g.AddNode(graph.NodeID(fmt.Sprintf("%d", i))); err != nil {

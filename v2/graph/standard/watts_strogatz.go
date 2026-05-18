@@ -8,9 +8,6 @@ import (
 
 // WattsStrogatzGraph generates a small-world graph based on the Watts-Strogatz model.
 func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k int, beta float64) (*graph.Graph, error) {
-	if weightFunc == nil {
-		weightFunc = Unweighted
-	}
 	if k < 0 || k >= n {
 		// degree must be between 0 and n-1
 		return nil, fmt.Errorf("invalid degree: k must be between 0 and n-1")
@@ -23,7 +20,13 @@ func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 	}
 
 	r := generateRand(seed)
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	// --- 1. Generate Nodes ---
 	for i := 0; i < n; i++ {

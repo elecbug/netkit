@@ -9,14 +9,17 @@ import (
 // GridGraph generates a grid graph with the specified number of rows and columns.
 // If torus is true, the graph will wrap around at the edges, creating a toroidal structure.
 func GridGraph(seed int, directed bool, weightFunc WeightedFunc, rows, cols int, torus bool) (*graph.Graph, error) {
-	if weightFunc == nil {
-		weightFunc = Unweighted
-	}
 	if rows < 0 || cols < 0 {
 		return nil, fmt.Errorf("rows and cols must be non-negative")
 	}
 
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	nodeID := func(row, col int) graph.NodeID {
 		return graph.NodeID(fmt.Sprintf("%d", row*cols+col))

@@ -10,9 +10,6 @@ import (
 // Each node has exactly degree k. Returns nil if impossible.
 // This implementation requires n*k to be even.
 func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k int) (*graph.Graph, error) {
-	if weightFunc == nil {
-		weightFunc = Unweighted
-	}
 	if k < 0 || k >= n {
 		// degree must be between 0 and n-1
 		return nil, fmt.Errorf("invalid degree: k must be between 0 and n-1")
@@ -27,7 +24,13 @@ func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k i
 	}
 
 	r := generateRand(seed)
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	// add nodes
 	for i := 0; i < n; i++ {

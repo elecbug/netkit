@@ -10,8 +10,8 @@ import (
 // Graph maintains nodes and adjacency edges.
 type Graph struct {
 	nodes    map[NodeID]*Node // nodes maps NodeID to the corresponding Node struct.
-	Directed bool             // Directed indicates whether the graph is directed (true) or undirected (false).
-	Weighted bool             // Weighted indicates whether the graph is weighted (true) or unweighted (false).
+	directed bool             // Directed indicates whether the graph is directed (true) or undirected (false).
+	weighted bool             // Weighted indicates whether the graph is weighted (true) or unweighted (false).
 }
 
 // graphSerialization is a helper struct for JSON serialization of the Graph.
@@ -29,8 +29,8 @@ type Matrix [][]Weight
 func New(directed bool, weighted bool) *Graph {
 	return &Graph{
 		nodes:    make(map[NodeID]*Node),
-		Directed: directed,
-		Weighted: weighted,
+		directed: directed,
+		weighted: weighted,
 	}
 }
 
@@ -112,7 +112,7 @@ func (g *Graph) AddEdge(from NodeID, to NodeID, weight *Weight) error {
 		return fmt.Errorf("node %s does not exist", to)
 	}
 
-	if g.Weighted {
+	if g.weighted {
 		if weight == nil || *weight <= 0 {
 			return fmt.Errorf("weight must be positive for weighted graphs")
 		}
@@ -121,7 +121,7 @@ func (g *Graph) AddEdge(from NodeID, to NodeID, weight *Weight) error {
 		if err != nil {
 			return err
 		}
-		if !g.Directed {
+		if !g.directed {
 			err := toNode.addEdge(from, *weight)
 			if err != nil {
 				return err
@@ -136,7 +136,7 @@ func (g *Graph) AddEdge(from NodeID, to NodeID, weight *Weight) error {
 		if err != nil {
 			return err
 		}
-		if !g.Directed {
+		if !g.directed {
 			err := toNode.addEdge(from, 1)
 			if err != nil {
 				return err
@@ -164,7 +164,7 @@ func (g *Graph) RemoveEdge(from NodeID, to NodeID) error {
 	if err != nil {
 		return err
 	}
-	if !g.Directed {
+	if !g.directed {
 		err := toNode.removeEdge(from)
 		if err != nil {
 			return err
@@ -208,8 +208,8 @@ func (g *Graph) EdgeWeight(from NodeID, to NodeID) (Weight, error) {
 // String returns a string representation of the graph, including its nodes and edges.
 func (g *Graph) String() string {
 	result := "Graph:\n"
-	result += fmt.Sprintf("  Directed: %t\n", g.Directed)
-	result += fmt.Sprintf("  Weighted: %t\n", g.Weighted)
+	result += fmt.Sprintf("  Directed: %t\n", g.directed)
+	result += fmt.Sprintf("  Weighted: %t\n", g.weighted)
 	result += "  Nodes:\n"
 
 	type pair struct {
@@ -268,8 +268,8 @@ func (g *Graph) Matrix() *Matrix {
 func (g *Graph) Serialize() (string, error) {
 	serialization := graphSerialization{
 		Nodes:    make(map[NodeID]map[NodeID]Weight),
-		Directed: g.Directed,
-		Weighted: g.Weighted,
+		Directed: g.directed,
+		Weighted: g.weighted,
 	}
 
 	for id, node := range g.nodes {
@@ -303,7 +303,7 @@ func Deserialize(jsonStr string) (*Graph, error) {
 	for fromID, edges := range serialization.Nodes {
 		for toID, weight := range edges {
 			var weightPtr *Weight
-			if g.Weighted {
+			if g.weighted {
 				weightCopy := weight
 				weightPtr = &weightCopy
 			}
@@ -313,8 +313,8 @@ func Deserialize(jsonStr string) (*Graph, error) {
 		}
 	}
 
-	g.Directed = serialization.Directed
-	g.Weighted = serialization.Weighted
+	g.directed = serialization.Directed
+	g.weighted = serialization.Weighted
 
 	if err := g.checkProperties(); err != nil {
 		return nil, fmt.Errorf("graph properties check failed: %v", err)
@@ -335,7 +335,7 @@ func (g *Graph) Hash() string {
 
 // checkProperties checks that the graph's properties (directed/undirected, weighted/unweighted) are consistent with its edges.
 func (g *Graph) checkProperties() error {
-	if !g.Directed {
+	if !g.directed {
 		for fromID, node := range g.nodes {
 			for toID, weight := range node.edges {
 				toNode, _ := g.Node(toID)
@@ -350,7 +350,7 @@ func (g *Graph) checkProperties() error {
 		}
 	}
 
-	if !g.Weighted {
+	if !g.weighted {
 		for fromID, node := range g.nodes {
 			for toID, weight := range node.edges {
 				if weight != 1 {
@@ -361,4 +361,16 @@ func (g *Graph) checkProperties() error {
 	}
 
 	return nil
+}
+
+/* Properties */
+
+// IsDirected returns true if the graph is directed, false otherwise.
+func (g *Graph) IsDirected() bool {
+	return g.directed
+}
+
+// IsWeighted returns true if the graph is weighted, false otherwise.
+func (g *Graph) IsWeighted() bool {
+	return g.weighted
 }

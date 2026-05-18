@@ -16,12 +16,14 @@ func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int
 	if m < 1 || n <= m {
 		return nil, fmt.Errorf("invalid parameters: n must be greater than m and m must be at least 1")
 	}
-	if weightFunc == nil {
-		weightFunc = Unweighted
-	}
-
 	r := generateRand(seed)
-	g := graph.New(directed, true)
+	g := graph.New(directed, weightFunc != nil)
+
+	if weightFunc == nil {
+		weightFunc = func(from, to *graph.Node) *graph.Weight {
+			return nil
+		}
+	}
 
 	// --- 1. initialize ---
 	for i := 0; i < m; i++ {
