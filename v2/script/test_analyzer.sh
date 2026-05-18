@@ -1,6 +1,8 @@
 # !/bin/bash
 set -e
 
+go test -v ./v2/graph/analyzer/
+
 CURRENT_DIR=$(pwd)
 SOURCE_DIR=$(dirname "$0")
 
