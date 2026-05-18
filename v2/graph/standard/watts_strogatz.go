@@ -7,6 +7,8 @@ import (
 )
 
 // WattsStrogatzGraph generates a small-world graph based on the Watts-Strogatz model.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func WattsStrogatzGraph(seed int, directed bool, weightFunc WeightedFunc, n, k int, beta float64) (*graph.Graph, error) {
 	if k < 0 || k >= n {
 		// degree must be between 0 and n-1

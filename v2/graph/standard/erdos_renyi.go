@@ -8,6 +8,8 @@ import (
 
 // ErdosRenyiGraph generates a random graph based on the Erdős-Rényi model.
 // Nodes are added first, and then edges are created between nodes with a probability p.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func ErdosRenyiGraph(seed int, directed bool, weightFunc WeightedFunc, n int, p float64) (*graph.Graph, error) {
 	if p < 0 || p > 1 {
 		return nil, fmt.Errorf("invalid probability: p must be between 0 and 1")

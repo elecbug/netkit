@@ -45,6 +45,8 @@ func generateRand(seed int) *rand.Rand {
 }
 
 // StandardGraph generates a graph based on the provided configuration. It supports various graph types and parameters.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func StandardGraph(seed int, directed bool, weightFunc WeightedFunc, config GraphConfig) (*graph.Graph, error) {
 	switch config.Type {
 	case Grid:

@@ -9,6 +9,8 @@ import (
 // RandomRegularGraph generates a random k-regular graph with n nodes.
 // Each node has exactly degree k. Returns nil if impossible.
 // This implementation requires n*k to be even.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func RandomRegularGraph(seed int, directed bool, weightFunc WeightedFunc, n, k int) (*graph.Graph, error) {
 	if k < 0 || k >= n {
 		// degree must be between 0 and n-1

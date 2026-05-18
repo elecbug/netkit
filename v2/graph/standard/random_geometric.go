@@ -10,6 +10,8 @@ import (
 // RandomGeometricGraph generates a random geometric graph (RGG).
 // Nodes are placed uniformly at random in the unit square, and edges
 // are added between nodes that are within a specified radius r.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func RandomGeometricGraph(seed int, directed bool, weightFunc WeightedFunc, n int, r float64) (*graph.Graph, error) {
 	if r < 0 || r > 1 {
 		return nil, fmt.Errorf("invalid radius: r must be between 0 and 1")

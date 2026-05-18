@@ -8,6 +8,8 @@ import (
 
 // GridGraph generates a grid graph with the specified number of rows and columns.
 // If torus is true, the graph will wrap around at the edges, creating a toroidal structure.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func GridGraph(seed int, directed bool, weightFunc WeightedFunc, rows, cols int, torus bool) (*graph.Graph, error) {
 	if rows < 0 || cols < 0 {
 		return nil, fmt.Errorf("rows and cols must be non-negative")

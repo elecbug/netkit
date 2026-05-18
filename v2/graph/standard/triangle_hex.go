@@ -7,6 +7,8 @@ import (
 )
 
 // TriangleHexGraph generates a hexagonal lattice graph with a specified edge length.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func TriangleHexGraph(seed int, directed bool, weightFunc WeightedFunc, edge int) (*graph.Graph, error) {
 
 	if edge < 0 {

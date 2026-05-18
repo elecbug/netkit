@@ -9,6 +9,8 @@ import (
 // BarabasiAlbertGraph generates a graph based on the Barabási-Albert preferential attachment model.
 // The graph starts with m fully connected nodes, and new nodes are added one by one, each connecting
 // to m existing nodes with a probability proportional to their degree.
+// If weightFunc is nil, all edges will have no weight (unweighted graph). Otherwise, weightFunc will be called for
+// each new edge with the new node and the target node as arguments.
 func BarabasiAlbertGraph(seed int, directed bool, weightFunc WeightedFunc, n int, m int) (*graph.Graph, error) {
 	if n < 0 {
 		return nil, fmt.Errorf("invalid number of nodes: n must be non-negative")
