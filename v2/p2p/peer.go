@@ -146,3 +146,12 @@ func (p *peer) eachPublish(network *P2P, msg Message) {
 		}(edgeCopy)
 	}
 }
+
+// eachStop marks the peer as inactive and closes its message queue.
+func (p *peer) eachStop() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.alive = false
+	close(p.msgQueue)
+}

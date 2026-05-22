@@ -68,6 +68,14 @@ func New(source *graph.Graph, cfg *Config) (*P2P, error) {
 	return &P2P{peers: nodes, cfg: cfg}, nil
 }
 
+// Free clears all peers from the P2P network, effectively resetting it to an empty state.
+func (p *P2P) Free() {
+	for id := range p.peers {
+		p.peers[id].eachStop()
+		delete(p.peers, id)
+	}
+}
+
 /* Basic Actions */
 
 // Run starts the message handling routines for all peers in the network.

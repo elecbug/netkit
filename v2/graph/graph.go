@@ -34,6 +34,13 @@ func New(directed bool, weighted bool) *Graph {
 	}
 }
 
+// Free clears all nodes and edges from the graph, effectively resetting it to an empty state.
+func (g *Graph) Free() {
+	for id := range g.nodes {
+		delete(g.nodes, id)
+	}
+}
+
 /* Node */
 
 // AddNode adds a node to the graph.
