@@ -36,7 +36,7 @@ func testComputeShortestPath(t *testing.T) {
 	g.AddEdge("A", "C", graph.NewWeight(2))
 	g.AddEdge("C", "D", graph.NewWeight(1))
 
-	a := analyzer.NewAnalyzer(g, 1, analyzer.DefaultConfig())
+	a := analyzer.New(g, 1, analyzer.DefaultConfig())
 
 	paths, err := a.ShortestPaths("A", "D")
 	if err != nil {
@@ -106,7 +106,7 @@ func TestPerformance(t *testing.T) {
 		t.Fatalf("failed to create graph: %v", err)
 	}
 
-	a := analyzer.NewAnalyzer(g, 1, analyzer.DefaultConfig())
+	a := analyzer.New(g, 1, analyzer.DefaultConfig())
 
 	startTime := time.Now()
 	paths, err := a.ShortestPaths("0", "999")
@@ -121,7 +121,7 @@ func TestPerformance(t *testing.T) {
 	duration := time.Since(startTime)
 	fmt.Printf("  - Time taken to compute shortest paths: %v\n", duration)
 
-	a = analyzer.NewAnalyzer(g, 4, analyzer.DefaultConfig())
+	a = analyzer.New(g, 4, analyzer.DefaultConfig())
 
 	startTime = time.Now()
 	pathsCompared, err := a.ShortestPaths("0", "999")
@@ -135,7 +135,7 @@ func TestPerformance(t *testing.T) {
 		t.Errorf("expected total distance %v, got %v", paths[0].TotalDistance(), pathsCompared[0].TotalDistance())
 	}
 
-	a = analyzer.NewAnalyzer(g, 16, analyzer.DefaultConfig())
+	a = analyzer.New(g, 16, analyzer.DefaultConfig())
 
 	startTime = time.Now()
 	pathsCompared, err = a.ShortestPaths("0", "999")
@@ -149,7 +149,7 @@ func TestPerformance(t *testing.T) {
 		t.Errorf("expected total distance %v, got %v", paths[0].TotalDistance(), pathsCompared[0].TotalDistance())
 	}
 
-	a = analyzer.NewAnalyzer(g, 32, analyzer.DefaultConfig())
+	a = analyzer.New(g, 32, analyzer.DefaultConfig())
 
 	startTime = time.Now()
 	pathsCompared, err = a.ShortestPaths("0", "999")
@@ -204,7 +204,7 @@ func TestAnaylzer(t *testing.T) {
 	}
 
 	cfg := analyzer.DefaultConfig()
-	a := analyzer.NewAnalyzer(g, 16, cfg)
+	a := analyzer.New(g, 16, cfg)
 
 	t.Run("ShortestPaths", func(t *testing.T) {
 		results["shortest_paths"] = make(map[string]any)
