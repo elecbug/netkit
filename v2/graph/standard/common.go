@@ -21,6 +21,7 @@ const (
 	WattsStrogatz   GraphType = "watts_strogatz"
 	RandomGeometric GraphType = "random_geometric"
 	RandomRegular   GraphType = "random_regular"
+	Waxman          GraphType = "waxman"
 	None            GraphType = "none"
 )
 
@@ -136,6 +137,20 @@ func StandardGraph(seed int, directed bool, weightFunc WeightedFunc, config Grap
 			return nil, fmt.Errorf("invalid parameter 'k' for Random Regular graph")
 		}
 		return RandomRegularGraph(seed, directed, weightFunc, n, k)
+	case Waxman:
+		n, ok := config.Params["n"].(int)
+		if !ok {
+			return nil, fmt.Errorf("invalid parameter 'n' for Waxman graph")
+		}
+		alpha, ok := config.Params["alpha"].(float64)
+		if !ok {
+			return nil, fmt.Errorf("invalid parameter 'alpha' for Waxman graph")
+		}
+		beta, ok := config.Params["beta"].(float64)
+		if !ok {
+			return nil, fmt.Errorf("invalid parameter 'beta' for Waxman graph")
+		}
+		return WaxmanGraph(seed, directed, weightFunc, n, alpha, beta)
 	case None:
 		return graph.New(directed, true), nil
 	default:
