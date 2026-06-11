@@ -114,6 +114,10 @@ func (p *P2P) ExpireSimulation(cancel context.CancelFunc, msg string, expiration
 		time.Sleep(checkInterval)
 	}
 
+	for _, peer := range p.peers {
+		peer.eachStop()
+	}
+
 	cancel()
 }
 
