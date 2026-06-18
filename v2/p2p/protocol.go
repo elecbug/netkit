@@ -52,9 +52,12 @@ var Gossip ProtocolFunc = func(id PeerID, msg Message, neighbors []PeerID, sentP
 		targets = append(targets, neighbor)
 	}
 
-	gossipFactor, ok := broadcastParams["gossip_factor"].(float64)
-	if !ok {
-		gossipFactor = 0.5 // default gossip factor
+	gossipFactor, ok1 := broadcastParams["gossip_factor"].(float64)
+	gossipNode, ok2 := broadcastParams["gossip_node"].(int)
+
+	if !ok1 && !ok2 {
+		ok1 = true
+		gossipFactor = 0.5
 	}
 
 	if len(targets) > 0 {
@@ -62,8 +65,13 @@ var Gossip ProtocolFunc = func(id PeerID, msg Message, neighbors []PeerID, sentP
 			targets[i], targets[j] = targets[j], targets[i]
 		})
 
-		k := int(float64(len(targets)) * gossipFactor)
-		targets = targets[:k]
+		if ok1 {
+			k := int(float64(len(targets)) * gossipFactor)
+			targets = targets[:k]
+		} else if ok2 {
+			k := gossipNode
+			targets = targets[:k]
+		}
 	}
 
 	return &targets
