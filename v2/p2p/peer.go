@@ -75,8 +75,8 @@ func (p *peer) eachRun(network *P2P, wg *sync.WaitGroup, ctx context.Context) {
 
 				if first {
 					go func(msg Message) {
-						time.Sleep(time.Duration(p.processingLatency) * time.Millisecond)
-						p.eachPublish(network, msg)
+						currentTime := time.Now()
+						p.eachPublish(network, msg, currentTime)
 					}(msg)
 				}
 			}
@@ -85,7 +85,7 @@ func (p *peer) eachRun(network *P2P, wg *sync.WaitGroup, ctx context.Context) {
 }
 
 // eachPublish sends the message to neighbors, excluding 'exclude' and already-sent targets.
-func (p *peer) eachPublish(network *P2P, msg Message) {
+func (p *peer) eachPublish(network *P2P, msg Message, start time.Time) {
 	content := msg.Content
 	protocol := msg.Protocol
 	hopCount := msg.HopCount
@@ -126,6 +126,10 @@ func (p *peer) eachPublish(network *P2P, msg Message) {
 				break
 			}
 		}
+	}
+
+	for time.Since(start) < time.Duration(p.processingLatency)*time.Millisecond {
+		time.Sleep(1 * time.Millisecond)
 	}
 
 	for _, e := range willSendEdges {
