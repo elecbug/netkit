@@ -266,3 +266,22 @@ func (p *P2P) MessageInfo(peerID PeerID, content string) (map[string]any, error)
 
 	return info, nil
 }
+
+// PeerLog returns a copy of the log entries for the specified peer, allowing for inspection of message flow and events.
+func (p * P2P) PeerLog(peerID PeerID, content string) (map[string][]logEntry, error) {
+	peer := p.peers[peerID]
+
+	if peer == nil {
+		return nil, fmt.Errorf("peer %s not found", peerID)
+	}
+
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
+	logCopy := make(map[string][]logEntry)
+	for k, v := range peer.log {
+		logCopy[k] = append([]logEntry(nil), v...)
+	}
+
+	return logCopy, nil
+}
