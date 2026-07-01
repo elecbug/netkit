@@ -3,6 +3,7 @@ package p2p
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -130,6 +131,8 @@ func (p *P2P) PeerIDs() []PeerID {
 	for id := range p.peers {
 		ids = append(ids, id)
 	}
+
+	slices.Sort(ids)
 
 	return ids
 }
@@ -265,4 +268,23 @@ func (p *P2P) MessageInfo(peerID PeerID, content string) (map[string]any, error)
 	info["first_from"] = peer.firstFrom[content]
 
 	return info, nil
+}
+
+// PeerLog returns a copy of the log entries for the specified peer, allowing for inspection of message flow and events.
+func (p *P2P) PeerLog(peerID PeerID, content string) (map[string][]logEntry, error) {
+	peer := p.peers[peerID]
+
+	if peer == nil {
+		return nil, fmt.Errorf("peer %s not found", peerID)
+	}
+
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
+	logCopy := make(map[string][]logEntry)
+	for k, v := range peer.log {
+		logCopy[k] = append([]logEntry(nil), v...)
+	}
+
+	return logCopy, nil
 }
