@@ -268,7 +268,7 @@ func (p *P2P) MessageInfo(peerID PeerID, content string) (map[string]any, error)
 }
 
 // PeerLog returns a copy of the log entries for the specified peer, allowing for inspection of message flow and events.
-func (p * P2P) PeerLog(peerID PeerID, content string) (map[string][]logEntry, error) {
+func (p *P2P) PeerLog(peerID PeerID, content string) (map[string][]logEntry, error) {
 	peer := p.peers[peerID]
 
 	if peer == nil {

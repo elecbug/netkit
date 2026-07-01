@@ -32,12 +32,12 @@ type edge struct {
 }
 
 type logEntry struct {
-	ID		PeerID   `json:"id"` // ID of the peer
-	Timestamp string   `json:"timestamp"` // timestamp of the log entry
-	Type 	string   `json:"type"` // type of log entry (e.g., "recv", "send")
-	From    PeerID   `json:"from"` // ID of the sender peer
-	To      PeerID   `json:"to"` // ID of the target peer
-	First   bool     `json:"first"` // indicates if this is the first time the message is seen
+	ID        PeerID `json:"id"`        // ID of the peer
+	Timestamp string `json:"timestamp"` // timestamp of the log entry
+	Type      string `json:"type"`      // type of log entry (e.g., "recv", "send")
+	From      PeerID `json:"from"`      // ID of the sender peer
+	To        PeerID `json:"to"`        // ID of the target peer
+	First     bool   `json:"first"`     // indicates if this is the first time the message is seen
 }
 
 // newPeer creates a new Node with the given ID and node latency.
@@ -87,28 +87,28 @@ func (p *peer) eachRun(network *P2P, wg *sync.WaitGroup, ctx context.Context) {
 				if _, ok := p.log[msg.Content]; !ok {
 					p.log[msg.Content] = make([]logEntry, 0)
 				}
-			
+
 				if _, ok := p.seenAt[msg.Content]; !ok {
 					p.seenAt[msg.Content] = time.Now()
 					p.firstFrom[msg.Content] = msg.From
 					first = true
-                    
+
 					p.log[msg.Content] = append(p.log[msg.Content], logEntry{
-						ID:      p.id,
+						ID:        p.id,
 						Timestamp: timestamp(),
-						Type:    "recv",
-						From:    msg.From,
-						To:      p.id,
-						First:   true,
+						Type:      "recv",
+						From:      msg.From,
+						To:        p.id,
+						First:     true,
 					})
 				} else {
 					p.log[msg.Content] = append(p.log[msg.Content], logEntry{
-						ID:      p.id,
+						ID:        p.id,
 						Timestamp: timestamp(),
-						Type:    "recv",
-						From:    msg.From,
-						To:      p.id,
-						First:   false,
+						Type:      "recv",
+						From:      msg.From,
+						To:        p.id,
+						First:     false,
 					})
 				}
 				p.mu.Unlock()
@@ -176,18 +176,18 @@ func (p *peer) eachPublish(network *P2P, msg Message, start time.Time) {
 	for _, e := range willSendEdges {
 		edgeCopy := e
 		p.sentTo[content][e.targetID] = struct{}{}
-		
+
 		if _, ok := p.log[msg.Content]; !ok {
 			p.log[msg.Content] = make([]logEntry, 0)
 		}
 
 		p.log[content] = append(p.log[content], logEntry{
-			ID:      p.id,
+			ID:        p.id,
 			Timestamp: timestamp(),
-			Type:    "send",
-			From:    p.id,
-			To:      e.targetID,
-			First:   false,
+			Type:      "send",
+			From:      p.id,
+			To:        e.targetID,
+			First:     false,
 		})
 
 		go func(e edge) {
