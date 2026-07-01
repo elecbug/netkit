@@ -131,7 +131,6 @@ func (p *peer) eachPublish(network *P2P, msg Message, start time.Time) {
 	hopCount := msg.HopCount
 
 	p.mu.Lock()
-	defer p.mu.Unlock()
 
 	if _, ok := p.sentTo[content]; !ok {
 		p.sentTo[content] = make(map[PeerID]struct{})
@@ -157,7 +156,11 @@ func (p *peer) eachPublish(network *P2P, msg Message, start time.Time) {
 		receivedEdges = append(receivedEdges, senderID)
 	}
 
-	targets := msg.Protocol(p.id, msg, allEdges, sentEdges, receivedEdges, msg.Params)
+	targets, dynamicParams := msg.Protocol(p.id, msg, allEdges, sentEdges, receivedEdges, msg.StaticParams, msg.DynamicParams)
+
+	if dynamicParams == nil {
+		dynamicParams = make(map[PeerID]map[string]any)
+	}
 
 	for _, targetID := range *targets {
 		for _, edge := range p.edges {
@@ -168,10 +171,14 @@ func (p *peer) eachPublish(network *P2P, msg Message, start time.Time) {
 		}
 	}
 
+	p.mu.Unlock()
+
 	delay := time.Duration(p.processingLatency * float64(time.Millisecond))
 	if remain := delay - time.Since(start); remain > 0 {
 		time.Sleep(remain)
 	}
+
+	p.mu.Lock()
 
 	for _, e := range willSendEdges {
 		edgeCopy := e
@@ -191,23 +198,38 @@ func (p *peer) eachPublish(network *P2P, msg Message, start time.Time) {
 		})
 
 		go func(e edge) {
-			time.Sleep(time.Duration(e.networkLatency) * time.Millisecond)
+			time.Sleep(time.Duration(e.networkLatency * float64(time.Millisecond)))
 
 			targetPeer, ok := network.peers[e.targetID]
-			if !ok || targetPeer == nil {
+			if !ok || targetPeer == nil || !targetPeer.alive {
 				return
 			}
 
+			var dynamics map[string]any
+
+			if _, ok := dynamicParams[e.targetID]; !ok {
+				dynamics = nil
+			} else {
+				dynamics = make(map[string]any)
+
+				for k, v := range dynamicParams[e.targetID] {
+					dynamics[k] = v
+				}
+			}
+
 			network.peers[e.targetID].msgQueue <- Message{
-				Publisher: msg.Publisher,
-				From:      p.id,
-				Content:   content,
-				Protocol:  protocol,
-				HopCount:  hopCount + 1,
-				Params:    msg.Params,
+				Publisher:     msg.Publisher,
+				From:          p.id,
+				Content:       content,
+				Protocol:      protocol,
+				HopCount:      hopCount + 1,
+				StaticParams:  msg.StaticParams,
+				DynamicParams: dynamics,
 			}
 		}(edgeCopy)
 	}
+
+	p.mu.Unlock()
 }
 
 // eachStop marks the peer as inactive and closes its message queue.
