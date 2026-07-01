@@ -71,6 +71,10 @@ var Gossip ProtocolFunc = func(id PeerID, msg Message, neighbors []PeerID, sentP
 			targets = targets[:k]
 		} else if ok2 {
 			k := gossipNode
+			if k > len(targets) {
+				k = len(targets)
+			}
+			
 			targets = targets[:k]
 		}
 	}
