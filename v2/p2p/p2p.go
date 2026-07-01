@@ -3,6 +3,7 @@ package p2p
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -130,6 +131,8 @@ func (p *P2P) PeerIDs() []PeerID {
 	for id := range p.peers {
 		ids = append(ids, id)
 	}
+
+	slices.Sort(ids)
 
 	return ids
 }
