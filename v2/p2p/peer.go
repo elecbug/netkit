@@ -130,6 +130,11 @@ func (p *peer) eachPublish(network *P2P, msg Message, start time.Time) {
 	protocol := msg.Protocol
 	hopCount := msg.HopCount
 
+	delay := time.Duration(p.processingLatency * float64(time.Millisecond))
+	if remain := delay - time.Since(start); remain > 0 {
+		time.Sleep(remain)
+	}
+
 	p.mu.Lock()
 
 	if _, ok := p.sentTo[content]; !ok {
@@ -170,15 +175,6 @@ func (p *peer) eachPublish(network *P2P, msg Message, start time.Time) {
 			}
 		}
 	}
-
-	p.mu.Unlock()
-
-	delay := time.Duration(p.processingLatency * float64(time.Millisecond))
-	if remain := delay - time.Since(start); remain > 0 {
-		time.Sleep(remain)
-	}
-
-	p.mu.Lock()
 
 	for _, e := range willSendEdges {
 		edgeCopy := e
