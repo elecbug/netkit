@@ -140,19 +140,20 @@ func (p *P2P) PeerIDs() []PeerID {
 /* Message Handling */
 
 // Publish sends a message to the specified peer's message queue.
-func (p *P2P) Publish(id PeerID, msg string, protocol ProtocolFunc, params map[string]any) error {
+func (p *P2P) Publish(id PeerID, msg string, protocol ProtocolFunc, staticParams, dynamicParams map[string]any) error {
 	if peer, ok := p.peers[id]; ok {
 		if !peer.alive {
 			return fmt.Errorf("peer %s is not alive", id)
 		}
 
 		peer.msgQueue <- Message{
-			Publisher: id,
-			From:      id,
-			Content:   msg,
-			Protocol:  protocol,
-			Params:    params,
-			HopCount:  0,
+			Publisher:     id,
+			From:          id,
+			Content:       msg,
+			Protocol:      protocol,
+			StaticParams:  staticParams,
+			DynamicParams: dynamicParams,
+			HopCount:      0,
 		}
 		return nil
 	}
